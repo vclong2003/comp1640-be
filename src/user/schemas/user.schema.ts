@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ERole } from '../eums/role.enum';
 import { Session, SessionSchema } from './session.schema';
 import mongoose from 'mongoose';
+import { Faculty, FacultySchema } from './faculty.schema';
 
 @Schema()
 export class User {
-  @Prop()
   _id: string;
 
   @Prop({ unique: true, required: true })
@@ -14,7 +14,7 @@ export class User {
   @Prop()
   avatar_url: string;
 
-  @Prop()
+  @Prop({ required: true })
   name: string;
 
   @Prop({ required: true })
@@ -22,6 +22,9 @@ export class User {
 
   @Prop({ required: true })
   password: string;
+
+  @Prop({ type: FacultySchema })
+  faculty: Faculty;
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Event' })
   participated_event_ids: string[];
