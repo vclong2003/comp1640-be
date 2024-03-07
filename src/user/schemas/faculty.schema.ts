@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
 export class Faculty {
-  _id: string;
+  _id?: string;
 
   @Prop()
   name: string;

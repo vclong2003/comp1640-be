@@ -3,6 +3,7 @@ import { ERole } from '../eums/role.enum';
 import { Session, SessionSchema } from './session.schema';
 import mongoose from 'mongoose';
 import { Faculty, FacultySchema } from './faculty.schema';
+import { EGender } from '../eums/gender.enum';
 
 @Schema()
 export class User {
@@ -12,10 +13,19 @@ export class User {
   email: string;
 
   @Prop()
+  phone: string;
+
+  @Prop()
   avatar_url: string;
 
   @Prop({ required: true })
   name: string;
+
+  @Prop()
+  dob: Date;
+
+  @Prop()
+  gender: EGender;
 
   @Prop({ required: true })
   roles: ERole;
@@ -24,7 +34,7 @@ export class User {
   password: string;
 
   @Prop({ type: FacultySchema })
-  faculty: Faculty;
+  faculty?: Faculty;
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Event' })
   participated_event_ids: string[];
