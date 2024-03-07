@@ -4,6 +4,7 @@ import { PinoLoggerModule } from './shared-modules/pino-logger/pino-logger.modul
 import { MongooseModule } from './shared-modules/mongoose/mongoose.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
     PinoLoggerModule,
     UserModule,
     AuthModule,
+    EventModule,
   ],
   providers: [],
 })
