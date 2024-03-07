@@ -28,7 +28,7 @@ export class User {
   gender: EGender;
 
   @Prop({ required: true })
-  roles: ERole;
+  role: ERole;
 
   @Prop({ required: true })
   password: string;
