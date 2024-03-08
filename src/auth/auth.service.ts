@@ -1,18 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { UserService } from 'src/user/user.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { User } from 'src/user/schemas/user.schema';
 
 import { ERole } from 'src/user/eums/role.enum';
 import { PasswordService } from '../shared-modules/password/password.service';
+import { LoginResponseDto } from './dtos/login-response.dto';
+import { JwtService } from 'src/shared-modules/jwt/jwt.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
-    private configService: ConfigService,
     private passwordService: PasswordService,
+    private jwtService: JwtService,
   ) {}
 
   async guestRegister(dto: GuestRegisterDto): Promise<User> {
@@ -33,5 +34,12 @@ export class AuthService {
     );
     if (isPasswordValid) return user;
     return null;
+  }
+
+  async login(user: User): Promise<LoginResponseDto> {
+    const { _id, role } = user;
+    const accessToken = await this.jwtService.genAccessToken({ id: _id, role });
+    const refreshToken = await this.jwtService.genRefreshToken({ id: _id });
+    return { accessToken, refreshToken };
   }
 }

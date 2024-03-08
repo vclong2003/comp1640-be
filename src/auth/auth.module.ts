@@ -4,9 +4,10 @@ import { AuthService } from './auth.service';
 import { UserModule } from 'src/user/user.module';
 import { PasswordModule } from 'src/shared-modules/password/password.module';
 import { LocalStrategy } from './strategies/local.strategy';
+import { JwtModule } from 'src/shared-modules/jwt/jwt.module';
 
 @Module({
-  imports: [UserModule, PasswordModule],
+  imports: [UserModule, PasswordModule, JwtModule],
   providers: [AuthService, LocalStrategy],
   controllers: [AuthController],
 })
