@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { User } from 'src/user/schemas/user.schema';
-
 import { ERole } from 'src/user/eums/role.enum';
 import { PasswordService } from '../shared-modules/password/password.service';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
+import { UAParser } from 'ua-parser-js';
 
 @Injectable()
 export class AuthService {
@@ -36,10 +36,12 @@ export class AuthService {
     return null;
   }
 
-  async login(user: User): Promise<LoginResponseDto> {
+  async login(user: User, ua: string): Promise<LoginResponseDto> {
     const { _id, role } = user;
     const accessToken = await this.jwtService.genAccessToken({ _id, role });
     const refreshToken = await this.jwtService.genRefreshToken({ _id });
+    const uaResult = UAParser(ua);
+    console.log('User Agent', uaResult);
     return { accessToken, refreshToken };
   }
 }

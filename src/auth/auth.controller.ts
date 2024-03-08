@@ -29,8 +29,10 @@ export class AuthController {
       sameSite: 'strict',
       httpOnly: true,
     };
+    const ua = req.headers['user-agent'];
     const { refreshToken, accessToken } = await this.authService.login(
       req.user,
+      ua,
     );
     res.cookie('refresh_token', refreshToken, cookieOptions);
     res.cookie('access_token', accessToken, cookieOptions);
