@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { User } from 'src/user/schemas/user.schema';
@@ -7,7 +7,7 @@ import { PasswordService } from '../shared-modules/password/password.service';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
 import { UAParser } from 'ua-parser-js';
-import { IAccessTokenPayload } from 'src/shared-modules/jwt/interfaces/access-token-payload.interface';
+import { IUserAgent } from './interfaces/user-agent.interface';
 
 @Injectable()
 export class AuthService {
@@ -41,19 +41,33 @@ export class AuthService {
     const { _id, role } = user;
     const accessToken = await this.jwtService.genAccessToken({ _id, role });
     const refreshToken = await this.jwtService.genRefreshToken({ _id });
-    const uaResult = UAParser(ua);
-    console.log('User Agent', uaResult);
+
+    const userAgent: IUserAgent = UAParser(ua);
+    const browser = userAgent.browser.name + ' on ' + userAgent.os.name;
+
+    await this.userService.createSession({
+      userId: _id,
+      browser,
+      token: refreshToken,
+    });
+
     return { accessToken, refreshToken };
   }
 
-  async refreshAccessToken(
-    refreshToken: string,
-  ): Promise<{ accessToken: string; user: IAccessTokenPayload }> {
+  async refreshAccessToken(refreshToken: string): Promise<string> {
     const { _id } = await this.jwtService.verifyRefreshToken(refreshToken);
+    const isRefreshTokenValid = await this.userService.isSessionExist(
+      _id,
+      refreshToken,
+    );
+    if (!isRefreshTokenValid) {
+      throw new UnauthorizedException('Refresh token not found!');
+    }
     const user = await this.userService.findOneById(_id);
-    const accessTokenPayload = { _id: user._id, role: user.role };
-    const accessToken =
-      await this.jwtService.genAccessToken(accessTokenPayload);
-    return { accessToken, user: accessTokenPayload };
+    const accessToken = await this.jwtService.genAccessToken({
+      _id,
+      role: user.role,
+    });
+    return accessToken;
   }
 }

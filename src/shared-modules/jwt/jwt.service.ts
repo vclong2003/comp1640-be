@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService as BaseJwtService } from '@nestjs/jwt';
 import { EJwtConfigKey } from 'src/config/jwt.config';
@@ -25,10 +25,12 @@ export class JwtService {
     const token = await this.baseJwtService.signAsync(payload, tokenOptions);
     return token;
   }
-
   async verifyRefreshToken(token: string): Promise<IRefreshTokenPayload> {
     const secret = this.configService.get(EJwtConfigKey.RefreshTokenSecret);
-    const payload = await this.baseJwtService.verifyAsync(token, { secret });
+    const payload = await this.baseJwtService.verifyAsync(token, {
+      secret,
+    });
+    if (!payload) throw new UnauthorizedException('Invalid access token');
     return payload;
   }
 }

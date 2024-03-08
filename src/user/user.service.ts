@@ -63,6 +63,14 @@ export class UserService {
     return user.sessions;
   }
 
+  async isSessionExist(userId: string, token: string): Promise<boolean> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new ConflictException('User not found');
+    }
+    return user.sessions.some((session) => session.token === token);
+  }
+
   async removeSession(userId: string, sessionId: string): Promise<Session[]> {
     const user = await this.userModel.findById(userId);
     if (!user) {
