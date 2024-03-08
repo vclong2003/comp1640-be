@@ -25,4 +25,10 @@ export class JwtService {
     const token = await this.baseJwtService.signAsync(payload, tokenOptions);
     return token;
   }
+
+  async verifyRefreshToken(token: string): Promise<IRefreshTokenPayload> {
+    const secret = this.configService.get(EJwtConfigKey.RefreshTokenSecret);
+    const payload = await this.baseJwtService.verifyAsync(token, { secret });
+    return payload;
+  }
 }

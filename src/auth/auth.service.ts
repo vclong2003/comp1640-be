@@ -7,6 +7,7 @@ import { PasswordService } from '../shared-modules/password/password.service';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
 import { UAParser } from 'ua-parser-js';
+import { IAccessTokenPayload } from 'src/shared-modules/jwt/interfaces/access-token-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -43,5 +44,16 @@ export class AuthService {
     const uaResult = UAParser(ua);
     console.log('User Agent', uaResult);
     return { accessToken, refreshToken };
+  }
+
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; user: IAccessTokenPayload }> {
+    const { _id } = await this.jwtService.verifyRefreshToken(refreshToken);
+    const user = await this.userService.findOneById(_id);
+    const accessTokenPayload = { _id: user._id, role: user.role };
+    const accessToken =
+      await this.jwtService.genAccessToken(accessTokenPayload);
+    return { accessToken, user: accessTokenPayload };
   }
 }
