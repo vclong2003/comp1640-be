@@ -16,3 +16,5 @@ const configModule = BaseConfigModule.forRoot({
   exports: [configModule],
 })
 export class ConfigModule {}
+
+// VCL'S NOTES: KEYS MUST BE UNIQUE

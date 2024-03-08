@@ -1,15 +1,15 @@
 enum EMailConfigKey {
-  Host = 'host',
-  Port = 'port',
-  User = 'user',
-  Pass = 'pass',
+  SmtpHost = 'smtp-host',
+  SmtpPort = 'smtp-port',
+  SmtpUser = 'smtp-user',
+  SmtpPass = 'smtp-pass',
 }
 
 const mailConfig = () => ({
-  [EMailConfigKey.Host]: process.env.MAIL_HOST,
-  [EMailConfigKey.Port]: parseInt(process.env.MAIL_PORT),
-  [EMailConfigKey.User]: process.env.MAIL_USER,
-  [EMailConfigKey.Pass]: process.env.MAIL_PASS,
+  [EMailConfigKey.SmtpHost]: process.env.SMTP_HOST,
+  [EMailConfigKey.SmtpPort]: parseInt(process.env.SMTP_PORT),
+  [EMailConfigKey.SmtpUser]: process.env.SMTP_USER,
+  [EMailConfigKey.SmtpPass]: process.env.SMTP_PASS,
 });
 
 export { EMailConfigKey };

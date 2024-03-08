@@ -8,7 +8,7 @@ export class MailerService {
   async test() {
     try {
       await this.baseMailerService.sendMail({
-        to: 'longvcgch210092@fpt.edu.vn',
+        to: 'vclong2003@gmail.com',
         from: 'System <vclong2003@gmail.com>',
         subject: 'Testing Nest Mailermodule with template ✔',
         template: 'reset-password', // The `.pug`, `.ejs` or `.hbs` extension is appended automatically.
