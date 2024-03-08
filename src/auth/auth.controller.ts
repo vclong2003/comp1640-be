@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { NoAccessToken } from './decorators/no-access-token.decorator';
+import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +19,10 @@ export class AuthController {
     sameSite: 'strict',
     httpOnly: true,
   };
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private mailerService: MailerService,
+  ) {}
 
   @Post('guest-register')
   async guestRegister(@Body() dto: GuestRegisterDto) {
@@ -50,7 +54,7 @@ export class AuthController {
 
   @Get('')
   async test(@Request() req) {
-    console.log(req.cookies);
+    this.mailerService.test();
     return req.user;
   }
 }
