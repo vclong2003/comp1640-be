@@ -6,12 +6,14 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './auth/guards/access-token.guard';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
     ConfigModule,
     MongooseModule,
     PinoLoggerModule,
+    MailerModule,
     UserModule,
     AuthModule,
   ],
