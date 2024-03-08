@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
-export class LoginSession {
-  _id: string;
+export class Session {
+  _id?: string;
 
   @Prop()
   browser: string;
@@ -14,4 +14,4 @@ export class LoginSession {
   token: string;
 }
 
-export const LoginSessionSchema = SchemaFactory.createForClass(LoginSession);
+export const SessionSchema = SchemaFactory.createForClass(Session);

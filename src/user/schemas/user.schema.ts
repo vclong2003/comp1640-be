@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ERole } from '../eums/role.enum';
-import { LoginSession, LoginSessionSchema } from './login-session.schema';
+import { Session, SessionSchema } from './session.schema';
+import mongoose from 'mongoose';
+import { Faculty, FacultySchema } from './faculty.schema';
+import { EGender } from '../eums/gender.enum';
 
 @Schema()
 export class User {
@@ -9,20 +12,38 @@ export class User {
   @Prop({ unique: true, required: true })
   email: string;
 
-  @Prop({ required: true })
-  password: string;
-
-  @Prop({ required: true })
-  roles: ERole[];
-
-  @Prop({ type: [LoginSessionSchema] })
-  sessions: LoginSession[];
-
   @Prop()
-  name: string;
+  phone: string;
 
   @Prop()
   avatar_url: string;
+
+  @Prop({ required: true })
+  name: string;
+
+  @Prop()
+  dob: Date;
+
+  @Prop()
+  gender: EGender;
+
+  @Prop({ required: true })
+  role: ERole;
+
+  @Prop({ required: true })
+  password: string;
+
+  @Prop({ type: FacultySchema })
+  faculty?: Faculty;
+
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Event' })
+  participated_event_ids: string[];
+
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
+  submitted_contribution_ids: string[];
+
+  @Prop({ type: [SessionSchema] })
+  sessions: Session[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
