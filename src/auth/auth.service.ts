@@ -38,8 +38,8 @@ export class AuthService {
 
   async login(user: User): Promise<LoginResponseDto> {
     const { _id, role } = user;
-    const accessToken = await this.jwtService.genAccessToken({ id: _id, role });
-    const refreshToken = await this.jwtService.genRefreshToken({ id: _id });
+    const accessToken = await this.jwtService.genAccessToken({ _id, role });
+    const refreshToken = await this.jwtService.genRefreshToken({ _id });
     return { accessToken, refreshToken };
   }
 }

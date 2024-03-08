@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Request,
   Response,
@@ -9,6 +10,7 @@ import {
 import { AuthService } from './auth.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { NoAccessToken } from './decorators/no-access-token.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -19,6 +21,7 @@ export class AuthController {
     return await this.authService.guestRegister(dto);
   }
 
+  @NoAccessToken()
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req, @Response() res) {
@@ -32,5 +35,11 @@ export class AuthController {
     res.cookie('refresh_token', refreshToken, cookieOptions);
     res.cookie('access_token', accessToken, cookieOptions);
     return res.status(200).send();
+  }
+
+  @Get('')
+  async test(@Request() req) {
+    console.log(req.cookies);
+    return req.user;
   }
 }
