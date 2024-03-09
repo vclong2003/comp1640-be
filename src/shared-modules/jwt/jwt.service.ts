@@ -40,7 +40,16 @@ export class JwtService {
     const payload = await this.baseJwtService.verifyAsync(token, {
       secret,
     });
-    if (!payload) throw new UnauthorizedException('Invalid access token');
+    if (!payload) throw new UnauthorizedException('Invalid refresh token!');
+    return payload;
+  }
+
+  async verifyRegisterToken(token: string): Promise<IRegisterTokenPayload> {
+    const secret = this.configService.get(EJwtConfigKey.RegisterTokenSecret);
+    const payload = await this.baseJwtService.verifyAsync(token, {
+      secret,
+    });
+    if (!payload) throw new UnauthorizedException('Invalid register token!');
     return payload;
   }
 }

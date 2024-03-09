@@ -91,4 +91,19 @@ export class AuthService {
     });
     await this.mailerService.sendRegisterEmail(email, token);
   }
+
+  //---- missing faculty module
+  // async register(token: string) {
+  //   const { email, role, facultyId } =
+  //     await this.jwtService.verifyRegisterToken(token);
+  //   const user = await this.userService.findOneByEmail(email);
+  //   if (user) {
+  //     throw new ConflictException('User already exists!');
+  //   }
+  //   await this.userService.createUser({
+  //     email,
+  //     role,
+  //     facultyId,
+  //   });
+  // }
 }
