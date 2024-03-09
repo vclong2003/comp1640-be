@@ -19,6 +19,25 @@ export class MailerService {
       });
     } catch (error) {
       console.log(error);
+      throw new Error('Error when sending email');
+    }
+  }
+
+  async sendRegisterEmail(email: string, token: string) {
+    try {
+      await this.baseMailerService.sendMail({
+        to: email,
+        from: 'System <vclong2003@gmail.com>',
+        subject: 'Finish your registration',
+        template: 'create-account', // The `.pug`, `.ejs` or `.hbs` extension is appended automatically.
+        context: {
+          email: email,
+          registerUrl: token,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw new Error('Error when sending email');
     }
   }
 }

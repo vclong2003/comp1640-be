@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { User } from 'src/user/schemas/user.schema';
@@ -8,6 +12,8 @@ import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
 import { UAParser } from 'ua-parser-js';
 import { IUserAgent } from './interfaces/user-agent.interface';
+import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
+import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +21,7 @@ export class AuthService {
     private userService: UserService,
     private passwordService: PasswordService,
     private jwtService: JwtService,
+    private mailerService: MailerService,
   ) {}
 
   async guestRegister(dto: GuestRegisterDto): Promise<User> {
@@ -69,5 +76,19 @@ export class AuthService {
       role: user.role,
     });
     return accessToken;
+  }
+
+  async sendRegisterEmail(dto: SendRegisterEmailDto) {
+    const { email, role, facultyId } = dto;
+    const user = await this.userService.findOneByEmail(email);
+    if (user) {
+      throw new ConflictException('User already exists!');
+    }
+    const token = await this.jwtService.genRegisterToken({
+      email,
+      role,
+      facultyId,
+    });
+    await this.mailerService.sendRegisterEmail(email, token);
   }
 }

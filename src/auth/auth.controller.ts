@@ -11,7 +11,7 @@ import { AuthService } from './auth.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { NoAccessToken } from './decorators/no-access-token.decorator';
-import { MailerService } from 'src/shared-modules/mailer/mailer.service';
+import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -19,10 +19,7 @@ export class AuthController {
     sameSite: 'strict',
     httpOnly: true,
   };
-  constructor(
-    private authService: AuthService,
-    private mailerService: MailerService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
   @Post('guest-register')
   async guestRegister(@Body() dto: GuestRegisterDto) {
@@ -54,7 +51,12 @@ export class AuthController {
 
   @Get('')
   async test(@Request() req) {
-    this.mailerService.test();
     return req.user;
+  }
+
+  @Post('send-register-email')
+  async sendRegisterEmail(@Body() dto: SendRegisterEmailDto, @Response() res) {
+    await this.authService.sendRegisterEmail(dto);
+    return res.status(200).send();
   }
 }
