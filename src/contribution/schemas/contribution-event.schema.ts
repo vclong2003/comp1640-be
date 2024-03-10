@@ -1,10 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { Event } from 'src/event/schemas/event.schema';
 
 @Schema()
 export class ContributionEvent {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Event.name })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Event' })
   _id: string;
 
   @Prop()

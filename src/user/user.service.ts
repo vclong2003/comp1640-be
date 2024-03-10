@@ -4,7 +4,7 @@ import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { CreateSessionDto } from './dtos/create-session.dto';
-import { Session } from './schemas/user-session.schema';
+import { UserSession } from './schemas/user-session.schema';
 
 @Injectable()
 export class UserService {
@@ -49,7 +49,7 @@ export class UserService {
       .exec();
   }
 
-  async createSession(dto: CreateSessionDto): Promise<Session[]> {
+  async createSession(dto: CreateSessionDto): Promise<UserSession[]> {
     const { userId, browser, token } = dto;
 
     const user = await this.userModel.findById(userId);
@@ -71,7 +71,10 @@ export class UserService {
     return user.sessions.some((session) => session.token === token);
   }
 
-  async removeSession(userId: string, sessionId: string): Promise<Session[]> {
+  async removeSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<UserSession[]> {
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new ConflictException('User not found');

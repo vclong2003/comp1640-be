@@ -17,7 +17,6 @@ import {
 } from './contribution-file.schema';
 import { Comment, CommentSchema } from './contribution-comment/comment.schema';
 import mongoose from 'mongoose';
-import { User } from 'src/user/schemas/user.schema';
 
 @Schema()
 export class Contribution {
@@ -56,7 +55,7 @@ export class Contribution {
   @Prop({ type: [CommentSchema] })
   comments: Comment[];
 
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: User.name })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
   liked_user_ids: string[];
 
   @Prop()
