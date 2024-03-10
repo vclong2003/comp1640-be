@@ -1,5 +1,5 @@
 import { ERole } from '../eums/role.enum';
-import { Faculty } from '../schemas/faculty.schema';
+import { Faculty } from '../schemas/user-faculty.schema';
 
 export class CreateUserDto {
   email: string;

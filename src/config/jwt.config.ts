@@ -1,7 +1,12 @@
 enum EJwtConfigKey {
+  // access token
   AccessTokenSecret = 'accessTokenSecret',
   AccessTokenExpire = 'accessTokenExpire',
+  //refresh token
   RefreshTokenSecret = 'refreshTokenSecret',
+  //register token
+  RegisterTokenSecret = 'registerTokenSecret',
+  RegisterTokenExpire = 'registerTokenExpire',
 }
 
 const jwtConfig = async () => ({
@@ -9,6 +14,9 @@ const jwtConfig = async () => ({
   [EJwtConfigKey.AccessTokenExpire]: process.env.JWT_ACCESS_EXPIRE,
 
   [EJwtConfigKey.RefreshTokenSecret]: process.env.JWT_REFRESH_SECRET,
+
+  [EJwtConfigKey.RegisterTokenSecret]: process.env.JWT_REGISTER_SECRET,
+  [EJwtConfigKey.RegisterTokenExpire]: process.env.JWT_REGISTER_EXPIRE,
 });
 
 export { EJwtConfigKey };
