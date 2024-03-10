@@ -21,6 +21,7 @@ export class AuthController {
   };
   constructor(private authService: AuthService) {}
 
+  @NoAccessToken()
   @Post('guest-register')
   async guestRegister(@Body() dto: GuestRegisterDto) {
     return await this.authService.guestRegister(dto);

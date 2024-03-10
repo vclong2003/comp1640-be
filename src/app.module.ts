@@ -4,8 +4,6 @@ import { PinoLoggerModule } from './shared-modules/pino-logger/pino-logger.modul
 import { MongooseModule } from './shared-modules/mongoose/mongoose.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
-import { AccessTokenGuard } from './auth/guards/access-token.guard';
 import { FacultyModule } from './faculty/faculty.module';
 import { EventModule } from './event/event.module';
 import { ContributionModule } from './contribution/contribution.module';
@@ -22,10 +20,10 @@ import { ContributionModule } from './contribution/contribution.module';
     ContributionModule,
   ],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: AccessTokenGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: AccessTokenGuard,
+    // },
   ],
 })
 export class AppModule {}
