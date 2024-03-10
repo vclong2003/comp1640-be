@@ -4,7 +4,7 @@ import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { CreateSessionDto } from './dtos/create-session.dto';
-import { Session } from './schemas/session.schema';
+import { Session } from './schemas/user-session.schema';
 
 @Injectable()
 export class UserService {

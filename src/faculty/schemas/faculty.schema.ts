@@ -1,6 +1,7 @@
-import { Prop, Schema } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { User } from 'src/user/schemas/user.schema';
+import { FacultyMc, FacultyMcSchema } from './faculty-mc.schema';
 
 @Schema()
 export class Faculty {
@@ -9,8 +10,8 @@ export class Faculty {
   @Prop({ required: true })
   name: string;
 
-  @Prop()
-  mc: string;
+  @Prop({ type: FacultyMcSchema, required: false })
+  mc?: FacultyMc;
 
   @Prop()
   event_ids: string[];
@@ -21,3 +22,5 @@ export class Faculty {
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: User.name })
   student_ids: string[];
 }
+
+export const FacultySchema = SchemaFactory.createForClass(Faculty);
