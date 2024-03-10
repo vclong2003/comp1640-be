@@ -8,6 +8,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './auth/guards/access-token.guard';
 import { FacultyModule } from './faculty/faculty.module';
 import { EventModule } from './event/event.module';
+import { ContributionModule } from './contribution/contribution.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EventModule } from './event/event.module';
     AuthModule,
     FacultyModule,
     EventModule,
+    ContributionModule,
   ],
   providers: [
     {

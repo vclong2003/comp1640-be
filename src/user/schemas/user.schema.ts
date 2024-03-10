@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import { EGender } from '../eums/gender.enum';
 import { UserFaculty, UserFacultySchema } from './user-faculty.schema';
 import { UserSession, UserSessionSchema } from './user-session.schema';
+import { Event } from 'src/event/schemas/event.schema';
+import { Contribution } from 'src/contribution/schemas/contribution.schema';
 
 @Schema()
 export class User {
@@ -36,10 +38,10 @@ export class User {
   @Prop({ type: UserFacultySchema })
   faculty?: UserFaculty;
 
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Event' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Event.name })
   participated_event_ids: string[];
 
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Contribution.name })
   submitted_contribution_ids: string[];
 
   @Prop({ type: [UserSessionSchema] })

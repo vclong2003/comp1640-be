@@ -1,5 +1,7 @@
 import { Prop, Schema } from '@nestjs/mongoose';
 import { EventFaculty, EventFacultySchema } from './event-faculty';
+import mongoose from 'mongoose';
+import { Contribution } from 'src/contribution/schemas/contribution.schema';
 
 @Schema()
 export class Event {
@@ -20,9 +22,9 @@ export class Event {
   @Prop({ type: EventFacultySchema })
   faculty: EventFaculty;
 
-  @Prop()
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Contribution.name })
   contribution_ids: string[];
 
-  @Prop()
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Contribution.name })
   published_contribution_ids: string[];
 }
