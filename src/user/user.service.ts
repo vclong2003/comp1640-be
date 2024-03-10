@@ -4,11 +4,11 @@ import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { CreateSessionDto } from './dtos/create-session.dto';
-import { Session } from './schemas/session.schema';
+import { UserSession } from './schemas/user-session.schema';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(@InjectModel('User') private userModel: Model<User>) {}
 
   async findOneByEmail(email: string): Promise<User | null> {
     return await this.userModel.findOne({ email }).exec();
@@ -49,7 +49,7 @@ export class UserService {
       .exec();
   }
 
-  async createSession(dto: CreateSessionDto): Promise<Session[]> {
+  async createSession(dto: CreateSessionDto): Promise<UserSession[]> {
     const { userId, browser, token } = dto;
 
     const user = await this.userModel.findById(userId);
@@ -63,7 +63,18 @@ export class UserService {
     return user.sessions;
   }
 
-  async removeSession(userId: string, sessionId: string): Promise<Session[]> {
+  async isSessionExist(userId: string, token: string): Promise<boolean> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new ConflictException('User not found');
+    }
+    return user.sessions.some((session) => session.token === token);
+  }
+
+  async removeSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<UserSession[]> {
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new ConflictException('User not found');

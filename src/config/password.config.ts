@@ -1,5 +1,5 @@
 enum EPasswordConfigKey {
-  Rounds = 'rounds',
+  Rounds = 'pwd-rounds',
 }
 
 const passwordConfig = () => ({

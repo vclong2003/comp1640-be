@@ -2230,6 +2230,11 @@ colorette@^2.0.7:
   resolved "https://registry.yarnpkg.com/colorette/-/colorette-2.0.20.tgz#9eb793e6833067f7235902fcd3b09917a000a95a"
   integrity sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==
 
+"colors@>= 0.3.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/colors/-/colors-1.4.0.tgz#c50491479d4c1bdaed2c9ced32cf7c7dc2360f78"
+  integrity sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
+
 combined-stream@^1.0.8:
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/combined-stream/-/combined-stream-1.0.8.tgz#c3d45a8b34fd730631a110a8a2520682b31d5a7f"
@@ -4604,6 +4609,14 @@ magic-string@0.30.5:
   dependencies:
     "@jridgewell/sourcemap-codec" "^1.4.15"
 
+mailer@^0.6.7:
+  version "0.6.7"
+  resolved "https://registry.yarnpkg.com/mailer/-/mailer-0.6.7.tgz#012d69b2554864976d9d77f5326b35097653f653"
+  integrity sha512-llrQPeVVMUGq+q9mWXvJfDKBq92accMum1tDuN6Wynvs628iYjGyOpLWUkcPq2Y6zK9WJxC85nlru+8llNxl2A==
+  dependencies:
+    colors ">= 0.3.0"
+    nodemailer "0.1.20"
+
 mailparser@^3.6.4:
   version "3.6.7"
   resolved "https://registry.yarnpkg.com/mailparser/-/mailparser-3.6.7.tgz#54d03366082983e471223fe1096f09c4b2c38fb0"
@@ -4725,6 +4738,11 @@ mime@2.6.0, mime@^2.4.6:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/mime/-/mime-2.6.0.tgz#a2a682a95cd4d0cb1d6257e28f83da7e35800367"
   integrity sha512-USPkMeET31rOMiarsBNIHZKLGgvKc/LrjofAnBlOttf5ajRvqiRA8QsenbcooctK6d6Ts6aqZXBA+XbkKthiQg==
+
+mimelib-noiconv@*:
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/mimelib-noiconv/-/mimelib-noiconv-0.1.9.tgz#eadce6f9ce226842501a203e95bcee96af8189f2"
+  integrity sha512-r5jXJR1Zq5SWX/LQDeC474Vvbq8tAWwaK1798wzfZGlmqoCH/cU5cDiYb1IMSYKPzC2hsTNIpqylW9R7DmDvQA==
 
 mimic-fn@^2.1.0:
   version "2.1.0"
@@ -5291,6 +5309,13 @@ node-releases@^2.0.14:
   version "2.0.14"
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.14.tgz#2ffb053bceb8b2be8495ece1ab6ce600c4461b0b"
   integrity sha512-y10wOWt8yZpqXmOgRo77WaHEmhYQYGNA6y421PKsKYWEK8aW+cqAphborZDhqfyKrbZEN92CN1X2KbafY2s7Yw==
+
+nodemailer@0.1.20:
+  version "0.1.20"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-0.1.20.tgz#a91748a448eddf35fe24d7272c8187ddcc38e253"
+  integrity sha512-0p+nadmJiD2SpYsxsAdj26QYMZKTxAHC6h4zyl9sKD5QHsyby9AdqxYvP5F++rUkc4x1goAyeOi6Xl05k6eekw==
+  dependencies:
+    mimelib-noiconv "*"
 
 nodemailer@6.9.9:
   version "6.9.9"

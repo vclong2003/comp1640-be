@@ -1,9 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ERole } from '../eums/role.enum';
-import { Session, SessionSchema } from './session.schema';
 import mongoose from 'mongoose';
-import { Faculty, FacultySchema } from './faculty.schema';
 import { EGender } from '../eums/gender.enum';
+import { UserFaculty, UserFacultySchema } from './user-faculty.schema';
+import { UserSession, UserSessionSchema } from './user-session.schema';
+import { Event } from 'src/event/schemas/event.schema';
+import { Contribution } from 'src/contribution/schemas/contribution.schema';
 
 @Schema()
 export class User {
@@ -33,17 +35,17 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ type: FacultySchema })
-  faculty?: Faculty;
+  @Prop({ type: UserFacultySchema })
+  faculty?: UserFaculty;
 
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Event' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Event.name })
   participated_event_ids: string[];
 
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Contribution.name })
   submitted_contribution_ids: string[];
 
-  @Prop({ type: [SessionSchema] })
-  sessions: Session[];
+  @Prop({ type: [UserSessionSchema] })
+  sessions: UserSession[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
