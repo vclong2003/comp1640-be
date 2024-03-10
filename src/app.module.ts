@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './auth/guards/access-token.guard';
 import { FacultyModule } from './faculty/faculty.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { FacultyModule } from './faculty/faculty.module';
     UserModule,
     AuthModule,
     FacultyModule,
+    EventModule,
   ],
   providers: [
     {
