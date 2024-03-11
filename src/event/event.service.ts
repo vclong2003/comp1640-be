@@ -30,7 +30,6 @@ export class EventService {
     if (!faculty) {
       throw new BadRequestException('Faculty not found');
     }
-
     // check if event already exists
     const currentEvent = await this.eventModel
       .findOne({

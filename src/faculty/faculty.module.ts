@@ -15,3 +15,4 @@ import { UserModule } from 'src/user/user.module';
   exports: [FacultyService],
 })
 export class FacultyModule {}
+// init
