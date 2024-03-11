@@ -13,7 +13,9 @@ export class FacultyService {
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     private userService: UserService,
   ) {}
-
+  async findById(id: string): Promise<Faculty> {
+    return this.facultyModel.findById(id).exec();
+  }
   async getAllFaculty(): Promise<Faculty[]> {
     return this.facultyModel.find().select('_id name mc').exec();
   }
