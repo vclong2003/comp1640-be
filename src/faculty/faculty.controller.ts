@@ -7,14 +7,20 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 export class FacultyController {
   constructor(private facultyService: FacultyService) {}
 
-  @Post('')
-  async createFaculty(@Body() dto: CreateFacultyDto) {
-    return this.facultyService.createFaculty(dto);
-  }
-
   @Get('all')
   async getAllFaculty() {
     return this.facultyService.getAllFaculty();
+  }
+
+  @Get(':facultyId/students')
+  async getStudents(@Param('facultyId') facultyId: string) {
+    return this.facultyService.findAllStudentByFaculty(facultyId);
+  }
+
+  @Roles(['admin'])
+  @Post('')
+  async createFaculty(@Body() dto: CreateFacultyDto) {
+    return this.facultyService.createFaculty(dto);
   }
 
   @Roles(['admin'])
@@ -26,8 +32,10 @@ export class FacultyController {
     return this.facultyService.addStudentToFaculty(facultyId, studentId);
   }
 
-  @Get(':facultyId/students')
-  async getStudents(@Param('facultyId') facultyId: string) {
-    return this.facultyService.findAllStudentByFaculty(facultyId);
+  @Roles(['admin'])
+  @Post(':facultyId/mc')
+  async setFacultyMc(@Param('facultyId') facultyId: string, @Body() data) {
+    const { mcId } = data;
+    return this.facultyService.setFacultyMc(facultyId, mcId);
   }
 }
