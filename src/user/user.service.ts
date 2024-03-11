@@ -27,14 +27,15 @@ export class UserService {
 
   async createUser(dto: CreateUserDto): Promise<User> {
     const { email } = dto;
-
+    // check if user exists
     const currentUser = await this.findOneByEmail(email);
     if (currentUser) {
       throw new ConflictException('User with this email already exists');
     }
-
+    // create new user
     const user = new this.userModel({ ...dto });
-    return user.save();
+    await user.save();
+    return user;
   }
 
   async updateUser(_id: string, update: Partial<User>): Promise<User> {
@@ -51,15 +52,14 @@ export class UserService {
 
   async createSession(dto: CreateSessionDto): Promise<UserSession[]> {
     const { userId, browser, token } = dto;
-
+    // find user
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new ConflictException('User not found');
     }
-
+    // add new session
     user.sessions.push({ browser, token, date: new Date() });
     await user.save();
-
     return user.sessions;
   }
 
