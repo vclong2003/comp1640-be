@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { FacultyService } from './faculty.service';
 import { CreateFacultyDto } from './dtos/create-faculty.dto';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @Controller('faculty')
 export class FacultyController {
@@ -16,6 +17,7 @@ export class FacultyController {
     return this.facultyService.getAllFaculty();
   }
 
+  @Roles(['admin'])
   @Post(':facultyId/student')
   async addStudent(@Param('facultyId') facultyId: string, @Body() data) {
     const { studentId } = data;

@@ -77,9 +77,15 @@ export class FacultyService {
     if (!student || student.role != ERole.Student) {
       throw new BadRequestException('Invalid student');
     }
+    if (student.faculty) {
+      throw new BadRequestException('Student already belongs to a faculty');
+    }
     // add student to faculty
     faculty.student_ids.push(studentId);
     await faculty.save();
+    await this.userService.updateUser(studentId, {
+      faculty: { _id: faculty._id, name: faculty.name },
+    });
     return faculty;
   }
 
