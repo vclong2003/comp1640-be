@@ -1,4 +1,4 @@
-import { ERole } from 'src/user/eums/role.enum';
+import { ERole } from 'src/user/enums/role.enum';
 
 export interface IRegisterTokenPayload {
   email: string;

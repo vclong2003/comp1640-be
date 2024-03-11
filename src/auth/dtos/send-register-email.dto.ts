@@ -1,5 +1,5 @@
 import { IsEmail, IsOptional, IsString } from 'class-validator';
-import { ERole } from 'src/user/eums/role.enum';
+import { ERole } from 'src/user/enums/role.enum';
 
 export class SendRegisterEmailDto {
   @IsEmail()
