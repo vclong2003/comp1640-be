@@ -5,6 +5,7 @@ import { Faculty } from './schemas/faculty.schema';
 import { CreateFacultyDto } from './dtos/create-faculty.dto';
 import { UserService } from 'src/user/user.service';
 import { ERole } from 'src/user/enums/role.enum';
+import { User } from 'src/user/schemas/user.schema';
 
 @Injectable()
 export class FacultyService {
@@ -19,9 +20,12 @@ export class FacultyService {
 
   async createFaculty(dto: CreateFacultyDto): Promise<Faculty> {
     const { name, mcId } = dto;
-    const mcUser = await this.userService.findOneById(mcId);
-    if (!mcUser || mcUser.role != ERole.MarketingCoordinator) {
-      throw new BadRequestException('Invalid mc');
+    let mcUser: User | null = null;
+    if (mcId) {
+      mcUser = await this.userService.findOneById(mcId);
+      if (!mcUser || mcUser.role != ERole.MarketingCoordinator) {
+        throw new BadRequestException('Invalid mc');
+      }
     }
     const currentFaculty = await this.facultyModel
       .findOne({
@@ -35,7 +39,7 @@ export class FacultyService {
     }
     const newFaculty = new this.facultyModel({
       name,
-      mc: { _id: mcUser._id, name: mcUser.name, email: mcUser.email },
+      mc: mcUser && { _id: mcUser._id, name: mcUser.name, email: mcUser.email },
     });
     await newFaculty.save();
     return newFaculty;
