@@ -1,4 +1,4 @@
-import { ERole } from '../eums/role.enum';
+import { ERole } from '../enums/role.enum';
 import { UserFaculty } from '../schemas/user-faculty.schema';
 
 export class CreateUserDto {
