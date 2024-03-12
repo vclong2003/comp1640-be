@@ -2,10 +2,12 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService as BaseJwtService } from '@nestjs/jwt';
 import { EJwtConfigKey } from 'src/config/jwt.config';
-import { IRefreshTokenPayload } from './interfaces/refresh-token-payload.interface';
-import { IAccessTokenPayload } from './interfaces/access-token-payload.interface';
-import { IRegisterTokenPayload } from './interfaces/register-token-payload.interface';
-import { IResetPasswordTokenPayload } from './interfaces/reset-password-token-payload.interface';
+import {
+  IAccessTokenPayload,
+  IRefreshTokenPayload,
+  IRegisterTokenPayload,
+  IResetPasswordTokenPayload,
+} from './jwt.interface';
 
 @Injectable()
 export class JwtService {

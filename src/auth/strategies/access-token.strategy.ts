@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { Strategy } from 'passport-jwt';
 import { EJwtConfigKey } from 'src/config/jwt.config';
-import { IAccessTokenPayload } from 'src/shared-modules/jwt/interfaces/access-token-payload.interface';
+import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interface';
 
 export const STRATEGY_NAME = 'access-token';
 
