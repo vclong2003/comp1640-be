@@ -10,10 +10,13 @@ import {
 import { EventService } from './event.service';
 import { CreateEventDTO } from './dtos/create-event.dto'; // Import the missing CreateEventDto
 import { UpdateEventDTO } from './dtos/update-event.dto';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { ERole } from 'src/user/enums/role.enum';
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
+  @Roles([ERole.Admin, ERole.MarketingCoordinator])
   @Post()
   create(@Body() createEventDto: CreateEventDTO) {
     return this.eventService.createEvent(createEventDto);

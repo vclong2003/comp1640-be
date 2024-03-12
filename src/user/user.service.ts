@@ -18,21 +18,19 @@ export class UserService {
     return this.userModel.findOne({ _id }).exec();
   }
 
-  async findUsersByUsername(username: string): Promise<User[] | null> {
+  async findUsersByUsername(name: string): Promise<User[] | null> {
     return this.userModel
-      .find({ username: { $regex: username } }) // find all users with username that contains the given string
+      .find({ name: { $regex: name } })
       .select(['_id', 'username', 'info.avatar_url'])
       .exec();
   }
 
   async createUser(dto: CreateUserDto): Promise<User> {
     const { email } = dto;
-    // check if user exists
     const currentUser = await this.findOneByEmail(email);
     if (currentUser) {
       throw new ConflictException('User with this email already exists');
     }
-    // create new user
     const user = new this.userModel({ ...dto });
     await user.save();
     return user;
@@ -52,12 +50,10 @@ export class UserService {
 
   async createSession(dto: CreateSessionDto): Promise<UserSession[]> {
     const { userId, browser, token } = dto;
-    // find user
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new ConflictException('User not found');
     }
-    // add new session
     user.sessions.push({ browser, token, date: new Date() });
     await user.save();
     return user.sessions;
@@ -79,12 +75,10 @@ export class UserService {
     if (!user) {
       throw new ConflictException('User not found');
     }
-
     user.sessions = user.sessions.filter(
       (session) => session._id.toString() !== sessionId,
     );
     await user.save();
-
     return user.sessions;
   }
 }
