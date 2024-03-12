@@ -10,10 +10,10 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 import { NoAccessToken } from './decorators/no-access-token.decorator';
 import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
 import { ApiBody } from '@nestjs/swagger';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
