@@ -15,6 +15,7 @@ import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
 import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { SetupAccountDto } from './dtos/setup-account.dto';
+import { SendResetPasswordEmailDto } from './dtos/send-reset-password-email.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -66,6 +67,16 @@ export class AuthController {
   @Get('')
   async test(@Request() req) {
     return req.user;
+  }
+
+  @Post('send-reset-password-email')
+  async sendResetPasswordEmail(
+    @Body() dto: SendResetPasswordEmailDto,
+    @Response() res,
+  ) {
+    const { email } = dto;
+    await this.authService.sendResetPasswordEmail(email);
+    return res.status(200).send();
   }
 
   @Post('send-register-email')

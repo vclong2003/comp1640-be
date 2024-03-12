@@ -97,6 +97,17 @@ export class AuthService {
     await this.mailerService.sendRegisterEmail(email, token);
   }
 
+  async sendResetPasswordEmail(email: string) {
+    const user = await this.userService.findOneByEmail(email);
+    if (!user) {
+      throw new BadRequestException('User not found!');
+    }
+    const token = await this.jwtService.genResetPasswordToken({
+      userId: user._id,
+    });
+    await this.mailerService.sendResetPasswordEmail(email, user.name, token);
+  }
+
   async setupAccount(dto: SetupAccountDto) {
     const { token, name, password, dob, phone } = dto;
     const { email, role, facultyId } =

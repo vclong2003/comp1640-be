@@ -40,4 +40,22 @@ export class MailerService {
       throw new Error('Error when sending email');
     }
   }
+
+  async sendResetPasswordEmail(email: string, name: string, token: string) {
+    try {
+      await this.baseMailerService.sendMail({
+        to: email,
+        from: 'System <vclong2003@gmail.com>',
+        subject: 'Reset your password',
+        template: 'reset-password', // The `.pug`, `.ejs` or `.hbs` extension is appended automatically.
+        context: {
+          name: name,
+          resetPasswordUrl: token,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw new Error('Error when sending email');
+    }
+  }
 }
