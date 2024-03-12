@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -58,7 +57,6 @@ export class AuthController {
   @NoAccessToken()
   async getAccessToken(@Request() req, @Response() res) {
     const refreshToken = req.cookies['refresh_token'];
-    if (!refreshToken) throw new BadRequestException('No refresh token');
     const accessToken = await this.authService.refreshAccessToken(refreshToken);
     res.cookie('access_token', accessToken, this.cookieOptions);
     return res.status(200).send();

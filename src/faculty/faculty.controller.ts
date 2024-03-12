@@ -10,12 +10,12 @@ export class FacultyController {
 
   @Get('all')
   async getAllFaculty() {
-    return this.facultyService.getAllFaculty();
+    return this.facultyService.findAll();
   }
 
   @Get(':facultyId/students')
   async getStudents(@Param('facultyId') facultyId: string) {
-    return this.facultyService.findAllStudentByFaculty(facultyId);
+    return this.facultyService.findAllStudent(facultyId);
   }
 
   @Post('')
@@ -30,7 +30,7 @@ export class FacultyController {
     const { studentId } = data;
     console.log('facultyId', facultyId);
     console.log('studentId', studentId);
-    return this.facultyService.addStudentToFaculty(facultyId, studentId);
+    return this.facultyService.addStudent(facultyId, studentId);
   }
 
   @Post(':facultyId/mc')

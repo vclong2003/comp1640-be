@@ -20,11 +20,11 @@ export class FacultyService {
     private userService: UserService,
   ) {}
 
-  async findById(id: string): Promise<Faculty> {
+  async findOneById(id: string): Promise<Faculty> {
     return this.facultyModel.findById(id).exec();
   }
 
-  async getAllFaculty(): Promise<Faculty[]> {
+  async findAll(): Promise<Faculty[]> {
     return this.facultyModel.find().select('_id name mc').exec();
   }
 
@@ -69,7 +69,7 @@ export class FacultyService {
     return faculty;
   }
 
-  async addStudentToFaculty(facultyId: string, studentId: string) {
+  async addStudent(facultyId: string, studentId: string) {
     const faculty = await this.facultyModel.findById(facultyId).exec();
     if (!faculty) {
       throw new BadRequestException('Faculty not found');
@@ -93,7 +93,7 @@ export class FacultyService {
     return faculty;
   }
 
-  async removeStudentFromFaculty(facultyId: string, studentId: string) {
+  async removeStudent(facultyId: string, studentId: string) {
     const faculty = await this.facultyModel.findById(facultyId).exec();
     if (!faculty) {
       throw new BadRequestException('Faculty not found');
@@ -108,7 +108,7 @@ export class FacultyService {
     return faculty;
   }
 
-  async findAllStudentByFaculty(facultyId: string) {
+  async findAllStudent(facultyId: string) {
     const faculty = await this.facultyModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(facultyId) } },
       {

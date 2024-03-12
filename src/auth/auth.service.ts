@@ -67,13 +67,13 @@ export class AuthService {
   }
 
   async refreshAccessToken(refreshToken: string): Promise<string> {
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token is required!');
+    }
     const { _id } = await this.jwtService.verifyRefreshToken(refreshToken);
-    const isRefreshTokenValid = await this.userService.isSessionExist(
-      _id,
-      refreshToken,
-    );
-    if (!isRefreshTokenValid) {
-      throw new UnauthorizedException('Refresh token not found!');
+    const session = await this.userService.findSession(_id, refreshToken);
+    if (!session) {
+      throw new UnauthorizedException('Refresh token not stored!');
     }
     const user = await this.userService.findOneById(_id);
     const accessToken = await this.jwtService.genAccessToken({
@@ -125,7 +125,7 @@ export class AuthService {
 
     let faculty: Faculty;
     if (facultyId) {
-      faculty = await this.facultyService.findById(facultyId);
+      faculty = await this.facultyService.findOneById(facultyId);
       if (!faculty) throw new BadRequestException('Faculty not found!');
     }
 

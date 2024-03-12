@@ -24,7 +24,7 @@ export class EventController {
 
   @Get()
   findAll() {
-    return this.eventService.getAllEvent();
+    return this.eventService.findAll();
   }
 
   @Put(':id')

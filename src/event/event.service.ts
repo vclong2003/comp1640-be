@@ -13,7 +13,7 @@ export class EventService {
     private facultyService: FacultyService,
   ) {}
 
-  async getAllEvent(): Promise<Event[]> {
+  async findAll(): Promise<Event[]> {
     return this.eventModel.find().exec();
   }
 
@@ -25,7 +25,7 @@ export class EventService {
       final_closure_date,
       facultyId,
     } = createEventDto;
-    const faculty = await this.facultyService.findById(facultyId);
+    const faculty = await this.facultyService.findOneById(facultyId);
     if (!faculty) {
       throw new BadRequestException('Faculty not found');
     }

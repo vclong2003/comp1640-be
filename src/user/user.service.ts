@@ -46,7 +46,7 @@ export class UserService {
       .exec();
   }
 
-  async findMcByName(name: string): Promise<User[] | null> {
+  async findMcsByName(name: string): Promise<User[] | null> {
     return this.userModel
       .find({ name: { $regex: name }, role: ERole.MarketingCoordinator })
       .select(['_id', 'username', 'info.avatar_url'])
@@ -107,12 +107,15 @@ export class UserService {
     return user.sessions;
   }
 
-  async isSessionExist(userId: string, token: string): Promise<boolean> {
+  async findSession(
+    userId: string,
+    token: string,
+  ): Promise<UserSession | null> {
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new ConflictException('User not found');
     }
-    return user.sessions.some((session) => session.token === token);
+    return user.sessions.find((session) => session.token === token) || null;
   }
 
   async removeSession(
