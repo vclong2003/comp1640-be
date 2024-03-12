@@ -5,6 +5,7 @@ import { EApiConfigKey } from './config/api.config';
 import { Logger } from 'nestjs-pino';
 import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -12,6 +13,7 @@ async function bootstrap() {
   app.enableCors();
   app.useLogger(app.get(Logger));
   app.use(cookieParser());
+  app.useGlobalPipes(new ValidationPipe());
 
   const configService = app.get<ConfigService>(ConfigService);
   const port = configService.get(EApiConfigKey.Port);

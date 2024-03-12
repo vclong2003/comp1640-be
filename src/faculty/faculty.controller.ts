@@ -18,14 +18,14 @@ export class FacultyController {
     return this.facultyService.findAllStudentByFaculty(facultyId);
   }
 
-  @Roles([ERole.Admin])
   @Post('')
+  @Roles([ERole.Admin])
   async createFaculty(@Body() dto: CreateFacultyDto) {
     return this.facultyService.createFaculty(dto);
   }
 
-  @Roles([ERole.Admin])
   @Post(':facultyId/student')
+  @Roles([ERole.Admin])
   async addStudent(@Param('facultyId') facultyId: string, @Body() data) {
     const { studentId } = data;
     console.log('facultyId', facultyId);
@@ -33,8 +33,8 @@ export class FacultyController {
     return this.facultyService.addStudentToFaculty(facultyId, studentId);
   }
 
-  @Roles([ERole.Admin])
   @Post(':facultyId/mc')
+  @Roles([ERole.Admin])
   async setFacultyMc(@Param('facultyId') facultyId: string, @Body() data) {
     const { mcId } = data;
     return this.facultyService.setFacultyMc(facultyId, mcId);

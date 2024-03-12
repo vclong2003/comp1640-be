@@ -16,8 +16,8 @@ import { ERole } from 'src/user/enums/role.enum';
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
-  @Roles([ERole.Admin, ERole.MarketingCoordinator])
   @Post()
+  @Roles([ERole.Admin, ERole.MarketingCoordinator])
   create(@Body() createEventDto: CreateEventDTO) {
     return this.eventService.createEvent(createEventDto);
   }
@@ -28,11 +28,13 @@ export class EventController {
   }
 
   @Put(':id')
+  @Roles([ERole.Admin, ERole.MarketingCoordinator])
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDTO) {
-    return this.eventService.updateEvent(id, updateEventDto); // Fix the method call
+    return this.eventService.updateEvent(id, updateEventDto);
   }
 
   @Delete(':id')
+  @Roles([ERole.Admin, ERole.MarketingCoordinator])
   remove(@Param('id') id: string) {
     return this.eventService.removeEvent(id);
   }

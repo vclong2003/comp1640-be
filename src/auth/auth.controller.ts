@@ -25,12 +25,13 @@ export class AuthController {
   };
   constructor(private authService: AuthService) {}
 
-  @NoAccessToken()
   @Post('guest-register')
+  @NoAccessToken()
   async guestRegister(@Body() dto: GuestRegisterDto) {
     return await this.authService.guestRegister(dto);
   }
 
+  @Post('login')
   @ApiBody({
     schema: {
       type: 'object',
@@ -40,7 +41,6 @@ export class AuthController {
       },
     },
   })
-  @Post('login')
   @NoAccessToken()
   @UseGuards(LocalAuthGuard)
   async login(@Request() req, @Response() res) {
@@ -54,8 +54,8 @@ export class AuthController {
     return res.status(200).send();
   }
 
-  @NoAccessToken()
   @Get('access-token')
+  @NoAccessToken()
   async getAccessToken(@Request() req, @Response() res) {
     const refreshToken = req.cookies['refresh_token'];
     if (!refreshToken) throw new BadRequestException('No refresh token');
@@ -85,8 +85,8 @@ export class AuthController {
     return res.status(200).send();
   }
 
-  @NoAccessToken()
   @Post('setup-account')
+  @NoAccessToken()
   async setupAccount(@Body() dto: SetupAccountDto) {
     return await this.authService.setupAccount(dto);
   }
