@@ -14,6 +14,7 @@ import { UserSession } from './schemas/user-session.schema';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { FacultyService } from 'src/faculty/faculty.service';
 import { UserFaculty } from './schemas/user-faculty.schema';
+import { ERole } from './enums/role.enum';
 
 @Injectable()
 export class UserService {
@@ -31,9 +32,23 @@ export class UserService {
     return this.userModel.findOne({ _id }).exec();
   }
 
-  async findUsersByUsername(name: string): Promise<User[] | null> {
+  async findUsersByName(name: string): Promise<User[] | null> {
     return this.userModel
       .find({ name: { $regex: name } })
+      .select(['_id', 'username', 'info.avatar_url'])
+      .exec();
+  }
+
+  async findStudentsByName(name: string): Promise<User[] | null> {
+    return this.userModel
+      .find({ name: { $regex: name }, role: ERole.Student })
+      .select(['_id', 'username', 'info.avatar_url'])
+      .exec();
+  }
+
+  async findMcByName(name: string): Promise<User[] | null> {
+    return this.userModel
+      .find({ name: { $regex: name }, role: ERole.MarketingCoordinator })
       .select(['_id', 'username', 'info.avatar_url'])
       .exec();
   }

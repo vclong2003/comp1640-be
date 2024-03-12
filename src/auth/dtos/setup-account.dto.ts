@@ -1,14 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsOptional, IsString } from 'class-validator';
 
-export class GuestRegisterDto {
-  @ApiProperty()
-  @IsEmail()
-  email: string;
-
+export class SetupAccountDto {
   @ApiProperty()
   @IsString()
-  name: string;
+  token: string;
 
   @ApiProperty()
   @IsString()
@@ -16,15 +12,15 @@ export class GuestRegisterDto {
 
   @ApiProperty()
   @IsString()
-  facultyId: string;
+  name: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  phone: string;
+  phone?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsDate()
-  dob: Date;
+  dob?: Date;
 }

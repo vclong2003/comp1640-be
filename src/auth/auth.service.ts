@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -14,6 +15,9 @@ import { UAParser } from 'ua-parser-js';
 import { IUserAgent } from './interfaces/user-agent.interface';
 import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
 import { MailerService } from 'src/shared-modules/mailer/mailer.service';
+import { FacultyService } from 'src/faculty/faculty.service';
+import { SetupAccountDto } from './dtos/setup-account.dto';
+import { Faculty } from 'src/faculty/schemas/faculty.schema';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +26,7 @@ export class AuthService {
     private passwordService: PasswordService,
     private jwtService: JwtService,
     private mailerService: MailerService,
+    private facultyService: FacultyService,
   ) {}
 
   async guestRegister(dto: GuestRegisterDto): Promise<User> {
@@ -92,18 +97,35 @@ export class AuthService {
     await this.mailerService.sendRegisterEmail(email, token);
   }
 
-  //---- missing faculty module
-  // async register(token: string) {
-  //   const { email, role, facultyId } =
-  //     await this.jwtService.verifyRegisterToken(token);
-  //   const user = await this.userService.findOneByEmail(email);
-  //   if (user) {
-  //     throw new ConflictException('User already exists!');
-  //   }
-  //   await this.userService.createUser({
-  //     email,
-  //     role,
-  //     facultyId,
-  //   });
-  // }
+  async setupAccount(dto: SetupAccountDto) {
+    const { token, name, password, dob, phone } = dto;
+    const { email, role, facultyId } =
+      await this.jwtService.verifyRegisterToken(token);
+
+    const user = await this.userService.findOneByEmail(email);
+    if (user) {
+      throw new BadRequestException('User already exists!');
+    }
+
+    // facultyId is required for student and marketing coordinator
+    if (role !== ERole.Student && role !== ERole.MarketingCoordinator) {
+      if (facultyId) throw new BadRequestException('Faculty is not required');
+    }
+
+    let faculty: Faculty;
+    if (facultyId) {
+      faculty = await this.facultyService.findById(facultyId);
+      if (!faculty) throw new BadRequestException('Faculty not found!');
+    }
+
+    await this.userService.createUser({
+      email,
+      role,
+      name,
+      dob,
+      phone,
+      password: await this.passwordService.hashPassword(password),
+      faculty: faculty && { _id: faculty._id, name: faculty.name },
+    });
+  }
 }

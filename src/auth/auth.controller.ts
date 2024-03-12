@@ -14,6 +14,7 @@ import { NoAccessToken } from './decorators/no-access-token.decorator';
 import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
 import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { SetupAccountDto } from './dtos/setup-account.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -71,5 +72,11 @@ export class AuthController {
   async sendRegisterEmail(@Body() dto: SendRegisterEmailDto, @Response() res) {
     await this.authService.sendRegisterEmail(dto);
     return res.status(200).send();
+  }
+
+  @NoAccessToken()
+  @Post('setup-account')
+  async setupAccount(@Body() dto: SetupAccountDto) {
+    return await this.authService.setupAccount(dto);
   }
 }

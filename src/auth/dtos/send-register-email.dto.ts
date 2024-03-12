@@ -14,5 +14,5 @@ export class SendRegisterEmailDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  facultyId: string;
+  facultyId?: string;
 }

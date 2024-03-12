@@ -7,9 +7,10 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtModule } from 'src/shared-modules/jwt/jwt.module';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { MailerModule } from 'src/shared-modules/mailer/mailer.module';
+import { FacultyModule } from 'src/faculty/faculty.module';
 
 @Module({
-  imports: [UserModule, PasswordModule, JwtModule, MailerModule],
+  imports: [UserModule, PasswordModule, JwtModule, MailerModule, FacultyModule],
   providers: [AuthService, LocalStrategy, AccessTokenStrategy],
   controllers: [AuthController],
   exports: [AuthService],
