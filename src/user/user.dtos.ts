@@ -1,7 +1,6 @@
 import { IsDate, IsOptional, IsString } from 'class-validator';
-import { EGender } from './enums/gender.enum';
-import { ERole } from './enums/role.enum';
 import { UserFaculty } from './schemas/user-faculty.schema';
+import { EGender, ERole } from './user.enums';
 
 export class CreateUserDto {
   email: string;

@@ -1,11 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ERole } from '../enums/role.enum';
 import mongoose from 'mongoose';
-import { EGender } from '../enums/gender.enum';
 import { UserFaculty, UserFacultySchema } from './user-faculty.schema';
 import { UserSession, UserSessionSchema } from './user-session.schema';
 import { Event } from 'src/event/schemas/event.schema';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
+import { EGender, ERole } from '../user.enums';
 
 @Schema()
 export class User {

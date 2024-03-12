@@ -7,10 +7,10 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Faculty } from './schemas/faculty.schema';
-import { CreateFacultyDto } from './dtos/create-faculty.dto';
 import { UserService } from 'src/user/user.service';
-import { ERole } from 'src/user/enums/role.enum';
 import { User } from 'src/user/schemas/user.schema';
+import { CreateFacultyDto } from './faculty.dtos';
+import { ERole } from 'src/user/user.enums';
 
 @Injectable()
 export class FacultyService {

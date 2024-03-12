@@ -12,8 +12,8 @@ import { UserSession } from './schemas/user-session.schema';
 
 import { FacultyService } from 'src/faculty/faculty.service';
 import { UserFaculty } from './schemas/user-faculty.schema';
-import { ERole } from './enums/role.enum';
-import { CreateSessionDto, CreateUserDto, UpdateUserDto } from './user.dto';
+import { CreateSessionDto, CreateUserDto, UpdateUserDto } from './user.dtos';
+import { ERole } from './user.enums';
 
 @Injectable()
 export class UserService {

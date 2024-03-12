@@ -7,7 +7,7 @@ import {
   IRefreshTokenPayload,
   IRegisterTokenPayload,
   IResetPasswordTokenPayload,
-} from './jwt.interface';
+} from './jwt.interfaces';
 
 @Injectable()
 export class JwtService {

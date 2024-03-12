@@ -5,3 +5,9 @@ export enum ERole {
   MarketingCoordinator = 'mc',
   Admin = 'admin',
 }
+
+export enum EGender {
+  Male = 'male',
+  Female = 'female',
+  Other = 'other',
+}

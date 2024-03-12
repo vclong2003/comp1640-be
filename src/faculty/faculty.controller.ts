@@ -1,8 +1,8 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { FacultyService } from './faculty.service';
-import { CreateFacultyDto } from './dtos/create-faculty.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { ERole } from 'src/user/enums/role.enum';
+import { CreateFacultyDto } from './faculty.dtos';
+import { ERole } from 'src/user/user.enums';
 
 @Controller('faculty')
 export class FacultyController {

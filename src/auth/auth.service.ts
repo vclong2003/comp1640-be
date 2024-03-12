@@ -7,7 +7,6 @@ import {
 import { UserService } from 'src/user/user.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { User } from 'src/user/schemas/user.schema';
-import { ERole } from 'src/user/enums/role.enum';
 import { PasswordService } from '../shared-modules/password/password.service';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
@@ -18,6 +17,7 @@ import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 import { FacultyService } from 'src/faculty/faculty.service';
 import { SetupAccountDto } from './dtos/setup-account.dto';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
+import { ERole } from 'src/user/user.enums';
 
 @Injectable()
 export class AuthService {

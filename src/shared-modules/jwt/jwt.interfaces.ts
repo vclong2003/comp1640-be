@@ -1,4 +1,4 @@
-import { ERole } from 'src/user/enums/role.enum';
+import { ERole } from 'src/user/user.enums';
 
 export interface IRefreshTokenPayload {
   _id: string;

@@ -2,9 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event } from './schemas/event.schema';
-import { CreateEventDTO } from './dtos/create-event.dto';
-import { UpdateEventDTO } from './dtos/update-event.dto';
 import { FacultyService } from 'src/faculty/faculty.service';
+import { CreateEventDTO, UpdateEventDTO } from './event.dtos';
 
 @Injectable()
 export class EventService {

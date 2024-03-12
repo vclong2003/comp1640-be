@@ -8,10 +8,9 @@ import {
   Delete,
 } from '@nestjs/common';
 import { EventService } from './event.service';
-import { CreateEventDTO } from './dtos/create-event.dto'; // Import the missing CreateEventDto
-import { UpdateEventDTO } from './dtos/update-event.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { ERole } from 'src/user/enums/role.enum';
+import { ERole } from 'src/user/user.enums';
+import { CreateEventDTO, UpdateEventDTO } from './event.dtos';
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
