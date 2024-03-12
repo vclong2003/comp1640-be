@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { EApiConfigKey } from './config/api.config';
 import { Logger } from 'nestjs-pino';
 import * as cookieParser from 'cookie-parser';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -13,12 +14,14 @@ async function bootstrap() {
   app.use(cookieParser());
 
   const configService = app.get<ConfigService>(ConfigService);
-
   const port = configService.get(EApiConfigKey.Port);
+
+  // Swagger
+  const config = new DocumentBuilder().setTitle('VCL API').build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
 
   await app.listen(port);
   console.log('Server is running on port: ', port, `\n`);
 }
 bootstrap();
-
-//test dev

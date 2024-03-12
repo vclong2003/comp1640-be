@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -12,6 +13,7 @@ import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { NoAccessToken } from './decorators/no-access-token.decorator';
 import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -27,9 +29,18 @@ export class AuthController {
     return await this.authService.guestRegister(dto);
   }
 
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', default: 'vclong2003@gmail.com' },
+        password: { type: 'string', default: '12345678' },
+      },
+    },
+  })
+  @Post('login')
   @NoAccessToken()
   @UseGuards(LocalAuthGuard)
-  @Post('login')
   async login(@Request() req, @Response() res) {
     const ua = req.headers['user-agent'];
     const { refreshToken, accessToken } = await this.authService.login(
@@ -45,6 +56,7 @@ export class AuthController {
   @Get('access-token')
   async getAccessToken(@Request() req, @Response() res) {
     const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) throw new BadRequestException('No refresh token');
     const accessToken = await this.authService.refreshAccessToken(refreshToken);
     res.cookie('access_token', accessToken, this.cookieOptions);
     return res.status(200).send();

@@ -12,10 +12,10 @@ export class Faculty {
   @Prop({ type: FacultyMcSchema })
   mc: FacultyMc;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Event' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Event' })
   event_ids: string[];
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Contribution' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
   contribution_ids: string[];
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
