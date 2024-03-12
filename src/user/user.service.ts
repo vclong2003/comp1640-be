@@ -8,13 +8,12 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { CreateSessionDto } from './dtos/create-session.dto';
 import { UserSession } from './schemas/user-session.schema';
-import { UpdateUserDto } from './dtos/update-user.dto';
+
 import { FacultyService } from 'src/faculty/faculty.service';
 import { UserFaculty } from './schemas/user-faculty.schema';
 import { ERole } from './enums/role.enum';
+import { CreateSessionDto, CreateUserDto, UpdateUserDto } from './user.dto';
 
 @Injectable()
 export class UserService {
