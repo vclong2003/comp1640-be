@@ -12,6 +12,7 @@ import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { NoAccessToken } from './decorators/no-access-token.decorator';
 import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -27,9 +28,15 @@ export class AuthController {
     return await this.authService.guestRegister(dto);
   }
 
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { email: { type: 'string' }, password: { type: 'string' } },
+    },
+  })
+  @Post('login')
   @NoAccessToken()
   @UseGuards(LocalAuthGuard)
-  @Post('login')
   async login(@Request() req, @Response() res) {
     const ua = req.headers['user-agent'];
     const { refreshToken, accessToken } = await this.authService.login(
