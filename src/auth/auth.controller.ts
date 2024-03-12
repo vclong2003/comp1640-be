@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -31,7 +32,10 @@ export class AuthController {
   @ApiBody({
     schema: {
       type: 'object',
-      properties: { email: { type: 'string' }, password: { type: 'string' } },
+      properties: {
+        email: { type: 'string', default: 'vclong2003@gmail.com' },
+        password: { type: 'string', default: '12345678' },
+      },
     },
   })
   @Post('login')
@@ -52,6 +56,7 @@ export class AuthController {
   @Get('access-token')
   async getAccessToken(@Request() req, @Response() res) {
     const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) throw new BadRequestException('No refresh token');
     const accessToken = await this.authService.refreshAccessToken(refreshToken);
     res.cookie('access_token', accessToken, this.cookieOptions);
     return res.status(200).send();
