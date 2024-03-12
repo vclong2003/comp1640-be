@@ -25,12 +25,10 @@ export class EventService {
       final_closure_date,
       facultyId,
     } = createEventDto;
-    // find faculty
     const faculty = await this.facultyService.findById(facultyId);
     if (!faculty) {
       throw new BadRequestException('Faculty not found');
     }
-    // check if event already exists
     const currentEvent = await this.eventModel
       .findOne({
         name: {
@@ -41,7 +39,6 @@ export class EventService {
     if (currentEvent) {
       throw new BadRequestException('Event already exists');
     }
-    // create new event
     const newEvent = new this.eventModel({
       name,
       start_date,
@@ -56,12 +53,9 @@ export class EventService {
     return newEvent;
   }
 
-  async updateEvent(
-    id: string,
-    updateEventDto: UpdateEventDTO,
-  ): Promise<Event> {
+  async updateEvent(id: string, dto: UpdateEventDTO): Promise<Event> {
     const updatedEvent = await this.eventModel
-      .findByIdAndUpdate(id, updateEventDto, { new: true })
+      .findByIdAndUpdate(id, dto, { new: true })
       .exec();
     if (!updatedEvent) {
       throw new BadRequestException('Event not found');

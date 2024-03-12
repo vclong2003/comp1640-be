@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Faculty } from './schemas/faculty.schema';
@@ -11,11 +16,14 @@ import { User } from 'src/user/schemas/user.schema';
 export class FacultyService {
   constructor(
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
+    @Inject(forwardRef(() => UserService))
     private userService: UserService,
   ) {}
+
   async findById(id: string): Promise<Faculty> {
     return this.facultyModel.findById(id).exec();
   }
+
   async getAllFaculty(): Promise<Faculty[]> {
     return this.facultyModel.find().select('_id name mc').exec();
   }
@@ -78,9 +86,25 @@ export class FacultyService {
     }
     faculty.student_ids.push(studentId);
     await faculty.save();
-    await this.userService.updateUser(studentId, {
-      faculty: { _id: faculty._id, name: faculty.name },
+    await this.userService.updateUserFaculty(studentId, {
+      _id: faculty._id,
+      name: faculty.name,
     });
+    return faculty;
+  }
+
+  async removeStudentFromFaculty(facultyId: string, studentId: string) {
+    const faculty = await this.facultyModel.findById(facultyId).exec();
+    if (!faculty) {
+      throw new BadRequestException('Faculty not found');
+    }
+    const studentIndex = faculty.student_ids.indexOf(studentId);
+    if (studentIndex == -1) {
+      throw new BadRequestException('Student not found in faculty');
+    }
+    faculty.student_ids.splice(studentIndex, 1);
+    await faculty.save();
+    await this.userService.updateUserFaculty(studentId, null);
     return faculty;
   }
 

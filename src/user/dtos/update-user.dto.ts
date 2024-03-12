@@ -4,10 +4,6 @@ import { EGender } from '../enums/gender.enum';
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
   phone?: string;
 
   @IsOptional()
