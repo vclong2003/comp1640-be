@@ -1,27 +1,19 @@
 import {
   BadRequestException,
   ConflictException,
-  Inject,
   Injectable,
-  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { UserSession } from './schemas/user-session.schema';
-
-import { FacultyService } from 'src/faculty/faculty.service';
 import { UserFaculty } from './schemas/user-faculty.schema';
 import { CreateSessionDto, CreateUserDto, UpdateUserDto } from './user.dtos';
 import { ERole } from './user.enums';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectModel('User') private userModel: Model<User>,
-    @Inject(forwardRef(() => FacultyService))
-    private facultyService: FacultyService,
-  ) {}
+  constructor(@InjectModel('User') private userModel: Model<User>) {}
 
   async findOneByEmail(email: string): Promise<User | null> {
     return await this.userModel.findOne({ email }).exec();
@@ -34,21 +26,21 @@ export class UserService {
   async findUsersByName(name: string): Promise<User[] | null> {
     return this.userModel
       .find({ name: { $regex: name } })
-      .select(['_id', 'username', 'info.avatar_url'])
+      .select(['_id', 'name', 'avatar_url'])
       .exec();
   }
 
   async findStudentsByName(name: string): Promise<User[] | null> {
     return this.userModel
       .find({ name: { $regex: name }, role: ERole.Student })
-      .select(['_id', 'username', 'info.avatar_url'])
+      .select(['_id', 'name', 'avatar_url'])
       .exec();
   }
 
   async findMcsByName(name: string): Promise<User[] | null> {
     return this.userModel
       .find({ name: { $regex: name }, role: ERole.MarketingCoordinator })
-      .select(['_id', 'username', 'info.avatar_url'])
+      .select(['_id', 'name', 'avatar_url'])
       .exec();
   }
 

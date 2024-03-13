@@ -11,3 +11,15 @@ export class CreateFacultyDto {
   @IsString()
   mcId?: string;
 }
+
+export class AddStudentDto {
+  @ApiProperty()
+  @IsString()
+  studentId: string;
+}
+
+export class SetFacultyDto {
+  @ApiProperty()
+  @IsString()
+  mcId: string;
+}

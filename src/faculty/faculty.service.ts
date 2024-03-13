@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  forwardRef,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Faculty } from './schemas/faculty.schema';
@@ -16,7 +11,6 @@ import { ERole } from 'src/user/user.enums';
 export class FacultyService {
   constructor(
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
-    @Inject(forwardRef(() => UserService))
     private userService: UserService,
   ) {}
 
