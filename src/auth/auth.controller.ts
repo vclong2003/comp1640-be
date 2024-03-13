@@ -15,6 +15,7 @@ import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { SetupAccountDto } from './dtos/setup-account.dto';
 import { SendResetPasswordEmailDto } from './dtos/send-reset-password-email.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -87,5 +88,10 @@ export class AuthController {
   @NoAccessToken()
   async setupAccount(@Body() dto: SetupAccountDto) {
     return await this.authService.setupAccount(dto);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.authService.resetPassword(dto);
   }
 }

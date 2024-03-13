@@ -123,4 +123,12 @@ export class UserService {
     await user.save();
     return user.sessions;
   }
+
+  async updatePassword(_id: string, password: string): Promise<User> {
+    return await this.userModel.findByIdAndUpdate(
+      _id,
+      { password },
+      { new: true },
+    );
+  }
 }

@@ -18,6 +18,7 @@ import { FacultyService } from 'src/faculty/faculty.service';
 import { SetupAccountDto } from './dtos/setup-account.dto';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import { ERole } from 'src/user/user.enums';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -138,5 +139,14 @@ export class AuthService {
       password: await this.passwordService.hashPassword(password),
       faculty: faculty && { _id: faculty._id, name: faculty.name },
     });
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const { token, password } = dto;
+    const { userId } = await this.jwtService.verifyResetPasswordToken(token);
+    await this.userService.updatePassword(
+      userId,
+      await this.passwordService.hashPassword(password),
+    );
   }
 }
