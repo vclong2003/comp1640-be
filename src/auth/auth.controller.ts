@@ -25,6 +25,18 @@ export class AuthController {
   };
   constructor(private authService: AuthService) {}
 
+  @Post('send-register-email')
+  async sendRegisterEmail(@Body() dto: SendRegisterEmailDto, @Response() res) {
+    await this.authService.sendRegisterEmail(dto);
+    return res.status(200).send();
+  }
+
+  @Post('setup-account')
+  @NoAccessToken()
+  async setupAccount(@Body() dto: SetupAccountDto) {
+    return await this.authService.setupAccount(dto);
+  }
+
   @Post('guest-register')
   @NoAccessToken()
   async guestRegister(@Body() dto: GuestRegisterDto) {
@@ -76,18 +88,6 @@ export class AuthController {
     const { email } = dto;
     await this.authService.sendResetPasswordEmail(email);
     return res.status(200).send();
-  }
-
-  @Post('send-register-email')
-  async sendRegisterEmail(@Body() dto: SendRegisterEmailDto, @Response() res) {
-    await this.authService.sendRegisterEmail(dto);
-    return res.status(200).send();
-  }
-
-  @Post('setup-account')
-  @NoAccessToken()
-  async setupAccount(@Body() dto: SetupAccountDto) {
-    return await this.authService.setupAccount(dto);
   }
 
   @Post('reset-password')

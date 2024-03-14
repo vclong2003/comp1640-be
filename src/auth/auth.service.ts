@@ -90,11 +90,8 @@ export class AuthService {
     if (user) {
       throw new ConflictException('User already exists!');
     }
-    const token = await this.jwtService.genRegisterToken({
-      email,
-      role,
-      facultyId,
-    });
+    let tokenPayload = facultyId ? { email, role, facultyId } : { email, role };
+    const token = await this.jwtService.genRegisterToken(tokenPayload);
     await this.mailerService.sendRegisterEmail(email, token);
   }
 

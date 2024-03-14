@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ERole } from 'src/user/user.enums';
 
 export class SendRegisterEmailDto {
@@ -7,8 +7,8 @@ export class SendRegisterEmailDto {
   @IsEmail()
   email: string;
 
-  @ApiProperty()
-  @IsString()
+  @ApiProperty({ enum: ERole })
+  @IsEnum(ERole)
   role: ERole;
 
   @ApiProperty()
