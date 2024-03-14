@@ -119,7 +119,13 @@ export class AuthService {
   // Get current user ------------------------------------------------------
   async getCurrentUser(userId: string): Promise<User> {
     const user = this.userService.findOneById(userId);
-    return user;
+    return {
+      ...user,
+      password: undefined,
+      sessions: undefined,
+      participated_event_ids: undefined,
+      submitted_contribution_ids: undefined,
+    };
   }
 
   // Login ------------------------------------------------------

@@ -131,4 +131,18 @@ export class UserService {
       { new: true },
     );
   }
+
+  async getUserDetails(_id: string): Promise<User> {
+    return await this.userModel
+      .findById(_id)
+      .select([
+        'name',
+        'email',
+        'phone',
+        'avatar_url',
+        'role',
+        'faculty',
+        'dob',
+      ]);
+  }
 }

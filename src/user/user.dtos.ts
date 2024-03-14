@@ -1,4 +1,4 @@
-import { IsDate, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { UserFaculty } from './schemas/user-faculty.schema';
 import { EGender, ERole } from './user.enums';
 
@@ -30,7 +30,7 @@ export class UpdateUserDto {
   dob?: Date;
 
   @IsOptional()
-  @IsString()
+  @IsEnum(EGender)
   gender?: EGender;
 }
 
