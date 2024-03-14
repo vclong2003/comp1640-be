@@ -18,8 +18,10 @@ import {
 } from './dtos/register.dtos';
 import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { SendResetPasswordEmailDto } from './dtos/send-reset-password-email.dto';
-import { ResetPasswordDto } from './dtos/reset-password.dto';
+import {
+  ResetPasswordDto,
+  SendResetPasswordEmailDto,
+} from './dtos/reset-password.dto';
 import { Roles } from './decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 
@@ -66,6 +68,7 @@ export class AuthController {
     return await this.authService.setupGuestAccount(dto);
   }
 
+  // Login ------------------------------------------------------------------
   @Post('login')
   @ApiBody({
     schema: {
@@ -89,20 +92,7 @@ export class AuthController {
     return res.status(200).send();
   }
 
-  @Get('access-token')
-  @NoAccessToken()
-  async getAccessToken(@Request() req, @Response() res) {
-    const refreshToken = req.cookies['refresh_token'];
-    const accessToken = await this.authService.refreshAccessToken(refreshToken);
-    res.cookie('access_token', accessToken, this.cookieOptions);
-    return res.status(200).send();
-  }
-
-  @Get('')
-  async test(@Request() req) {
-    return req.user;
-  }
-
+  // Forgot password ---------------------------------------------------------
   @Post('send-reset-password-email')
   async sendResetPasswordEmail(
     @Body() dto: SendResetPasswordEmailDto,
@@ -116,5 +106,21 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto);
+  }
+
+  // Handle tokens -----------------------------------------------------------
+  @Get('access-token')
+  @NoAccessToken()
+  async getAccessToken(@Request() req, @Response() res) {
+    const refreshToken = req.cookies['refresh_token'];
+    const accessToken = await this.authService.refreshAccessToken(refreshToken);
+    res.cookie('access_token', accessToken, this.cookieOptions);
+    return res.status(200).send();
+  }
+
+  // Get current user --------------------------------------------------------
+  @Get('')
+  async test(@Request() req) {
+    return await this.authService.getCurrentUser(req.user);
   }
 }

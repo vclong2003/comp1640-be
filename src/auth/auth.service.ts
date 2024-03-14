@@ -116,6 +116,12 @@ export class AuthService {
     });
   }
 
+  // Get current user ------------------------------------------------------
+  async getCurrentUser(userId: string): Promise<User> {
+    const user = this.userService.findOneById(userId);
+    return user;
+  }
+
   // Login ------------------------------------------------------
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findOneByEmail(email);
@@ -163,6 +169,7 @@ export class AuthService {
     return accessToken;
   }
 
+  // Reset password ------------------------------------------------------
   async sendResetPasswordEmail(email: string) {
     const user = await this.userService.findOneByEmail(email);
     if (!user) throw new BadRequestException('User not found!');
