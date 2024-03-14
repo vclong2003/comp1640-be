@@ -10,10 +10,13 @@ import {
 import { AuthService } from './auth.service';
 import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { NoAccessToken } from './decorators/no-access-token.decorator';
-import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
+import {
+  SendRegisterEmailDto,
+  SendRegisterEmailVerifycationDto,
+  SetupAccountDto,
+} from './dtos/register.dtos';
 import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { SetupAccountDto } from './dtos/setup-account.dto';
 import { SendResetPasswordEmailDto } from './dtos/send-reset-password-email.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 
@@ -25,10 +28,17 @@ export class AuthController {
   };
   constructor(private authService: AuthService) {}
 
+  // Register
   @Post('send-register-email')
   async sendRegisterEmail(@Body() dto: SendRegisterEmailDto, @Response() res) {
     await this.authService.sendRegisterEmail(dto);
     return res.status(200).send();
+  }
+
+  @Post('verify-register-token')
+  @NoAccessToken()
+  async verifyRegisterToken(@Body() dto: SendRegisterEmailVerifycationDto) {
+    this.authService.verifyRegisterToken(dto);
   }
 
   @Post('setup-account')

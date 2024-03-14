@@ -12,13 +12,17 @@ import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
 import { UAParser } from 'ua-parser-js';
 import { IUserAgent } from './interfaces/user-agent.interface';
-import { SendRegisterEmailDto } from './dtos/send-register-email.dto';
+import {
+  SendRegisterEmailDto,
+  SendRegisterEmailVerifycationDto,
+  SetupAccountDto,
+} from './dtos/register.dtos';
 import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 import { FacultyService } from 'src/faculty/faculty.service';
-import { SetupAccountDto } from './dtos/setup-account.dto';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import { ERole } from 'src/user/user.enums';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { IRegisterTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +34,56 @@ export class AuthService {
     private facultyService: FacultyService,
   ) {}
 
+  // Register ------------------------------------------------------
+  async sendRegisterEmail(dto: SendRegisterEmailDto) {
+    const { email, role, facultyId } = dto;
+    const user = await this.userService.findOneByEmail(email);
+    if (user) throw new ConflictException('User already exists!');
+    const tokenPayload = facultyId
+      ? { email, role, facultyId }
+      : { email, role };
+    const token = await this.jwtService.genRegisterToken(tokenPayload);
+    await this.mailerService.sendRegisterEmail(email, token);
+  }
+
+  async verifyRegisterToken(
+    dto: SendRegisterEmailVerifycationDto,
+  ): Promise<IRegisterTokenPayload> {
+    const { token } = dto;
+    return this.jwtService.verifyRegisterToken(token);
+  }
+
+  async setupAccount(dto: SetupAccountDto) {
+    const { token, name, password, dob, phone } = dto;
+    const { email, role, facultyId } =
+      await this.jwtService.verifyRegisterToken(token);
+
+    const user = await this.userService.findOneByEmail(email);
+    if (user) throw new BadRequestException('User already exists!');
+
+    // facultyId is required for student and marketing coordinator
+    if (role !== ERole.Student && role !== ERole.MarketingCoordinator) {
+      if (facultyId) throw new BadRequestException('Faculty is not required');
+    }
+
+    let faculty: Faculty;
+    if (facultyId) {
+      faculty = await this.facultyService.findOneById(facultyId);
+      if (!faculty) throw new BadRequestException('Faculty not found!');
+    }
+
+    await this.userService.createUser({
+      email,
+      role,
+      name,
+      dob,
+      phone,
+      password: await this.passwordService.hashPassword(password),
+      faculty: faculty && { _id: faculty._id, name: faculty.name },
+    });
+  }
+
+  // Guest Register ------------------------------------------------------
   async guestRegister(dto: GuestRegisterDto): Promise<User> {
     const user = await this.userService.createUser({
       ...dto,
@@ -39,6 +93,7 @@ export class AuthService {
     return user;
   }
 
+  // Login ------------------------------------------------------
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findOneByEmail(email);
     if (!user) return null;
@@ -67,6 +122,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  // Handle tokens ------------------------------------------------------
   async refreshAccessToken(refreshToken: string): Promise<string> {
     if (!refreshToken) {
       throw new BadRequestException('Refresh token is required!');
@@ -84,58 +140,13 @@ export class AuthService {
     return accessToken;
   }
 
-  async sendRegisterEmail(dto: SendRegisterEmailDto) {
-    const { email, role, facultyId } = dto;
-    const user = await this.userService.findOneByEmail(email);
-    if (user) {
-      throw new ConflictException('User already exists!');
-    }
-    let tokenPayload = facultyId ? { email, role, facultyId } : { email, role };
-    const token = await this.jwtService.genRegisterToken(tokenPayload);
-    await this.mailerService.sendRegisterEmail(email, token);
-  }
-
   async sendResetPasswordEmail(email: string) {
     const user = await this.userService.findOneByEmail(email);
-    if (!user) {
-      throw new BadRequestException('User not found!');
-    }
+    if (!user) throw new BadRequestException('User not found!');
     const token = await this.jwtService.genResetPasswordToken({
       userId: user._id,
     });
     await this.mailerService.sendResetPasswordEmail(email, user.name, token);
-  }
-
-  async setupAccount(dto: SetupAccountDto) {
-    const { token, name, password, dob, phone } = dto;
-    const { email, role, facultyId } =
-      await this.jwtService.verifyRegisterToken(token);
-
-    const user = await this.userService.findOneByEmail(email);
-    if (user) {
-      throw new BadRequestException('User already exists!');
-    }
-
-    // facultyId is required for student and marketing coordinator
-    if (role !== ERole.Student && role !== ERole.MarketingCoordinator) {
-      if (facultyId) throw new BadRequestException('Faculty is not required');
-    }
-
-    let faculty: Faculty;
-    if (facultyId) {
-      faculty = await this.facultyService.findOneById(facultyId);
-      if (!faculty) throw new BadRequestException('Faculty not found!');
-    }
-
-    await this.userService.createUser({
-      email,
-      role,
-      name,
-      dob,
-      phone,
-      password: await this.passwordService.hashPassword(password),
-      faculty: faculty && { _id: faculty._id, name: faculty.name },
-    });
   }
 
   async resetPassword(dto: ResetPasswordDto) {
