@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ERole } from 'src/user/user.enums';
 
+// Register ---------------------------------------------------------------
 export class SendRegisterEmailDto {
   @ApiProperty()
   @IsEmail()
@@ -17,6 +18,12 @@ export class SendRegisterEmailDto {
   facultyId?: string;
 }
 
+export class SendGuestRegisterEmailDto {
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+}
+
 export class SendRegisterEmailVerifycationDto {
   @ApiProperty()
   @IsString()
@@ -27,6 +34,35 @@ export class SetupAccountDto {
   @ApiProperty()
   @IsString()
   token: string;
+
+  @ApiProperty()
+  @IsString()
+  password: string;
+
+  @ApiProperty()
+  @IsString()
+  name: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsDate()
+  dob?: Date;
+}
+
+// Guest Register ---------------------------------------------------------
+export class SetupGuestAccountDto {
+  @ApiProperty()
+  @IsString()
+  token: string;
+
+  @ApiProperty()
+  @IsString()
+  facultyId: string;
 
   @ApiProperty()
   @IsString()

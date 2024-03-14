@@ -8,17 +8,20 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { GuestRegisterDto } from './dtos/guest-register.dto';
 import { NoAccessToken } from './decorators/no-access-token.decorator';
 import {
+  SendGuestRegisterEmailDto,
   SendRegisterEmailDto,
   SendRegisterEmailVerifycationDto,
   SetupAccountDto,
+  SetupGuestAccountDto,
 } from './dtos/register.dtos';
 import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { SendResetPasswordEmailDto } from './dtos/send-reset-password-email.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { Roles } from './decorators/roles.decorator';
+import { ERole } from 'src/user/user.enums';
 
 @Controller('auth')
 export class AuthController {
@@ -28,8 +31,9 @@ export class AuthController {
   };
   constructor(private authService: AuthService) {}
 
-  // Register
+  // Register ---------------------------------------------------------------
   @Post('send-register-email')
+  @Roles([ERole.Admin])
   async sendRegisterEmail(@Body() dto: SendRegisterEmailDto, @Response() res) {
     await this.authService.sendRegisterEmail(dto);
     return res.status(200).send();
@@ -38,7 +42,8 @@ export class AuthController {
   @Post('verify-register-token')
   @NoAccessToken()
   async verifyRegisterToken(@Body() dto: SendRegisterEmailVerifycationDto) {
-    this.authService.verifyRegisterToken(dto);
+    const { token } = dto;
+    this.authService.verifyRegisterToken(token);
   }
 
   @Post('setup-account')
@@ -47,10 +52,18 @@ export class AuthController {
     return await this.authService.setupAccount(dto);
   }
 
-  @Post('guest-register')
+  // Guest Register ---------------------------------------------------------
+  @Post('send-guest-register-email')
   @NoAccessToken()
-  async guestRegister(@Body() dto: GuestRegisterDto) {
-    return await this.authService.guestRegister(dto);
+  async sendGuestRegisterEmail(@Body() dto: SendGuestRegisterEmailDto) {
+    const { email } = dto;
+    return await this.authService.sendGuestRegisterEmail(email);
+  }
+
+  @Post('setup-guest-account')
+  @NoAccessToken()
+  async setupGuestAccount(@Body() dto: SetupGuestAccountDto) {
+    return await this.authService.setupGuestAccount(dto);
   }
 
   @Post('login')
