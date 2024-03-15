@@ -21,6 +21,20 @@ export class EventService {
     private userService: UserService,
   ) {}
 
+  async getEventDetails(_id: string): Promise<Event> {
+    const events = this.eventModel.aggregate([
+      { $match: { _id } },
+      {
+        $project: {
+          number_of_contributions: { $size: 'contribution_ids' },
+          contribution_ids: 0,
+          published_contribution_ids: 0,
+        },
+      },
+    ]);
+    return events[0];
+  }
+
   async findEvents(dto: FindEventDTO): Promise<Event[]> {
     const {
       facultyId,

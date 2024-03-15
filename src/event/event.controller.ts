@@ -35,6 +35,11 @@ export class EventController {
     return await this.eventService.findEvents(dto);
   }
 
+  @Get(':eventId')
+  async getEventDetails(@Param('eventId') eventId: string) {
+    return await this.eventService.getEventDetails(eventId);
+  }
+
   @Put(':id')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDTO) {
