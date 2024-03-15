@@ -1,15 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event } from './schemas/event.schema';
 import { FacultyService } from 'src/faculty/faculty.service';
 import { CreateEventDTO, FindEventDTO, UpdateEventDTO } from './event.dtos';
 import { UserService } from 'src/user/user.service';
+import { Faculty } from 'src/faculty/schemas/faculty.schema';
 
 @Injectable()
 export class EventService {
   constructor(
     @InjectModel('Event') private eventModel: Model<Event>,
+    @Inject(forwardRef(() => FacultyService))
     private facultyService: FacultyService,
     private userService: UserService,
   ) {}
@@ -115,6 +122,21 @@ export class EventService {
     });
     await newEvent.save();
     return newEvent;
+  }
+
+  async updateEventsFaculty(faculty: Faculty) {
+    return this.eventModel.updateMany(
+      { 'faculty._id': faculty._id },
+      {
+        $set: {
+          faculty: {
+            _id: faculty._id,
+            name: faculty.name,
+            mc: faculty.mc,
+          },
+        },
+      },
+    );
   }
 
   async updateEvent(id: string, dto: UpdateEventDTO): Promise<Event> {

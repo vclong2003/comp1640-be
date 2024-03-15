@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Faculty } from './schemas/faculty.schema';
@@ -6,12 +11,15 @@ import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/schemas/user.schema';
 import { CreateFacultyDto } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
+import { EventService } from 'src/event/event.service';
 
 @Injectable()
 export class FacultyService {
   constructor(
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     private userService: UserService,
+    @Inject(forwardRef(() => EventService))
+    private eventService: EventService,
   ) {}
 
   async findOneById(id: string): Promise<Faculty> {
@@ -60,6 +68,7 @@ export class FacultyService {
     }
     faculty.mc = { _id: mcUser._id, name: mcUser.name, email: mcUser.email };
     await faculty.save();
+    await this.eventService.updateEventsFaculty(faculty);
     return faculty;
   }
 
