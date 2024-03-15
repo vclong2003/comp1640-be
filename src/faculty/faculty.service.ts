@@ -68,7 +68,7 @@ export class FacultyService {
     }
     faculty.mc = { _id: mcUser._id, name: mcUser.name, email: mcUser.email };
     await faculty.save();
-    await this.eventService.updateEventsFaculty(faculty);
+    await this.eventService.updateEventsFaculty(faculty.event_ids, faculty);
     return faculty;
   }
 
@@ -139,5 +139,15 @@ export class FacultyService {
       throw new BadRequestException('Faculty not found');
     }
     return faculty[0];
+  }
+
+  async addEventId(facultyId: string, eventId: string) {
+    const faculty = await this.facultyModel.findById(facultyId).exec();
+    if (faculty.event_ids.includes(eventId)) {
+      throw new BadRequestException('Event already exists in faculty');
+    }
+    faculty.event_ids.push(eventId);
+    await faculty.save();
+    return faculty;
   }
 }

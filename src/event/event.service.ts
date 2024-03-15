@@ -135,31 +135,27 @@ export class EventService {
       },
     });
     await newEvent.save();
+    await this.facultyService.addEventId(facultyId, newEvent._id);
     return newEvent;
   }
 
-  async updateEventsFaculty(faculty: Faculty) {
-    return this.eventModel.updateMany(
-      { 'faculty._id': faculty._id },
-      {
-        $set: {
-          faculty: {
-            _id: faculty._id,
-            name: faculty.name,
-            mc: faculty.mc,
-          },
-        },
-      },
+  async updateEventsFaculty(event_ids: string[], faculty: Faculty) {
+    await this.eventModel.updateMany(
+      { _id: { $in: event_ids } },
+      { faculty: { _id: faculty._id, name: faculty.name, mc: faculty.mc } },
     );
+    return;
   }
 
   async updateEvent(id: string, dto: UpdateEventDTO): Promise<Event> {
+    const { name, start_date, first_closure_date, final_closure_date } = dto;
     const updatedEvent = await this.eventModel
-      .findByIdAndUpdate(id, dto, { new: true })
+      .findByIdAndUpdate(
+        id,
+        { name, start_date, final_closure_date, first_closure_date },
+        { new: true },
+      )
       .exec();
-    if (!updatedEvent) {
-      throw new BadRequestException('Event not found');
-    }
     return updatedEvent;
   }
 
