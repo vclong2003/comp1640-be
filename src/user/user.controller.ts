@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { FindUsersDto, UpdateUserDto } from './user.dtos';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -13,7 +22,7 @@ export class UserController {
     return await this.userService.findOneById(req.user._id);
   }
 
-  @Post('')
+  @Put('')
   async updateUser(@Req() req, @Body() dto: UpdateUserDto) {
     return await this.userService.updateUser(req.user._id, dto);
   }
@@ -42,13 +51,13 @@ export class UserController {
     return await this.userService.findGuests(dto);
   }
 
-  @Get('user/:userId')
+  @Get('/:userId')
   @Roles([ERole.Admin])
   async getUserById(@Param('userId') userId: string) {
     return await this.userService.findOneById(userId);
   }
 
-  @Post('user/:userId')
+  @Post('/:userId')
   @Roles([ERole.Admin])
   async updateUserById(
     @Param('userId') userId: string,
@@ -57,13 +66,13 @@ export class UserController {
     return await this.userService.updateUser(userId, dto);
   }
 
-  @Post('user/:userId/disable')
+  @Post('/:userId/disable')
   @Roles([ERole.Admin])
   async disableUser(@Param('userId') userId: string) {
     return await this.userService.disableUser(userId);
   }
 
-  @Post('user/:userId/enable')
+  @Post('/:userId/enable')
   @Roles([ERole.Admin])
   async enableUser(@Param('userId') userId: string) {
     return await this.userService.enableUser(userId);

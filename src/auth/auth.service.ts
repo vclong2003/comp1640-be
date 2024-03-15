@@ -117,14 +117,15 @@ export class AuthService {
   }
 
   // Get current user ------------------------------------------------------
-  async getCurrentUser(userId: string): Promise<User> {
-    const user = this.userService.findOneById(userId);
+  async getCurrentUser(userId: string) {
+    const user = await this.userService.findOneById(userId);
     return {
-      ...user,
-      password: undefined,
-      sessions: undefined,
-      participated_event_ids: undefined,
-      submitted_contribution_ids: undefined,
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      faculty: user.faculty,
+      avatar_url: user.avatar_url,
     };
   }
 

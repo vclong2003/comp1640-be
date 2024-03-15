@@ -7,6 +7,7 @@ import {
 } from 'class-validator';
 import { UserFaculty } from './schemas/user-faculty.schema';
 import { EGender, ERole } from './user.enums';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
   email: string;
@@ -19,22 +20,27 @@ export class CreateUserDto {
 }
 
 export class UpdateUserDto {
+  @ApiProperty()
   @IsOptional()
   @IsString()
   phone?: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
   avatar_url?: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
   name?: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsDate()
   dob?: Date;
 
+  @ApiProperty()
   @IsOptional()
   @IsEnum(EGender)
   gender?: EGender;
