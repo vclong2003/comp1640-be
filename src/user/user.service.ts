@@ -8,7 +8,12 @@ import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { UserSession } from './schemas/user-session.schema';
 import { UserFaculty } from './schemas/user-faculty.schema';
-import { CreateSessionDto, CreateUserDto, UpdateUserDto } from './user.dtos';
+import {
+  CreateSessionDto,
+  CreateUserDto,
+  FindUsersDto,
+  UpdateUserDto,
+} from './user.dtos';
 import { ERole } from './user.enums';
 
 @Injectable()
@@ -23,24 +28,80 @@ export class UserService {
     return this.userModel.findOne({ _id }).exec();
   }
 
-  async findUsersByName(name: string): Promise<User[] | null> {
+  async getUserDetails(_id: string): Promise<User> {
+    return await this.userModel
+      .findById(_id)
+      .select([
+        'name',
+        'email',
+        'phone',
+        'avatar_url',
+        'role',
+        'faculty',
+        'dob',
+      ]);
+  }
+
+  async findStudents(dto: FindUsersDto): Promise<User[] | null> {
+    const { name, email, facultyId, skip, limit } = dto;
+    const query = {
+      role: ERole.Student,
+      name: { $regex: name, $options: 'i' },
+      email: { $regex: email, $options: 'i' },
+    };
+    if (facultyId) query['faculty._id'] = facultyId;
     return this.userModel
-      .find({ name: { $regex: name } })
+      .find(query)
       .select(['_id', 'name', 'avatar_url'])
+      .skip(skip)
+      .limit(limit)
       .exec();
   }
 
-  async findStudentsByName(name: string): Promise<User[] | null> {
+  async findMcs(dto: FindUsersDto): Promise<User[] | null> {
+    const { name, email, facultyId, skip, limit } = dto;
+    const query = {
+      role: ERole.MarketingCoordinator,
+      name: { $regex: name, $options: 'i' },
+      email: { $regex: email, $options: 'i' },
+    };
+    if (facultyId) query['faculty._id'] = facultyId;
     return this.userModel
-      .find({ name: { $regex: name }, role: ERole.Student })
+      .find(query)
       .select(['_id', 'name', 'avatar_url'])
+      .skip(skip)
+      .limit(limit)
       .exec();
   }
 
-  async findMcsByName(name: string): Promise<User[] | null> {
+  async findMms(dto: FindUsersDto): Promise<User[] | null> {
+    const { name, email, skip, limit } = dto;
+    const query = {
+      role: ERole.MarketingManager,
+      name: { $regex: name, $options: 'i' },
+      email: { $regex: email, $options: 'i' },
+    };
     return this.userModel
-      .find({ name: { $regex: name }, role: ERole.MarketingCoordinator })
+      .find(query)
       .select(['_id', 'name', 'avatar_url'])
+      .skip(skip)
+      .limit(limit)
+      .exec();
+  }
+
+  async findGuests(dto: FindUsersDto): Promise<User[] | null> {
+    const { name, email, facultyId, skip, limit } = dto;
+    const query = {
+      role: ERole.Guest,
+      name: { $regex: name, $options: 'i' },
+      email: { $regex: email, $options: 'i' },
+    };
+    if (facultyId) query['faculty._id'] = facultyId;
+    return this.userModel
+      .find(query)
+      .select(['_id', 'name', 'avatar_url'])
+      .skip(skip)
+      .limit(limit)
       .exec();
   }
 
@@ -132,17 +193,13 @@ export class UserService {
     );
   }
 
-  async getUserDetails(_id: string): Promise<User> {
-    return await this.userModel
-      .findById(_id)
-      .select([
-        'name',
-        'email',
-        'phone',
-        'avatar_url',
-        'role',
-        'faculty',
-        'dob',
-      ]);
+  async disableUser(_id: string) {
+    await this.userModel.findByIdAndUpdate(_id, { disabled: true });
+    return;
+  }
+
+  async enableUser(_id: string) {
+    await this.userModel.findByIdAndUpdate(_id, { disabled: false });
+    return;
   }
 }

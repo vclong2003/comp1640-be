@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdateUserDto } from './user.dtos';
+import { FindUsersDto, UpdateUserDto } from './user.dtos';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { ERole } from './user.enums';
 
 @Controller('user')
 export class UserController {
@@ -14,5 +16,56 @@ export class UserController {
   @Post('')
   async updateUser(@Req() req, @Body() dto: UpdateUserDto) {
     return await this.userService.updateUser(req.user._id, dto);
+  }
+
+  @Get('students')
+  @Roles([ERole.Admin, ERole.MarketingManager, ERole.MarketingManager])
+  async findStudents(@Query() dto: FindUsersDto) {
+    return await this.userService.findStudents(dto);
+  }
+
+  @Get('mcs')
+  @Roles([ERole.Admin])
+  async findMcs(@Query() dto: FindUsersDto) {
+    return await this.userService.findMcs(dto);
+  }
+
+  @Get('mms')
+  @Roles([ERole.Admin])
+  async findMms(@Query() dto: FindUsersDto) {
+    return await this.userService.findMms(dto);
+  }
+
+  @Get('guests')
+  @Roles([ERole.Admin])
+  async findGuests(@Query() dto: FindUsersDto) {
+    return await this.userService.findGuests(dto);
+  }
+
+  @Get('user/:userId')
+  @Roles([ERole.Admin])
+  async getUserById(@Param('userId') userId: string) {
+    return await this.userService.findOneById(userId);
+  }
+
+  @Post('user/:userId')
+  @Roles([ERole.Admin])
+  async updateUserById(
+    @Param('userId') userId: string,
+    @Body() dto: UpdateUserDto,
+  ) {
+    return await this.userService.updateUser(userId, dto);
+  }
+
+  @Post('user/:userId/disable')
+  @Roles([ERole.Admin])
+  async disableUser(@Param('userId') userId: string) {
+    return await this.userService.disableUser(userId);
+  }
+
+  @Post('user/:userId/enable')
+  @Roles([ERole.Admin])
+  async enableUser(@Param('userId') userId: string) {
+    return await this.userService.enableUser(userId);
   }
 }

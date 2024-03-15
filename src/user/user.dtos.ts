@@ -1,4 +1,10 @@
-import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { UserFaculty } from './schemas/user-faculty.schema';
 import { EGender, ERole } from './user.enums';
 
@@ -38,4 +44,26 @@ export class CreateSessionDto {
   userId: string;
   browser: string;
   token: string;
+}
+
+export class FindUsersDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  facultyId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  skip?: number;
+
+  @IsOptional()
+  @IsNumber()
+  limit?: number;
 }
