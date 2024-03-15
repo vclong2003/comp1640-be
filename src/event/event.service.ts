@@ -3,17 +3,81 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event } from './schemas/event.schema';
 import { FacultyService } from 'src/faculty/faculty.service';
-import { CreateEventDTO, UpdateEventDTO } from './event.dtos';
+import { CreateEventDTO, FindEventDTO, UpdateEventDTO } from './event.dtos';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class EventService {
   constructor(
     @InjectModel('Event') private eventModel: Model<Event>,
     private facultyService: FacultyService,
+    private userService: UserService,
   ) {}
 
-  async findAll(): Promise<Event[]> {
-    return this.eventModel.find().exec();
+  async findEvents(dto: FindEventDTO): Promise<Event[]> {
+    const {
+      facultyId,
+      name,
+      start_date,
+      final_closure_date,
+      mcName,
+      limit,
+      skip,
+      sort,
+    } = dto;
+
+    return this.eventModel.aggregate([
+      {
+        $match: {
+          'faculty._id': facultyId,
+          'faculty.mc.name': { $regex: mcName, $options: 'i' },
+          name: { $regex: name, $options: 'i' },
+          start_date: { $gte: start_date },
+          final_closure_date: { $lte: final_closure_date },
+        },
+      },
+      {
+        $project: {
+          number_of_contributions: { $size: 'contribution_ids' },
+          contribution_ids: 0,
+          published_contribution_ids: 0,
+        },
+      },
+      { $sort: { [sort]: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+  }
+
+  async findEventsByUserFaculty(
+    userId: string,
+    dto: FindEventDTO,
+  ): Promise<Event[]> {
+    const user = await this.userService.findOneById(userId);
+    if (!user.faculty) throw new BadRequestException('User has no faculty');
+
+    const { name, start_date, final_closure_date, limit, skip, sort } = dto;
+
+    return this.eventModel.aggregate([
+      {
+        $match: {
+          'faculty._id': user.faculty._id,
+          name: { $regex: name, $options: 'i' },
+          start_date: { $gte: start_date },
+          final_closure_date: { $lte: final_closure_date },
+        },
+      },
+      {
+        $project: {
+          number_of_contributions: { $size: 'contribution_ids' },
+          contribution_ids: 0,
+          published_contribution_ids: 0,
+        },
+      },
+      { $sort: { [sort]: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ]);
   }
 
   async createEvent(createEventDto: CreateEventDTO): Promise<Event> {
@@ -46,6 +110,7 @@ export class EventService {
       faculty: {
         _id: faculty._id,
         name: faculty.name,
+        mc: faculty.mc,
       },
     });
     await newEvent.save();

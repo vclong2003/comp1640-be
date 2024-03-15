@@ -1,5 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
+import {
+  FacultyMc,
+  FacultyMcSchema,
+} from 'src/faculty/schemas/faculty-mc.schema';
 
 @Schema()
 export class EventFaculty {
@@ -8,6 +12,9 @@ export class EventFaculty {
 
   @Prop()
   name: string;
+
+  @Prop({ type: FacultyMcSchema })
+  mc: FacultyMc;
 }
 
 export const EventFacultySchema = SchemaFactory.createForClass(EventFaculty);

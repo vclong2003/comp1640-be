@@ -6,11 +6,13 @@ import {
   Put,
   Param,
   Delete,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
-import { CreateEventDTO, UpdateEventDTO } from './event.dtos';
+import { CreateEventDTO, FindEventDTO, UpdateEventDTO } from './event.dtos';
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
@@ -21,9 +23,16 @@ export class EventController {
     return this.eventService.createEvent(createEventDto);
   }
 
-  @Get()
-  findAll() {
-    return this.eventService.findAll();
+  @Get('')
+  @Roles([ERole.MarketingCoordinator, ERole.Student, ERole.Guest])
+  async findEventsByUserFaculty(@Req() req, @Query() dto: FindEventDTO) {
+    return await this.eventService.findEventsByUserFaculty(req.user._id, dto);
+  }
+
+  @Get('')
+  @Roles([ERole.Admin])
+  async findEvents(@Query() dto: FindEventDTO) {
+    return await this.eventService.findEvents(dto);
   }
 
   @Put(':id')
