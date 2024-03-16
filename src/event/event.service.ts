@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Event } from './schemas/event.schema';
+import { Event } from '../shared-modules/database/schemas/event/event.schema';
 import { FacultyService } from 'src/faculty/faculty.service';
 import { CreateEventDTO, FindEventDTO, UpdateEventDTO } from './event.dtos';
 import { UserService } from 'src/user/user.service';
-import { Faculty } from 'src/faculty/schemas/faculty.schema';
+import { Faculty } from 'src/shared-modules/database/schemas/faculty/faculty.schema';
 
 @Injectable()
 export class EventService {

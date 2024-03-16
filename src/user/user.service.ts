@@ -4,10 +4,10 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
+import { User } from '../shared-modules/database/schemas/user/user.schema';
 import { Model } from 'mongoose';
-import { UserSession } from './schemas/user-session.schema';
-import { UserFaculty } from './schemas/user-faculty.schema';
+import { UserSession } from '../shared-modules/database/schemas/user/user-session.schema';
+import { UserFaculty } from '../shared-modules/database/schemas/user/user-faculty.schema';
 import {
   CreateSessionDto,
   CreateUserDto,

@@ -1,5 +1,5 @@
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
-import { UserFaculty } from './schemas/user-faculty.schema';
+import { UserFaculty } from '../shared-modules/database/schemas/user/user-faculty.schema';
 import { EGender, ERole } from './user.enums';
 import { ApiProperty } from '@nestjs/swagger';
 

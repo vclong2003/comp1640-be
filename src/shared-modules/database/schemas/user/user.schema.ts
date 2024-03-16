@@ -2,9 +2,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { UserFaculty, UserFacultySchema } from './user-faculty.schema';
 import { UserSession, UserSessionSchema } from './user-session.schema';
-import { Event } from 'src/event/schemas/event.schema';
-import { Contribution } from 'src/contribution/schemas/contribution.schema';
-import { EGender, ERole } from '../user.enums';
+import { Event } from 'src/shared-modules/database/schemas/event/event.schema';
+import { Contribution } from 'src/shared-modules/database/schemas/contribution/contribution.schema';
+import { EGender, ERole } from '../../../../user/user.enums';
 
 @Schema()
 export class User {

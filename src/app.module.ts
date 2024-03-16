@@ -10,12 +10,14 @@ import { ContributionModule } from './contribution/contribution.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './auth/guards/access-token.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { DatabaseModule } from './shared-modules/database/database.module';
 
 @Module({
   imports: [
+    PinoLoggerModule,
     ConfigModule,
     MongooseModule,
-    PinoLoggerModule,
+    DatabaseModule,
     UserModule,
     AuthModule,
     FacultyModule,

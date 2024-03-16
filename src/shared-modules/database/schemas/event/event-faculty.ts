@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import {
   FacultyMc,
   FacultyMcSchema,
-} from 'src/faculty/schemas/faculty-mc.schema';
+} from 'src/shared-modules/database/schemas/faculty/faculty-mc.schema';
 
 @Schema()
 export class EventFaculty {

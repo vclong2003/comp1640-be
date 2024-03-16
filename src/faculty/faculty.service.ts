@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Faculty } from './schemas/faculty.schema';
+import { Faculty } from '../shared-modules/database/schemas/faculty/faculty.schema';
 import { UserService } from 'src/user/user.service';
-import { User } from 'src/user/schemas/user.schema';
+import { User } from 'src/shared-modules/database/schemas/user/user.schema';
 import { CreateFacultyDto } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
 import { EventService } from 'src/event/event.service';

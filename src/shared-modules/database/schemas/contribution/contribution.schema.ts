@@ -12,8 +12,8 @@ import {
   ContributionEventSchema,
 } from './contribution-event.schema';
 
-import { Comment, CommentSchema } from './contribution-comment/comment.schema';
 import mongoose from 'mongoose';
+import { CommentSchema } from './contribution-comment/comment.schema';
 
 @Schema()
 export class Contribution {
