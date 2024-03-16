@@ -35,10 +35,7 @@ export class EventController {
       req.user.role === ERole.Student ||
       req.user.role === ERole.MarketingCoordinator
     ) {
-      return await this.eventService.findEventsByUserFaculty(
-        req.user.faculty._id,
-        dto,
-      );
+      return await this.eventService.findEventsByUserFaculty(req.user._id, dto);
     }
     return await this.eventService.findEvents(dto);
   }

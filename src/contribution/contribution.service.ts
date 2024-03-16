@@ -1,7 +1,84 @@
-import { Injectable } from '@nestjs/common';
-import { StorageModule } from 'src/shared-modules/storage/storage.module';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { StorageService } from 'src/shared-modules/storage/storage.service';
+import { AddContributionDto } from './contribution.dtos';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Contribution } from 'src/shared-modules/database/schemas/contribution/contribution.schema';
+import { User } from 'src/shared-modules/database/schemas/user/user.schema';
+import { Event } from 'src/shared-modules/database/schemas/event/event.schema';
+import { Faculty } from 'src/shared-modules/database/schemas/faculty/faculty.schema';
 
 @Injectable()
 export class ContributionService {
-  constructor(private storageModule: StorageModule) {}
+  constructor(
+    @InjectModel('Contribution') private contributionModel: Model<Contribution>,
+    @InjectModel('Event') private eventModel: Model<Event>,
+    @InjectModel('Faculty') private facultyModel: Model<Faculty>,
+    @InjectModel('User') private userModel: Model<User>,
+    private strorageSerive: StorageService,
+  ) {}
+
+  async createNewContribution(
+    studentId: string,
+    dto: AddContributionDto,
+    files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
+  ) {
+    if (files.documents.length <= 0) throw new BadRequestException(1);
+
+    const { eventId, title, description } = dto;
+
+    const student = await this.userModel.findById(studentId);
+    if (!student.faculty) throw new BadRequestException(2);
+
+    const faculty = await this.facultyModel.findById(student.faculty._id);
+
+    const event = await this.eventModel.findById(eventId);
+    if (event.faculty._id !== faculty._id) throw new BadRequestException(3);
+
+    const contribution = new this.contributionModel({
+      title,
+      description,
+      author: {
+        _id: student._id,
+        name: student.name,
+        avatar_url: student.avatar_url,
+        email: student.email,
+      },
+      event: {
+        _id: event._id,
+        name: event.name,
+      },
+      faculty: {
+        _id: faculty._id,
+        name: faculty.name,
+      },
+    });
+
+    await this.strorageSerive.uploadContributionDocuments(
+      contribution._id,
+      files.documents,
+    );
+    if (files.images.length > 0) {
+      await this.strorageSerive.uploadContributionImages(
+        contribution._id,
+        files.images,
+      );
+    }
+    await contribution.save();
+
+    return { _id: contribution._id };
+  }
+
+  async getContributionById(contributionId: string) {
+    const contribution = await this.contributionModel.findById(contributionId);
+    const images =
+      await this.strorageSerive.getContributionImages(contributionId);
+    const documents =
+      await this.strorageSerive.getContributionDocuments(contributionId);
+    return {
+      contribution,
+      images,
+      documents,
+    };
+  }
 }

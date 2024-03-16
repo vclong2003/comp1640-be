@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsString, IsEmail, IsEnum, IsOptional } from 'class-validator';
 import { ERole } from 'src/user/user.enums';
 
 // Register ---------------------------------------------------------------
@@ -50,7 +50,7 @@ export class SetupAccountDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsDate()
+  @IsString()
   dob?: Date;
 }
 
@@ -79,6 +79,6 @@ export class SetupGuestAccountDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsDate()
+  @IsString()
   dob?: Date;
 }

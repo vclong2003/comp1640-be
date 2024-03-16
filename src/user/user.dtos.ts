@@ -1,4 +1,4 @@
-import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { EGender, ERole } from './user.enums';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -20,7 +20,7 @@ export class UpdateUserDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsDate()
+  @IsString()
   dob?: Date;
 
   @ApiProperty()

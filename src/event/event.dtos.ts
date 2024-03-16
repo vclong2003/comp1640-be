@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDate,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsString, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { EEventSort } from './event.enums';
 
 export class CreateEventDTO {
@@ -38,57 +32,57 @@ export class UpdateEventDTO {
 
   @ApiProperty()
   @IsOptional()
-  @IsDate()
+  @IsString()
   start_date?: Date;
 
   @ApiProperty()
   @IsOptional()
-  @IsDate()
+  @IsString()
   first_closure_date?: Date;
 
   @ApiProperty()
   @IsOptional()
-  @IsDate()
+  @IsString()
   final_closure_date?: Date;
 }
 
 export class FindEventsDTO {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   facultyId?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsDate()
+  @IsString()
   start_date?: Date;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsDate()
+  @IsString()
   final_closure_date?: Date;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   mcName?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsEnum(EEventSort)
   sort?: EEventSort;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   skip?: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   limit?: number;

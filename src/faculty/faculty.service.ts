@@ -35,13 +35,15 @@ export class FacultyService {
 
   async createFaculty(dto: CreateFacultyDto): Promise<Faculty> {
     const { name, mcId } = dto;
-    let mcUser: User | null = null;
-    if (mcId) {
-      mcUser = await this.userModel.findById(mcId).exec();
-      if (!mcUser || mcUser.role != ERole.MarketingCoordinator) {
+
+    let mc;
+    if (mc) {
+      mc = await this.userModel.findById(mcId);
+      if (!mc || mc.role != ERole.MarketingCoordinator) {
         throw new BadRequestException('Invalid mc');
       }
     }
+
     const currentFaculty = await this.facultyModel
       .findOne({
         name: {
@@ -55,17 +57,24 @@ export class FacultyService {
     }
     const newFaculty = new this.facultyModel({
       name,
-      mc: mcUser && { _id: mcUser._id, name: mcUser.name, email: mcUser.email },
+      mc: mc && { _id: mc._id, name: mc.name, email: mc.email },
     });
     await newFaculty.save();
+
+    if (mc) {
+      mc.faculty = { _id: newFaculty._id, name: newFaculty.name };
+      await mc.save();
+    }
+
     return newFaculty;
   }
 
   async updateFaculty(facultyId: string, dto: UpdateFacultyDto) {
     const { name, mcId } = dto;
-    let mc: User | null = null;
+
+    let mc;
     if (mcId) {
-      mc = await this.userModel.findById(mcId).exec();
+      mc = await this.userModel.findById(mcId);
       if (mc.role != ERole.MarketingCoordinator) {
         throw new BadRequestException('Invalid mc');
       }
@@ -89,6 +98,11 @@ export class FacultyService {
       },
     );
 
+    if (mc) {
+      mc.faculty = { _id: faculty._id, name: faculty.name };
+      await mc.save();
+    }
+
     await this.eventModel.updateMany(
       { _id: { $in: faculty.event_ids } },
       { faculty: { _id: faculty._id, name: faculty.name } },
@@ -98,6 +112,13 @@ export class FacultyService {
       { _id: { $in: faculty.contribution_ids } },
       { faculty: { _id: faculty._id, name: faculty.name } },
     );
+
+    await this.userModel.updateMany(
+      { _id: { $in: faculty.student_ids } },
+      { faculty: { _id: faculty._id, name: faculty.name } },
+    );
+
+    return faculty;
   }
 
   async moveStudent(facultyId: string, studentId: string) {

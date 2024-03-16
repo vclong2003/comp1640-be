@@ -95,7 +95,7 @@ export class EventService {
     dto: FindEventsDTO,
   ): Promise<Event[]> {
     const user = await this.userModel.findById(userId).exec();
-    if (user.faculty) throw new BadRequestException('User has no faculty');
+    if (!user.faculty) throw new BadRequestException('User has no faculty');
 
     const { name, start_date, final_closure_date, limit, skip, sort } = dto;
 
@@ -103,7 +103,7 @@ export class EventService {
       {
         $match: {
           'faculty._id': user.faculty._id,
-          name: { $regex: name, $options: 'i' },
+          name: { $regex: name || '', $options: 'i' },
           start_date: { $gte: start_date },
           final_closure_date: { $lte: final_closure_date },
         },
@@ -137,22 +137,20 @@ export class EventService {
       {
         $match: {
           'faculty._id': facultyId,
-          'faculty.mc.name': { $regex: mcName, $options: 'i' },
-          name: { $regex: name, $options: 'i' },
+          'faculty.mc.name': { $regex: mcName || '', $options: 'i' },
+          name: { $regex: name || '', $options: 'i' },
           start_date: { $gte: start_date },
           final_closure_date: { $lte: final_closure_date },
         },
       },
       {
         $project: {
-          number_of_contributions: { $size: 'contribution_ids' },
-          contribution_ids: 0,
-          published_contribution_ids: 0,
+          number_of_contributions: { $size: '$contribution_ids' },
         },
       },
       { $sort: { [sort]: -1 } },
-      { $skip: skip },
-      { $limit: limit },
+      { $skip: skip || 0 },
+      { $limit: limit || 100 },
     ]);
   }
 
