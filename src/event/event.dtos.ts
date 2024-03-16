@@ -52,7 +52,7 @@ export class UpdateEventDTO {
   final_closure_date?: Date;
 }
 
-export class FindEventDTO {
+export class FindEventsDTO {
   @ApiProperty()
   @IsOptional()
   @IsString()

@@ -1,50 +1,66 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Query,
+  Put,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { FacultyService } from './faculty.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { AddStudentDto, CreateFacultyDto, SetFacultyDto } from './faculty.dtos';
+import {
+  CreateFacultyDto,
+  FindFacultiesDto,
+  UpdateFacultyDto,
+} from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
-import { NoAccessToken } from 'src/auth/decorators/no-access-token.decorator';
 
 @Controller('faculty')
 export class FacultyController {
   constructor(private facultyService: FacultyService) {}
 
-  @Get('all')
-  @NoAccessToken()
-  async getAllFaculty() {
-    return this.facultyService.findAll();
-  }
-
-  @Get(':facultyId/students')
-  async getStudents(@Param('facultyId') facultyId: string) {
-    return this.facultyService.findAllStudent(facultyId);
-  }
-
   @Post('')
   @Roles([ERole.Admin])
   async createFaculty(@Body() dto: CreateFacultyDto) {
-    return this.facultyService.createFaculty(dto);
+    return await this.facultyService.createFaculty(dto);
   }
 
-  @Post(':facultyId/student')
+  @Put(':facultyId')
   @Roles([ERole.Admin])
-  async addStudent(
+  async updateFaculty(
     @Param('facultyId') facultyId: string,
-    @Body() dto: AddStudentDto,
+    @Body() dto: UpdateFacultyDto,
   ) {
-    const { studentId } = dto;
-    console.log('facultyId', facultyId);
-    console.log('studentId', studentId);
-    return this.facultyService.addStudent(facultyId, studentId);
+    return await this.facultyService.updateFaculty(facultyId, dto);
   }
 
-  @Post(':facultyId/mc')
+  @Put(':facultyId/student/:studentId')
   @Roles([ERole.Admin])
-  async setFacultyMc(
+  async moveStudent(
     @Param('facultyId') facultyId: string,
-    @Body() dto: SetFacultyDto,
+    @Param('studentId') studentId: string,
   ) {
-    const { mcId } = dto;
-    return this.facultyService.setFacultyMc(facultyId, mcId);
+    return await this.facultyService.moveStudent(facultyId, studentId);
+  }
+
+  @Delete(':facultyId/student/:studentId')
+  @Roles([ERole.Admin])
+  async removeStudent(
+    @Param('facultyId') facultyId: string,
+    @Param('studentId') studentId: string,
+  ) {
+    return await this.facultyService.removeStudent(facultyId, studentId);
+  }
+
+  @Get('all')
+  async getAllFaculty(@Query() dto: FindFacultiesDto) {
+    return await this.facultyService.findFaculties(dto);
+  }
+
+  @Get(':facultyId')
+  async getFaculty(@Param('facultyId') facultyId: string) {
+    return await this.facultyService.findOneById(facultyId);
   }
 }

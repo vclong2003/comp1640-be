@@ -6,8 +6,18 @@ export class CreateFacultyDto {
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
+  @IsString()
+  mcId?: string;
+}
+
+export class UpdateFacultyDto {
+  @ApiProperty({ required: false })
+  @IsString()
+  name?: string;
+
+  @ApiProperty({ required: false })
   @IsString()
   mcId?: string;
 }
@@ -18,8 +28,19 @@ export class AddStudentDto {
   studentId: string;
 }
 
-export class SetFacultyDto {
-  @ApiProperty()
+export class FindFacultiesDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  mcId: string;
+  name?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  skip?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  limit?: number;
 }

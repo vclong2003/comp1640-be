@@ -1,32 +1,36 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  forwardRef,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { Faculty } from '../shared-modules/database/schemas/faculty/faculty.schema';
 import { User } from 'src/shared-modules/database/schemas/user/user.schema';
-import { CreateFacultyDto } from './faculty.dtos';
+import {
+  CreateFacultyDto,
+  FindFacultiesDto,
+  UpdateFacultyDto,
+} from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
-import { EventService } from 'src/event/event.service';
+import { Event } from 'src/shared-modules/database/schemas/event/event.schema';
+import { Contribution } from 'src/shared-modules/database/schemas/contribution/contribution.schema';
 
 @Injectable()
 export class FacultyService {
   constructor(
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     @InjectModel('User') private userModel: Model<User>,
-    @Inject(forwardRef(() => EventService))
-    private eventService: EventService,
+    @InjectModel('Event') private eventModel: Model<Event>,
+    @InjectModel('Contribution') private contributionModel: Model<Contribution>,
   ) {}
 
   async findOneById(id: string): Promise<Faculty> {
     return this.facultyModel.findById(id).exec();
   }
 
-  async findAll(): Promise<Faculty[]> {
-    return this.facultyModel.find().select('_id name mc').exec();
+  async findFaculties(dto: FindFacultiesDto): Promise<Faculty[]> {
+    const { name, skip, limit } = dto;
+    const query = {
+      name: { $regex: name || '', $options: 'i' },
+    };
+    return this.facultyModel.find(query).skip(skip).limit(limit).exec();
   }
 
   async createFaculty(dto: CreateFacultyDto): Promise<Faculty> {
@@ -41,7 +45,8 @@ export class FacultyService {
     const currentFaculty = await this.facultyModel
       .findOne({
         name: {
-          $regex: new RegExp(`^${name}$`, 'i'),
+          $regex: name,
+          $options: 'i',
         },
       })
       .exec();
@@ -56,104 +61,73 @@ export class FacultyService {
     return newFaculty;
   }
 
-  async setFacultyMc(facultyId: string, mcId: string): Promise<Faculty> {
-    const faculty = await this.facultyModel.findById(facultyId).exec();
-    if (!faculty) {
-      throw new BadRequestException('Faculty not found');
+  async updateFaculty(facultyId: string, dto: UpdateFacultyDto) {
+    const { name, mcId } = dto;
+    let mc: User | null = null;
+    if (mcId) {
+      mc = await this.userModel.findById(mcId).exec();
+      if (mc.role != ERole.MarketingCoordinator) {
+        throw new BadRequestException('Invalid mc');
+      }
     }
-    const mcUser = await this.userModel.findById(mcId).exec();
-    if (!mcUser || mcUser.role != ERole.MarketingCoordinator) {
-      throw new BadRequestException('Invalid mc');
-    }
-    faculty.mc = { _id: mcUser._id, name: mcUser.name, email: mcUser.email };
-    await faculty.save();
-    await this.eventService.updateEventsFaculty(faculty.event_ids, faculty);
-    return faculty;
+
+    const updateData: Partial<Faculty> = {};
+    if (name) updateData.name = name;
+    if (mc)
+      updateData.mc = {
+        _id: mc._id,
+        name: mc.name,
+        email: mc.email,
+        avatar_url: mc.avatar_url,
+      };
+
+    const faculty = await this.facultyModel.findByIdAndUpdate(
+      facultyId,
+      updateData,
+      {
+        new: true,
+      },
+    );
+
+    await this.eventModel.updateMany(
+      { _id: { $in: faculty.event_ids } },
+      { faculty: { _id: faculty._id, name: faculty.name } },
+    );
+
+    await this.contributionModel.updateMany(
+      { _id: { $in: faculty.contribution_ids } },
+      { faculty: { _id: faculty._id, name: faculty.name } },
+    );
   }
 
-  async addStudent(facultyId: string, studentId: string) {
-    const faculty = await this.facultyModel.findById(facultyId).exec();
-    if (!faculty) {
-      throw new BadRequestException('Faculty not found');
-    }
-    if (faculty.student_ids.includes(studentId)) {
-      throw new BadRequestException('Student already exists in faculty');
-    }
-    const student = await this.userModel.findById(studentId).exec();
-    if (!student || student.role != ERole.Student) {
+  async moveStudent(facultyId: string, studentId: string) {
+    const student = await this.userModel.findById(studentId);
+    if (student.role != ERole.Student) {
       throw new BadRequestException('Invalid student');
     }
     if (student.faculty) {
-      throw new BadRequestException('Student already belongs to a faculty');
+      await this.facultyModel.findByIdAndUpdate(student.faculty._id, {
+        $pull: { student_ids: studentId },
+      });
     }
-    faculty.student_ids.push(studentId);
-    await faculty.save();
-    await this.userModel.updateOne(
-      { _id: studentId },
-      { faculty: { _id: faculty._id, name: faculty.name } },
+    const faculty = await this.facultyModel.findByIdAndUpdate(
+      facultyId,
+      {
+        $push: { student_ids: studentId },
+      },
+      { new: true },
     );
-    return faculty;
+    student.faculty = { _id: faculty._id, name: faculty.name };
+    await student.save();
   }
 
   async removeStudent(facultyId: string, studentId: string) {
-    const faculty = await this.facultyModel.findById(facultyId).exec();
-    if (!faculty) {
-      throw new BadRequestException('Faculty not found');
-    }
-    const studentIndex = faculty.student_ids.indexOf(studentId);
-    if (studentIndex == -1) {
-      throw new BadRequestException('Student not found in faculty');
-    }
-    faculty.student_ids.splice(studentIndex, 1);
-    await faculty.save();
-    await this.userModel.updateOne(
-      {
-        _id: studentId,
-      },
-      {
-        faculty: null,
-      },
-    );
-    return faculty;
-  }
-
-  async findAllStudent(facultyId: string) {
-    const faculty = await this.facultyModel.aggregate([
-      { $match: { _id: new mongoose.Types.ObjectId(facultyId) } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'student_ids',
-          foreignField: '_id',
-          as: 'students',
-        },
-      },
-      {
-        $project: {
-          name: 1,
-          mc: 1,
-          students: {
-            _id: 1,
-            name: 1,
-            email: 1,
-            avatar_url: 1,
-          },
-        },
-      },
-    ]);
-    if (!faculty || faculty.length == 0) {
-      throw new BadRequestException('Faculty not found');
-    }
-    return faculty[0];
-  }
-
-  async addEventId(facultyId: string, eventId: string) {
-    const faculty = await this.facultyModel.findById(facultyId).exec();
-    if (faculty.event_ids.includes(eventId)) {
-      throw new BadRequestException('Event already exists in faculty');
-    }
-    faculty.event_ids.push(eventId);
-    await faculty.save();
-    return faculty;
+    await this.facultyModel.findByIdAndUpdate(facultyId, {
+      $pull: { student_ids: studentId },
+    });
+    await this.userModel.findByIdAndUpdate(studentId, {
+      faculty: null,
+    });
+    return;
   }
 }

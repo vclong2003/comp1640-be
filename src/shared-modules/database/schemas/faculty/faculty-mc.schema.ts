@@ -11,6 +11,9 @@ export class FacultyMc {
 
   @Prop()
   email: string;
+
+  @Prop()
+  avatar_url: string;
 }
 
 export const FacultyMcSchema = SchemaFactory.createForClass(FacultyMc);

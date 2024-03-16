@@ -12,26 +12,34 @@ import {
 import { EventService } from './event.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
-import { CreateEventDTO, FindEventDTO, UpdateEventDTO } from './event.dtos';
+import { CreateEventDTO, FindEventsDTO, UpdateEventDTO } from './event.dtos';
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
-  @Post()
+  @Post('')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
-  create(@Body() createEventDto: CreateEventDTO) {
-    return this.eventService.createEvent(createEventDto);
+  async createEvent(@Req() req, @Body() dto: CreateEventDTO) {
+    if (req.user.role === ERole.MarketingCoordinator) {
+      return await this.eventService.createEventByUserFaculty(
+        req.user._id,
+        dto,
+      );
+    }
+    return await this.eventService.createEvent(dto);
   }
 
-  @Get('')
-  @Roles([ERole.MarketingCoordinator, ERole.Student, ERole.Guest])
-  async findEventsByUserFaculty(@Req() req, @Query() dto: FindEventDTO) {
-    return await this.eventService.findEventsByUserFaculty(req.user._id, dto);
-  }
-
-  @Get('')
-  @Roles([ERole.Admin])
-  async findEvents(@Query() dto: FindEventDTO) {
+  @Get('all')
+  async findEvents(@Req() req, @Query() dto: FindEventsDTO) {
+    if (
+      req.user.role === ERole.Student ||
+      req.user.role === ERole.MarketingCoordinator
+    ) {
+      return await this.eventService.findEventsByUserFaculty(
+        req.user.faculty._id,
+        dto,
+      );
+    }
     return await this.eventService.findEvents(dto);
   }
 
@@ -40,15 +48,32 @@ export class EventController {
     return await this.eventService.getEventDetails(eventId);
   }
 
-  @Put(':id')
+  @Put(':eventId')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
-  update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDTO) {
-    return this.eventService.updateEvent(id, updateEventDto);
+  async updateEvent(
+    @Req() req,
+    @Param('eventId') eventId: string,
+    @Body() dto: UpdateEventDTO,
+  ) {
+    if (req.user.role === ERole.MarketingCoordinator) {
+      return await this.eventService.updateEventByUserFaculty(
+        req.user._id,
+        eventId,
+        dto,
+      );
+    }
+    return await this.eventService.updateEvent(eventId, dto);
   }
 
-  @Delete(':id')
+  @Delete(':eventId')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
-  remove(@Param('id') id: string) {
-    return this.eventService.removeEvent(id);
+  async deleteEvent(@Req() req, @Param('eventId') eventId: string) {
+    if (req.user.role === ERole.MarketingCoordinator) {
+      return await this.eventService.removeEventFromUserFaculty(
+        req.user._id,
+        eventId,
+      );
+    }
+    return await this.eventService.removeEvent(eventId);
   }
 }
