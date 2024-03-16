@@ -1,25 +1,34 @@
 import {
+  Body,
   Controller,
+  Get,
   Post,
-  Req,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { NoAccessToken } from 'src/auth/decorators/no-access-token.decorator';
+import { StorageService } from 'src/shared-modules/storage/storage.service';
 
 @Controller('contribution')
 export class ContributionController {
+  constructor(private storageService: StorageService) {}
+
   @Post('')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'file', maxCount: 1 },
-      { name: 'file_1', maxCount: 1 },
-    ]),
-  )
+  @UseInterceptors(FilesInterceptor('files'))
   @NoAccessToken()
-  async test(@UploadedFile() files: Express.Multer.File[], @Req() req) {
+  async test(@UploadedFiles() files: Express.Multer.File[], @Body() body) {
     console.log(files);
-    console.log(req.body);
+    console.log(body);
+
+    const contributionId = '123456789';
+    await this.storageService.uploadContributionImages(contributionId, files);
+  }
+
+  @Get('')
+  @NoAccessToken()
+  async test1() {
+    const contributionId = '123456789';
+    return await this.storageService.getContributionImages(contributionId);
   }
 }

@@ -11,10 +11,7 @@ import {
   ContributionEvent,
   ContributionEventSchema,
 } from './contribution-event.schema';
-import {
-  ContributionFile,
-  ContributionFileSchema,
-} from './contribution-file.schema';
+
 import { Comment, CommentSchema } from './contribution-comment/comment.schema';
 import mongoose from 'mongoose';
 
@@ -42,12 +39,6 @@ export class Contribution {
 
   @Prop({ type: ContributionEventSchema })
   event: ContributionEvent;
-
-  @Prop({ type: [ContributionFileSchema] })
-  document_files: ContributionFile[];
-
-  @Prop({ type: [ContributionFileSchema] })
-  media_files: ContributionFile[];
 
   @Prop({ type: [CommentSchema] })
   private_comments: Comment[];
