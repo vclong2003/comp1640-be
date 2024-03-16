@@ -14,15 +14,15 @@ export class CreateEventDTO {
   name: string;
 
   @ApiProperty()
-  @IsDate()
+  @IsString()
   start_date: Date;
 
   @ApiProperty()
-  @IsDate()
+  @IsString()
   first_closure_date: Date;
 
   @ApiProperty()
-  @IsDate()
+  @IsString()
   final_closure_date: Date;
 
   @ApiProperty()

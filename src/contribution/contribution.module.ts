@@ -2,12 +2,9 @@ import { Module } from '@nestjs/common';
 import { ContributionService } from './contribution.service';
 import { ContributionController } from './contribution.controller';
 import { StorageModule } from 'src/shared-modules/storage/storage.module';
-import { UserModule } from 'src/user/user.module';
-import { FacultyModule } from 'src/faculty/faculty.module';
-import { EventModule } from 'src/event/event.module';
 
 @Module({
-  imports: [StorageModule, UserModule, FacultyModule, EventModule],
+  imports: [StorageModule],
   providers: [ContributionService],
   controllers: [ContributionController],
 })

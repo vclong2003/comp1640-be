@@ -14,10 +14,12 @@ export class CreateFacultyDto {
 
 export class UpdateFacultyDto {
   @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
   name?: string;
 
   @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
   mcId?: string;
 }
