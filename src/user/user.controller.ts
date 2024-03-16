@@ -27,28 +27,9 @@ export class UserController {
     return await this.userService.updateUser(req.user._id, dto);
   }
 
-  @Get('students')
-  @Roles([ERole.Admin, ERole.MarketingManager, ERole.MarketingManager])
-  async findStudents(@Query() dto: FindUsersDto) {
-    return await this.userService.findStudents(dto);
-  }
-
-  @Get('mcs')
-  @Roles([ERole.Admin])
-  async findMcs(@Query() dto: FindUsersDto) {
-    return await this.userService.findMcs(dto);
-  }
-
-  @Get('mms')
-  @Roles([ERole.Admin])
-  async findMms(@Query() dto: FindUsersDto) {
-    return await this.userService.findMms(dto);
-  }
-
-  @Get('guests')
-  @Roles([ERole.Admin])
-  async findGuests(@Query() dto: FindUsersDto) {
-    return await this.userService.findGuests(dto);
+  @Get('/all')
+  async findUsers(@Query() dto: FindUsersDto) {
+    return await this.userService.findUsers(dto);
   }
 
   @Get('/:userId')

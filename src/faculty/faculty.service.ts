@@ -7,7 +7,6 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Faculty } from '../shared-modules/database/schemas/faculty/faculty.schema';
-import { UserService } from 'src/user/user.service';
 import { User } from 'src/shared-modules/database/schemas/user/user.schema';
 import { CreateFacultyDto } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
@@ -17,7 +16,7 @@ import { EventService } from 'src/event/event.service';
 export class FacultyService {
   constructor(
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
-    private userService: UserService,
+    @InjectModel('User') private userModel: Model<User>,
     @Inject(forwardRef(() => EventService))
     private eventService: EventService,
   ) {}
@@ -34,7 +33,7 @@ export class FacultyService {
     const { name, mcId } = dto;
     let mcUser: User | null = null;
     if (mcId) {
-      mcUser = await this.userService.findOneById(mcId);
+      mcUser = await this.userModel.findById(mcId).exec();
       if (!mcUser || mcUser.role != ERole.MarketingCoordinator) {
         throw new BadRequestException('Invalid mc');
       }
@@ -62,7 +61,7 @@ export class FacultyService {
     if (!faculty) {
       throw new BadRequestException('Faculty not found');
     }
-    const mcUser = await this.userService.findOneById(mcId);
+    const mcUser = await this.userModel.findById(mcId).exec();
     if (!mcUser || mcUser.role != ERole.MarketingCoordinator) {
       throw new BadRequestException('Invalid mc');
     }
@@ -80,7 +79,7 @@ export class FacultyService {
     if (faculty.student_ids.includes(studentId)) {
       throw new BadRequestException('Student already exists in faculty');
     }
-    const student = await this.userService.findOneById(studentId);
+    const student = await this.userModel.findById(studentId).exec();
     if (!student || student.role != ERole.Student) {
       throw new BadRequestException('Invalid student');
     }
@@ -89,10 +88,10 @@ export class FacultyService {
     }
     faculty.student_ids.push(studentId);
     await faculty.save();
-    await this.userService.updateUserFaculty(studentId, {
-      _id: faculty._id,
-      name: faculty.name,
-    });
+    await this.userModel.updateOne(
+      { _id: studentId },
+      { faculty: { _id: faculty._id, name: faculty.name } },
+    );
     return faculty;
   }
 
@@ -107,7 +106,14 @@ export class FacultyService {
     }
     faculty.student_ids.splice(studentIndex, 1);
     await faculty.save();
-    await this.userService.updateUserFaculty(studentId, null);
+    await this.userModel.updateOne(
+      {
+        _id: studentId,
+      },
+      {
+        faculty: null,
+      },
+    );
     return faculty;
   }
 

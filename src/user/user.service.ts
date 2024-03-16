@@ -1,20 +1,8 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../shared-modules/database/schemas/user/user.schema';
 import { Model } from 'mongoose';
-import { UserSession } from '../shared-modules/database/schemas/user/user-session.schema';
-import { UserFaculty } from '../shared-modules/database/schemas/user/user-faculty.schema';
-import {
-  CreateSessionDto,
-  CreateUserDto,
-  FindUsersDto,
-  UpdateUserDto,
-} from './user.dtos';
-import { ERole } from './user.enums';
+import { FindUsersDto, UpdateUserDto } from './user.dtos';
 
 @Injectable()
 export class UserService {
@@ -42,10 +30,10 @@ export class UserService {
       ]);
   }
 
-  async findStudents(dto: FindUsersDto): Promise<User[] | null> {
-    const { name, email, facultyId, skip, limit } = dto;
+  async findUsers(dto: FindUsersDto): Promise<User[] | null> {
+    const { name, email, role, facultyId, skip, limit } = dto;
     const query = {
-      role: ERole.Student,
+      role,
       name: { $regex: name || '', $options: 'i' },
       email: { $regex: email || '', $options: 'i' },
     };
@@ -56,64 +44,6 @@ export class UserService {
       .skip(skip)
       .limit(limit)
       .exec();
-  }
-
-  async findMcs(dto: FindUsersDto): Promise<User[] | null> {
-    const { name, email, facultyId, skip, limit } = dto;
-    const query = {
-      role: ERole.MarketingCoordinator,
-      name: { $regex: name || '', $options: 'i' },
-      email: { $regex: email || '', $options: 'i' },
-    };
-    if (facultyId) query['faculty._id'] = facultyId;
-    return this.userModel
-      .find(query)
-      .select(['_id', 'name', 'avatar_url'])
-      .skip(skip)
-      .limit(limit)
-      .exec();
-  }
-
-  async findMms(dto: FindUsersDto): Promise<User[] | null> {
-    const { name, email, skip, limit } = dto;
-    const query = {
-      role: ERole.MarketingManager,
-      name: { $regex: name || '', $options: 'i' },
-      email: { $regex: email || '', $options: 'i' },
-    };
-    return this.userModel
-      .find(query)
-      .select(['_id', 'name', 'avatar_url'])
-      .skip(skip)
-      .limit(limit)
-      .exec();
-  }
-
-  async findGuests(dto: FindUsersDto): Promise<User[] | null> {
-    const { name, email, facultyId, skip, limit } = dto;
-    const query = {
-      role: ERole.Guest,
-      name: { $regex: name || '', $options: 'i' },
-      email: { $regex: email || '', $options: 'i' },
-    };
-    if (facultyId) query['faculty._id'] = facultyId;
-    return this.userModel
-      .find(query)
-      .select(['_id', 'name', 'avatar_url'])
-      .skip(skip)
-      .limit(limit)
-      .exec();
-  }
-
-  async createUser(dto: CreateUserDto): Promise<User> {
-    const { email } = dto;
-    const currentUser = await this.findOneByEmail(email);
-    if (currentUser) {
-      throw new ConflictException('User with this email already exists');
-    }
-    const user = new this.userModel({ ...dto });
-    await user.save();
-    return user;
   }
 
   async updateUser(_id: string, dto: UpdateUserDto): Promise<User> {
@@ -128,69 +58,6 @@ export class UserService {
         new: true,
       })
       .exec();
-  }
-
-  async updateUserFaculty(
-    _id: string,
-    faculty?: UserFaculty | null,
-  ): Promise<User | null> {
-    const user = await this.userModel.findById(_id).exec();
-    if (!user) {
-      throw new BadRequestException('User not valid');
-    }
-    if (!faculty) {
-      user.faculty = null;
-      await user.save();
-      return user;
-    }
-    user.faculty = { _id: faculty._id, name: faculty.name };
-    await user.save();
-    return user;
-  }
-
-  async createSession(dto: CreateSessionDto): Promise<UserSession[]> {
-    const { userId, browser, token } = dto;
-    const user = await this.userModel.findById(userId);
-    if (!user) {
-      throw new ConflictException('User not found');
-    }
-    user.sessions.push({ browser, token, date: new Date() });
-    await user.save();
-    return user.sessions;
-  }
-
-  async findSession(
-    userId: string,
-    token: string,
-  ): Promise<UserSession | null> {
-    const user = await this.userModel.findById(userId);
-    if (!user) {
-      throw new ConflictException('User not found');
-    }
-    return user.sessions.find((session) => session.token === token) || null;
-  }
-
-  async removeSession(
-    userId: string,
-    sessionId: string,
-  ): Promise<UserSession[]> {
-    const user = await this.userModel.findById(userId);
-    if (!user) {
-      throw new ConflictException('User not found');
-    }
-    user.sessions = user.sessions.filter(
-      (session) => session._id.toString() !== sessionId,
-    );
-    await user.save();
-    return user.sessions;
-  }
-
-  async updatePassword(_id: string, password: string): Promise<User> {
-    return await this.userModel.findByIdAndUpdate(
-      _id,
-      { password },
-      { new: true },
-    );
   }
 
   async disableUser(_id: string) {

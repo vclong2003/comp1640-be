@@ -1,17 +1,6 @@
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
-import { UserFaculty } from '../shared-modules/database/schemas/user/user-faculty.schema';
 import { EGender, ERole } from './user.enums';
 import { ApiProperty } from '@nestjs/swagger';
-
-export class CreateUserDto {
-  email: string;
-  name: string;
-  password: string;
-  role: ERole;
-  phone?: string;
-  faculty?: UserFaculty;
-  dob?: Date;
-}
 
 export class UpdateUserDto {
   @ApiProperty()
@@ -40,17 +29,15 @@ export class UpdateUserDto {
   gender?: EGender;
 }
 
-export class CreateSessionDto {
-  userId: string;
-  browser: string;
-  token: string;
-}
-
 export class FindUsersDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   name?: string;
+
+  @ApiProperty({ type: 'enum', enum: ERole })
+  @IsEnum(ERole)
+  role: ERole;
 
   @ApiProperty({ required: false })
   @IsOptional()
