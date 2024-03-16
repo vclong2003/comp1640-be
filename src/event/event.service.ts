@@ -21,6 +21,10 @@ export class EventService {
     private userService: UserService,
   ) {}
 
+  async findOneById(_id: string): Promise<Event> {
+    return this.eventModel.findById(_id).exec();
+  }
+
   async getEventDetails(_id: string): Promise<Event> {
     const events = this.eventModel.aggregate([
       { $match: { _id } },

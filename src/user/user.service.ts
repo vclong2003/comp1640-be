@@ -46,8 +46,8 @@ export class UserService {
     const { name, email, facultyId, skip, limit } = dto;
     const query = {
       role: ERole.Student,
-      name: { $regex: name, $options: 'i' },
-      email: { $regex: email, $options: 'i' },
+      name: { $regex: name || '', $options: 'i' },
+      email: { $regex: email || '', $options: 'i' },
     };
     if (facultyId) query['faculty._id'] = facultyId;
     return this.userModel
@@ -62,8 +62,8 @@ export class UserService {
     const { name, email, facultyId, skip, limit } = dto;
     const query = {
       role: ERole.MarketingCoordinator,
-      name: { $regex: name, $options: 'i' },
-      email: { $regex: email, $options: 'i' },
+      name: { $regex: name || '', $options: 'i' },
+      email: { $regex: email || '', $options: 'i' },
     };
     if (facultyId) query['faculty._id'] = facultyId;
     return this.userModel
@@ -78,8 +78,8 @@ export class UserService {
     const { name, email, skip, limit } = dto;
     const query = {
       role: ERole.MarketingManager,
-      name: { $regex: name, $options: 'i' },
-      email: { $regex: email, $options: 'i' },
+      name: { $regex: name || '', $options: 'i' },
+      email: { $regex: email || '', $options: 'i' },
     };
     return this.userModel
       .find(query)
@@ -93,8 +93,8 @@ export class UserService {
     const { name, email, facultyId, skip, limit } = dto;
     const query = {
       role: ERole.Guest,
-      name: { $regex: name, $options: 'i' },
-      email: { $regex: email, $options: 'i' },
+      name: { $regex: name || '', $options: 'i' },
+      email: { $regex: email || '', $options: 'i' },
     };
     if (facultyId) query['faculty._id'] = facultyId;
     return this.userModel

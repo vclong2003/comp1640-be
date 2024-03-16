@@ -1,10 +1,4 @@
-import {
-  IsDate,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { UserFaculty } from './schemas/user-faculty.schema';
 import { EGender, ERole } from './user.enums';
 import { ApiProperty } from '@nestjs/swagger';
@@ -53,23 +47,28 @@ export class CreateSessionDto {
 }
 
 export class FindUsersDto {
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   name?: string;
 
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   email?: string;
 
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   facultyId?: string;
 
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
+  @IsString()
   skip?: number;
 
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
+  @IsString()
   limit?: number;
 }
