@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEnum, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { EEventSort } from './event.enums';
 
 export class CreateEventDTO {
@@ -72,18 +72,18 @@ export class FindEventsDTO {
   @IsString()
   mcName?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, enum: EEventSort })
   @IsOptional()
   @IsEnum(EEventSort)
   sort?: EEventSort;
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
+  @IsString()
   skip?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
+  @IsString()
   limit?: number;
 }

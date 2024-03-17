@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, PipelineStage } from 'mongoose';
 import { Event } from '../shared-modules/database/schemas/event/event.schema';
 import { CreateEventDTO, FindEventsDTO, UpdateEventDTO } from './event.dtos';
 import { Faculty } from 'src/shared-modules/database/schemas/faculty/faculty.schema';
@@ -97,72 +97,16 @@ export class EventService {
     const user = await this.userModel.findById(userId).exec();
     if (!user.faculty) throw new BadRequestException('User has no faculty');
 
-    const { name, start_date, final_closure_date, limit, skip, sort } = dto;
-
-    return this.eventModel.aggregate([
-      {
-        $match: {
-          'faculty._id': user.faculty._id,
-          name: { $regex: name || '', $options: 'i' },
-          start_date: { $gte: start_date },
-          final_closure_date: { $lte: final_closure_date },
-        },
-      },
-      {
-        $project: {
-          number_of_contributions: { $size: 'contribution_ids' },
-          contribution_ids: 0,
-          published_contribution_ids: 0,
-        },
-      },
-      { $sort: { [sort]: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-    ]);
+    return this.eventModel.aggregate(
+      this.genFindEventsPipeline({
+        ...dto,
+        facultyId: user.faculty._id,
+      }),
+    );
   }
 
   async findEvents(dto: FindEventsDTO): Promise<Event[]> {
-    const {
-      facultyId,
-      name,
-      start_date,
-      final_closure_date,
-      mcName,
-      limit,
-      skip,
-      sort,
-    } = dto;
-
-    const conditions = {};
-    name && (conditions['name'] = { $regex: name, $options: 'i' });
-    start_date && (conditions['start_date'] = { $gte: start_date });
-    final_closure_date &&
-      (conditions['final_closure_date'] = { $lte: final_closure_date });
-
-    return this.eventModel.aggregate([
-      {
-        $match: conditions,
-      },
-      {
-        $project: {
-          name: 1,
-          start_date: 1,
-          first_closure_date: 1,
-          final_closure_date: 1,
-          faculty: 1,
-          number_of_contributions: {
-            $cond: {
-              if: { $isArray: '$contribution_ids' }, // Check if contribution_ids is an array
-              then: { $size: '$contribution_ids' }, // Calculate size if it's an array
-              else: 0, // Return 0 if contribution_ids is not an array (i.e., null or not present)
-            },
-          },
-        },
-      },
-      { $sort: { [sort]: -1 } },
-      { $skip: 0 },
-      { $limit: 100 },
-    ]);
+    return this.eventModel.aggregate(this.genFindEventsPipeline(dto));
   }
 
   async updateEvent(id: string, dto: UpdateEventDTO): Promise<Event> {
@@ -236,5 +180,52 @@ export class EventService {
 
     await this.eventModel.findByIdAndDelete(eventId).exec();
     await faculty.updateOne({ $pull: { event_ids: eventId } });
+  }
+
+  genFindEventsPipeline(dto: FindEventsDTO): PipelineStage[] {
+    const {
+      facultyId,
+      name,
+      start_date,
+      final_closure_date,
+      mcName,
+      limit,
+      skip,
+      sort,
+    } = dto;
+
+    const matchConditions = {};
+    facultyId && (matchConditions['faculty._id'] = facultyId);
+    name && (matchConditions['name'] = { $regex: name, $options: 'i' });
+    start_date && (matchConditions['start_date'] = { $gte: start_date });
+    final_closure_date &&
+      (matchConditions['final_closure_date'] = { $lte: final_closure_date });
+    mcName &&
+      (matchConditions['faculty.mc.name'] = { $regex: mcName, $options: 'i' });
+
+    return [
+      {
+        $match: matchConditions,
+      },
+      {
+        $project: {
+          name: 1,
+          start_date: 1,
+          first_closure_date: 1,
+          final_closure_date: 1,
+          faculty: 1,
+          number_of_contributions: {
+            $cond: {
+              if: { $isArray: '$contribution_ids' },
+              then: { $size: '$contribution_ids' },
+              else: 0,
+            },
+          },
+        },
+      },
+      { $sort: { [sort]: -1 } },
+      { $skip: Number(skip) || 0 },
+      { $limit: Number(limit) || 1000 },
+    ];
   }
 }
