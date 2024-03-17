@@ -58,11 +58,15 @@ export class ContributionController {
     @UploadedFiles()
     files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
   ) {
-    await this.contributionService.createNewContribution(user._id, dto, files);
+    return await this.contributionService.createNewContribution(
+      user._id,
+      dto,
+      files,
+    );
   }
 
   @Get(':contributionId')
   async getContributionById(@Param('contributionId') contributionId: string) {
-    return this.contributionService.getContributionById(contributionId);
+    return await this.contributionService.getContributionById(contributionId);
   }
 }

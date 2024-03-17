@@ -33,7 +33,10 @@ export class ContributionService {
     const faculty = await this.facultyModel.findById(student.faculty._id);
 
     const event = await this.eventModel.findById(eventId);
-    if (event.faculty._id !== faculty._id) throw new BadRequestException(3);
+    console.log(event.faculty._id, faculty._id);
+    if (event.faculty._id.toString() !== faculty._id.toString()) {
+      throw new BadRequestException(3);
+    }
 
     const contribution = new this.contributionModel({
       title,
