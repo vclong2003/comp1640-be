@@ -133,24 +133,35 @@ export class EventService {
       sort,
     } = dto;
 
+    const conditions = {};
+    name && (conditions['name'] = { $regex: name, $options: 'i' });
+    start_date && (conditions['start_date'] = { $gte: start_date });
+    final_closure_date &&
+      (conditions['final_closure_date'] = { $lte: final_closure_date });
+
     return this.eventModel.aggregate([
       {
-        $match: {
-          'faculty._id': facultyId,
-          'faculty.mc.name': { $regex: mcName || '', $options: 'i' },
-          name: { $regex: name || '', $options: 'i' },
-          start_date: { $gte: start_date },
-          final_closure_date: { $lte: final_closure_date },
-        },
+        $match: conditions,
       },
       {
         $project: {
-          number_of_contributions: { $size: '$contribution_ids' },
+          name: 1,
+          start_date: 1,
+          first_closure_date: 1,
+          final_closure_date: 1,
+          faculty: 1,
+          number_of_contributions: {
+            $cond: {
+              if: { $isArray: '$contribution_ids' }, // Check if contribution_ids is an array
+              then: { $size: '$contribution_ids' }, // Calculate size if it's an array
+              else: 0, // Return 0 if contribution_ids is not an array (i.e., null or not present)
+            },
+          },
         },
       },
       { $sort: { [sort]: -1 } },
-      { $skip: skip || 0 },
-      { $limit: limit || 100 },
+      { $skip: 0 },
+      { $limit: 100 },
     ]);
   }
 
