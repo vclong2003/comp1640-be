@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { EApiConfigKey } from './config/api.config';
-import { Logger } from 'nestjs-pino';
 import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
@@ -14,7 +13,6 @@ async function bootstrap() {
     origin: ['http://localhost:3000', 'https://alhkq.live'],
     credentials: true,
   });
-  // app.useLogger(app.get(Logger));
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
 

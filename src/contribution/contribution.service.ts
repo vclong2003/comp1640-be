@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
-import { AddContributionDto } from './contribution.dtos';
+import { AddContributionDto } from './add-contribution.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Contribution } from 'src/shared-modules/database/schemas/contribution/contribution.schema';

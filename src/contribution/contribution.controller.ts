@@ -9,7 +9,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { AddContributionDto } from './contribution.dtos';
+import { AddContributionDto } from './add-contribution.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { ContributionService } from './contribution.service';

@@ -41,8 +41,6 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
-    "pino-http": "^9.0.0",
-    "pino-pretty": "^10.3.1",
     "pug": "^3.0.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",

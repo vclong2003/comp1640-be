@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   ContributionAuthor,
   ContributionAuthorSchema,
-} from './contribution-author.schema';
+} from './contribution.author.schema';
 import {
   ContributionFaculty,
   ContributionFacultySchema,
