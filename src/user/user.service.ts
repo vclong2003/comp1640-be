@@ -40,7 +40,7 @@ export class UserService {
     if (facultyId) query['faculty._id'] = facultyId;
     return this.userModel
       .find(query)
-      .select(['_id', 'name', 'avatar_url'])
+      .select(['_id', 'email', 'name', 'avatar_url'])
       .skip(skip)
       .limit(limit)
       .exec();

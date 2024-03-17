@@ -81,9 +81,12 @@ export class EventService {
       { $match: { _id } },
       {
         $project: {
+          name: 1,
+          start_date: 1,
+          first_closure_date: 1,
+          final_closure_date: 1,
+          faculty: 1,
           number_of_contributions: { $size: 'contribution_ids' },
-          contribution_ids: 0,
-          published_contribution_ids: 0,
         },
       },
     ]);
@@ -213,7 +216,6 @@ export class EventService {
           start_date: 1,
           first_closure_date: 1,
           final_closure_date: 1,
-          faculty: 1,
           number_of_contributions: {
             $cond: {
               if: { $isArray: '$contribution_ids' },
