@@ -4,12 +4,13 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Req,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { AddContributionDto } from './add-contribution.dto';
+import { AddContributionDto, FindContributionsDto } from './contribution.dtos';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { ContributionService } from './contribution.service';
@@ -68,5 +69,20 @@ export class ContributionController {
   @Get(':contributionId')
   async getContributionById(@Param('contributionId') contributionId: string) {
     return await this.contributionService.getContributionById(contributionId);
+  }
+
+  @Get('')
+  async getAllContributions(@Req() req, @Query() dto: FindContributionsDto) {
+    if (
+      req.user.role === ERole.MarketingManager ||
+      req.user.role === ERole.Admin
+    ) {
+      return await this.contributionService.getContributions(dto);
+    }
+
+    return await this.contributionService.getContributionsByUserFaculty(
+      req.user._id,
+      dto,
+    );
   }
 }

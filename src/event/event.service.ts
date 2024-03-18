@@ -197,6 +197,8 @@ export class EventService {
       sort,
     } = dto;
 
+    const pipeline: PipelineStage[] = [];
+
     const matchConditions = {};
     facultyId && (matchConditions['faculty._id'] = facultyId);
     name && (matchConditions['name'] = { $regex: name, $options: 'i' });
@@ -206,28 +208,27 @@ export class EventService {
     mcName &&
       (matchConditions['faculty.mc.name'] = { $regex: mcName, $options: 'i' });
 
-    return [
-      {
-        $match: matchConditions,
-      },
-      {
-        $project: {
-          name: 1,
-          start_date: 1,
-          first_closure_date: 1,
-          final_closure_date: 1,
-          number_of_contributions: {
-            $cond: {
-              if: { $isArray: '$contribution_ids' },
-              then: { $size: '$contribution_ids' },
-              else: 0,
-            },
-          },
+    const project = {
+      name: 1,
+      start_date: 1,
+      first_closure_date: 1,
+      final_closure_date: 1,
+      number_of_contributions: {
+        $cond: {
+          if: { $isArray: '$contribution_ids' },
+          then: { $size: '$contribution_ids' },
+          else: 0,
         },
       },
-      { $sort: { [sort]: -1 } },
-      { $skip: Number(skip) || 0 },
-      { $limit: Number(limit) || 1000 },
-    ];
+    };
+
+    pipeline.push({ $match: matchConditions });
+    pipeline.push({ $project: project });
+
+    if (sort) pipeline.push({ $sort: { [sort]: -1 } });
+    if (skip) pipeline.push({ $skip: Number(skip) });
+    if (limit) pipeline.push({ $limit: Number(limit) });
+
+    return pipeline;
   }
 }

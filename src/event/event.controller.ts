@@ -29,7 +29,7 @@ export class EventController {
     return await this.eventService.createEvent(dto);
   }
 
-  @Get('all')
+  @Get('')
   async findEvents(@Req() req, @Query() dto: FindEventsDTO) {
     if (
       req.user.role === ERole.Student ||
