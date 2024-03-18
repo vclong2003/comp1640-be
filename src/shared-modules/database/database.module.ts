@@ -1,9 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema } from 'src/shared-modules/database/schemas/user/user.schema';
-import { EventSchema } from './schemas/event/event.schema';
-import { FacultySchema } from './schemas/faculty/faculty.schema';
-import { ContributionSchema } from './schemas/contribution/contribution.schema';
+import { UserSchema } from 'src/user/schemas/user.schema';
+import { EventSchema } from '../../event/schemas/event.schema';
+import { FacultySchema } from '../../faculty/schemas/faculty.schema';
+import { ContributionSchema } from '../../contribution/schemas/contribution.schema';
 
 @Global()
 @Module({

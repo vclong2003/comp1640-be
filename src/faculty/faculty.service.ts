@@ -1,16 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Faculty } from '../shared-modules/database/schemas/faculty/faculty.schema';
-import { User } from 'src/shared-modules/database/schemas/user/user.schema';
+import { Faculty } from './schemas/faculty.schema';
+import { User } from 'src/user/schemas/user.schema';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
-import { Event } from 'src/shared-modules/database/schemas/event/event.schema';
-import { Contribution } from 'src/shared-modules/database/schemas/contribution/contribution.schema';
+import { Event } from 'src/event/schemas/event.schema';
+import { Contribution } from 'src/contribution/schemas/contribution.schema';
 
 @Injectable()
 export class FacultyService {

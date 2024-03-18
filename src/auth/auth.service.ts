@@ -4,7 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { User } from 'src/shared-modules/database/schemas/user/user.schema';
+import { User } from 'src/user/schemas/user.schema';
 import { PasswordService } from '../shared-modules/password/password.service';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
@@ -16,7 +16,7 @@ import {
   SetupGuestAccountDto,
 } from './dtos/register.dtos';
 import { MailerService } from 'src/shared-modules/mailer/mailer.service';
-import { Faculty } from 'src/shared-modules/database/schemas/faculty/faculty.schema';
+import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import { ERole } from 'src/user/user.enums';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { IRegisterTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';

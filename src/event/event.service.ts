@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage } from 'mongoose';
-import { Event } from '../shared-modules/database/schemas/event/event.schema';
+import { Event } from './schemas/event.schema';
 import { CreateEventDTO, FindEventsDTO, UpdateEventDTO } from './event.dtos';
-import { Faculty } from 'src/shared-modules/database/schemas/faculty/faculty.schema';
-import { User } from 'src/shared-modules/database/schemas/user/user.schema';
-import { Contribution } from 'src/shared-modules/database/schemas/contribution/contribution.schema';
+import { Faculty } from 'src/faculty/schemas/faculty.schema';
+import { User } from 'src/user/schemas/user.schema';
+import { Contribution } from 'src/contribution/schemas/contribution.schema';
 
 @Injectable()
 export class EventService {
