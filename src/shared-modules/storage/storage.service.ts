@@ -2,6 +2,8 @@ import { Storage } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
 import { join } from 'path';
 import { FileResponseDto } from './storage.dtos';
+import { v4 as uuidv4 } from 'uuid';
+import { ContributionFile } from 'src/contribution/schemas/contribution-file.schemas';
 
 @Injectable()
 export class StorageService {
@@ -11,8 +13,9 @@ export class StorageService {
   private readonly PublicBucketName = 'alhkq-public';
 
   private readonly AvatarImagesFolder = 'avatar-images/';
-  private readonly ContributionImagesFolder = 'contribution-images/';
-  private readonly ContributionDocumentsFolder = 'contribution-documents/';
+
+  private readonly ContributionImagesFolder = 'contribution-images';
+  private readonly ContributionDocumentsFolder = 'contribution-documents';
 
   constructor() {
     this.storage = new Storage({
@@ -57,41 +60,47 @@ export class StorageService {
 
   // Contribution Documents -----------------------------------------------------
   async uploadContributionDocuments(
-    contributionId: string,
     files: Express.Multer.File[],
-  ) {
-    await Promise.all(
+  ): Promise<ContributionFile[]> {
+    const uploadedFile = await Promise.all(
       files.map(async (file) => {
-        const fileName =
+        const fileUrl =
           this.ContributionDocumentsFolder +
-          contributionId +
+          '/' +
+          uuidv4() +
           '/' +
           file.originalname;
 
         await this.storage
           .bucket(this.PrivateBucketName)
-          .file(fileName)
+          .file(fileUrl)
           .save(file.buffer);
+
+        return {
+          file_name: file.originalname,
+          file_url: fileUrl,
+        };
       }),
     );
+
+    return uploadedFile;
   }
 
   async getContributionDocuments(
-    contributionId: string,
+    savedFiles: ContributionFile[],
   ): Promise<FileResponseDto[]> {
-    const [files] = await this.storage.bucket(this.PrivateBucketName).getFiles({
-      prefix: this.ContributionDocumentsFolder + contributionId + '/',
-    });
-
     const fileResponses: FileResponseDto[] = await Promise.all(
-      files.map(async (file) => {
-        const fileUrl = await file.getSignedUrl({
-          action: 'read',
-          expires: Date.now() + 1000 * 60 * 60 * 12,
-        });
+      savedFiles.map(async (file) => {
+        const fileUrl = await this.storage
+          .bucket(this.PrivateBucketName)
+          .file(file.file_url)
+          .getSignedUrl({
+            action: 'read',
+            expires: Date.now() + 1000 * 60 * 60 * 12,
+          });
 
         return {
-          file_name: file.name,
+          file_name: file.file_name,
           file_url: fileUrl.toString(),
         };
       }),
@@ -101,42 +110,46 @@ export class StorageService {
   }
 
   // Contribution Images -------------------------------------------------------
-  async uploadContributionImages(
-    contributionId: string,
-    files: Express.Multer.File[],
-  ) {
-    await Promise.all(
+  async uploadContributionImages(files: Express.Multer.File[]) {
+    const uploadedFile = await Promise.all(
       files.map(async (file) => {
-        const fileName =
+        const fileUrl =
           this.ContributionImagesFolder +
-          contributionId +
+          '/' +
+          uuidv4() +
           '/' +
           file.originalname;
 
         await this.storage
           .bucket(this.PrivateBucketName)
-          .file(fileName)
+          .file(fileUrl)
           .save(file.buffer);
+
+        return {
+          file_name: file.originalname,
+          file_url: fileUrl,
+        };
       }),
     );
+
+    return uploadedFile;
   }
 
   async getContributionImages(
-    contributionId: string,
+    savedFiles: ContributionFile[],
   ): Promise<FileResponseDto[]> {
-    const [files] = await this.storage.bucket(this.PrivateBucketName).getFiles({
-      prefix: this.ContributionImagesFolder + contributionId + '/',
-    });
-
     const fileResponses: FileResponseDto[] = await Promise.all(
-      files.map(async (file) => {
-        const fileUrl = await file.getSignedUrl({
-          action: 'read',
-          expires: Date.now() + 1000 * 60 * 60 * 12,
-        });
+      savedFiles.map(async (file) => {
+        const fileUrl = await this.storage
+          .bucket(this.PrivateBucketName)
+          .file(file.file_url)
+          .getSignedUrl({
+            action: 'read',
+            expires: Date.now() + 1000 * 60 * 60 * 12,
+          });
 
         return {
-          file_name: file.name,
+          file_name: file.file_name,
           file_url: fileUrl.toString(),
         };
       }),

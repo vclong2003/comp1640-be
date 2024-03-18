@@ -23,7 +23,9 @@ export class ContributionService {
     dto: AddContributionDto,
     files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
   ) {
-    if (files.documents.length <= 0) throw new BadRequestException(1);
+    if (!files.documents || files.documents.length <= 0) {
+      throw new BadRequestException(1);
+    }
 
     const { eventId, title, description } = dto;
 
@@ -33,7 +35,6 @@ export class ContributionService {
     const faculty = await this.facultyModel.findById(student.faculty._id);
 
     const event = await this.eventModel.findById(eventId);
-    console.log(event.faculty._id, faculty._id);
     if (event.faculty._id.toString() !== faculty._id.toString()) {
       throw new BadRequestException(3);
     }
@@ -57,16 +58,15 @@ export class ContributionService {
       },
     });
 
-    await this.strorageSerive.uploadContributionDocuments(
-      contribution._id,
-      files.documents,
-    );
+    contribution.documents =
+      await this.strorageSerive.uploadContributionDocuments(files.documents);
+
     if (files.images.length > 0) {
-      await this.strorageSerive.uploadContributionImages(
-        contribution._id,
+      contribution.images = await this.strorageSerive.uploadContributionImages(
         files.images,
       );
     }
+
     await contribution.save();
 
     return { _id: contribution._id };
@@ -74,10 +74,12 @@ export class ContributionService {
 
   async getContributionById(contributionId: string) {
     const contribution = await this.contributionModel.findById(contributionId);
-    const images =
-      await this.strorageSerive.getContributionImages(contributionId);
-    const documents =
-      await this.strorageSerive.getContributionDocuments(contributionId);
+    const images = await this.strorageSerive.getContributionImages(
+      contribution.images,
+    );
+    const documents = await this.strorageSerive.getContributionDocuments(
+      contribution.documents,
+    );
     return {
       contribution,
       images,

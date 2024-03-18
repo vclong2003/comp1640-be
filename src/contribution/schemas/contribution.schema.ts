@@ -14,6 +14,10 @@ import {
 
 import mongoose from 'mongoose';
 import { CommentSchema } from './contribution-comment/comment.schema';
+import {
+  ContributionFile,
+  ContributionFileSchema,
+} from './contribution-file.schemas';
 
 @Schema()
 export class Contribution {
@@ -49,11 +53,17 @@ export class Contribution {
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
   liked_user_ids: string[];
 
+  @Prop({ type: [ContributionFileSchema] })
+  documents: ContributionFile[];
+
+  @Prop({ type: [ContributionFileSchema] })
+  images: ContributionFile[];
+
   @Prop()
   edited_at: Date;
 
   @Prop()
-  versions: Contribution[];
+  versions: Partial<Contribution>[];
 }
 
 export const ContributionSchema = SchemaFactory.createForClass(Contribution);
