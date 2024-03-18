@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 import { AddContributionDto, FindContributionsDto } from './contribution.dtos';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage } from 'mongoose';
+import mongoose, { Model, PipelineStage } from 'mongoose';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { Event } from 'src/event/schemas/event.schema';
@@ -98,7 +98,7 @@ export class ContributionService {
     const user = await this.userModel.findById(userId);
     if (!user.faculty) throw new BadRequestException(1);
 
-    const pipeLine = this.genFindContributionsPipeline({
+    const pipeLine = await this.genFindContributionsPipeline({
       ...dto,
       facultyId: user.faculty._id,
     });
@@ -108,12 +108,14 @@ export class ContributionService {
   }
 
   async getContributions(dto: FindContributionsDto) {
-    const pipeLine = this.genFindContributionsPipeline(dto);
+    const pipeLine = await this.genFindContributionsPipeline(dto);
     const contributions = await this.contributionModel.aggregate(pipeLine);
     return contributions;
   }
 
-  genFindContributionsPipeline(dto: FindContributionsDto): PipelineStage[] {
+  async genFindContributionsPipeline(
+    dto: FindContributionsDto,
+  ): Promise<PipelineStage[]> {
     const {
       title,
       eventId,
@@ -129,13 +131,33 @@ export class ContributionService {
 
     const match = {};
     if (title) match['title'] = { $regex: title, $options: 'i' };
-    if (eventId) match['event._id'] = eventId;
     if (authorId) match['author._id'] = authorId;
     if (authorName) {
       match['author.name'] = { $regex: authorName, $options: 'i' };
     }
-    if (facultyId) match['faculty._id'] = facultyId;
     if (is_publication) match['is_publication'] = is_publication;
+
+    const event_contribution_ids = [];
+    const faculty_contribution_ids = [];
+    if (eventId) {
+      const event = await this.eventModel.findById(eventId);
+      if (!event) throw new BadRequestException(1);
+      event_contribution_ids.push(event.contribution_ids);
+    }
+    if (facultyId) {
+      const faculty = await this.facultyModel.findById(facultyId);
+      if (!faculty) throw new BadRequestException(2);
+      faculty_contribution_ids.push(faculty.contribution_ids);
+    }
+    const join_ids = new Set<string>();
+    event_contribution_ids.forEach((id) => join_ids.add(id.toString()));
+    faculty_contribution_ids.forEach((id) => join_ids.add(id.toString()));
+
+    if (join_ids.size > 0) {
+      match['_id'] = {
+        $in: Array.from(join_ids).map((id) => new mongoose.Types.ObjectId(id)),
+      };
+    }
 
     const projection = {
       _id: 1,
@@ -150,7 +172,7 @@ export class ContributionService {
     pipeLine.push({ $project: projection });
     if (limit) pipeLine.push({ $limit: limit });
     if (skip) pipeLine.push({ $skip: skip });
-
+    console.log(pipeLine);
     return pipeLine;
   }
 }
