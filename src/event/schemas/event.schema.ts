@@ -21,10 +21,10 @@ export class Event {
   @Prop({ type: EventFacultySchema })
   faculty: EventFaculty;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Contribution' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
   contribution_ids: string[];
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Contribution' })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
   published_contribution_ids: string[];
 }
 

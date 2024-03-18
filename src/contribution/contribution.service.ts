@@ -58,6 +58,10 @@ export class ContributionService {
       },
     });
 
+    event.updateOne({ $push: { contribution_ids: contribution._id } });
+
+    faculty.updateOne({ $push: { contribution_ids: contribution._id } });
+
     contribution.documents =
       await this.strorageSerive.uploadContributionDocuments(files.documents);
 
@@ -68,12 +72,6 @@ export class ContributionService {
     }
 
     await contribution.save();
-
-    event.contribution_ids.push(contribution._id);
-    await event.save();
-
-    faculty.contribution_ids.push(contribution._id);
-    await faculty.save();
 
     return { _id: contribution._id };
   }
