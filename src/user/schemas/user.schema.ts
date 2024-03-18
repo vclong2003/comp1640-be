@@ -38,10 +38,10 @@ export class User {
   faculty?: UserFaculty;
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Event.name })
-  participated_event_ids?: string[];
+  participated_event_ids: string[];
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Contribution.name })
-  submitted_contribution_ids?: string[];
+  submitted_contribution_ids: string[];
 
   @Prop({ type: [UserSessionSchema] })
   sessions: UserSession[];
