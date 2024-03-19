@@ -6,19 +6,24 @@ import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
+import { EClientConfigKeys } from './config/client.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
+  const configService = app.get<ConfigService>(ConfigService);
+
+  const clientUrl = configService.get(EClientConfigKeys.Url);
+
+  console.log('Client URL: ', clientUrl, `\n`);
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://alhkq.live'],
+    origin: clientUrl,
     credentials: true,
   });
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
 
-  const configService = app.get<ConfigService>(ConfigService);
   const port = configService.get(EApiConfigKey.Port);
 
   // Swagger

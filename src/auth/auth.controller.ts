@@ -25,6 +25,8 @@ import {
 import { Roles } from './decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { ConfigService } from '@nestjs/config';
+import { EClientConfigKeys } from 'src/config/client.config';
 
 @Controller('auth')
 export class AuthController {
@@ -32,7 +34,10 @@ export class AuthController {
     sameSite: 'strict',
     httpOnly: true,
   };
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService,
+  ) {}
 
   // Register ---------------------------------------------------------------
   @Post('send-register-email')
@@ -130,17 +135,18 @@ export class AuthController {
   @NoAccessToken()
   @UseGuards(GoogleAuthGuard)
   async googleLoginCallback(@Request() req, @Response() res) {
+    const clientUrl = await this.configService.get(EClientConfigKeys.Url);
     const ua = req.headers['user-agent'];
     const tokens = await this.authService.googleLoginCallback(
       req.user.email,
       ua,
     );
-    if (!tokens) return res.redirect('http://localhost:3000/login?err=google');
+    if (!tokens) return res.redirect(clientUrl + '/login?err=google');
 
     const { refreshToken, accessToken } = tokens;
     res.cookie('refresh_token', refreshToken, this.cookieOptions);
     res.cookie('access_token', accessToken, this.cookieOptions);
 
-    return res.redirect('http://localhost:3000');
+    return res.redirect(clientUrl);
   }
 }
