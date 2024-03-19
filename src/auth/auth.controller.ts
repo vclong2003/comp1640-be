@@ -126,16 +126,21 @@ export class AuthController {
   }
 
   // Google login ------------------------------------------------------------
-  @Get('google-login')
+  @Get('google')
   @NoAccessToken()
   @UseGuards(GoogleAuthGuard)
   async googleLoginCallback(@Request() req, @Response() res) {
     const ua = req.headers['user-agent'];
-    const { refreshToken, accessToken } =
-      await this.authService.googleLoginCallback(req.user.email, ua);
+    const tokens = await this.authService.googleLoginCallback(
+      req.user.email,
+      ua,
+    );
+    if (!tokens) return res.redirect('http://localhost:3000/login?err=google');
+
+    const { refreshToken, accessToken } = tokens;
     res.cookie('refresh_token', refreshToken, this.cookieOptions);
     res.cookie('access_token', accessToken, this.cookieOptions);
 
-    return res.status(200).send();
+    return res.redirect('http://localhost:3000');
   }
 }

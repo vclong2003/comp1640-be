@@ -193,9 +193,7 @@ export class AuthService {
     const browser = userAgent.browser.name + ' on ' + userAgent.os.name;
 
     const user = await this.userModel.findOne({ email });
-    if (!user) {
-      throw new UnauthorizedException('User not found!');
-    }
+    if (!user) return null;
 
     const accessToken = await this.jwtService.genAccessToken({
       _id: user._id,

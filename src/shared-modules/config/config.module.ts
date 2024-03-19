@@ -6,6 +6,7 @@ import mailConfig from 'src/config/mail.config';
 import passwordConfig from 'src/config/password.config';
 
 const configModule = BaseConfigModule.forRoot({
+  envFilePath: ['.env', '.env.production'],
   load: [apiConfig, jwtConfig, passwordConfig, mailConfig],
   cache: true,
 });
