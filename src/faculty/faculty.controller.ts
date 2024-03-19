@@ -54,7 +54,7 @@ export class FacultyController {
     return await this.facultyService.removeStudent(facultyId, studentId);
   }
 
-  @Get('all')
+  @Get('')
   @Roles([ERole.Admin, ERole.MarketingManager])
   async getAllFaculty(@Query() dto: FindFacultiesDto) {
     return await this.facultyService.findFaculties(dto);

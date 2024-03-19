@@ -3,10 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { FindUsersDto, UpdateUserDto } from './user.dtos';
+import { StorageService } from 'src/shared-modules/storage/storage.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel('User') private userModel: Model<User>) {}
+  constructor(
+    @InjectModel('User') private userModel: Model<User>,
+    private storageService: StorageService,
+  ) {}
 
   async findOneByEmail(email: string): Promise<User | null> {
     return await this.userModel.findOne({ email }).exec();
@@ -46,18 +50,24 @@ export class UserService {
       .exec();
   }
 
-  async updateUser(_id: string, dto: UpdateUserDto): Promise<User> {
-    return await this.userModel
-      .findByIdAndUpdate(_id, dto, {
-        $projection: {
-          password: 0,
-          sessions: 0,
-          participated_event_ids: 0,
-          submitted_contribution_ids: 0,
-        },
-        new: true,
-      })
-      .exec();
+  async updateUser(
+    userId: string,
+    dto: UpdateUserDto,
+    avatar?: Express.Multer.File,
+  ) {
+    const { name, phone, dob } = dto;
+    const user = await this.userModel.findById(userId);
+    if (avatar) {
+      const avatarUrl = await this.storageService.uploadAvatarImage(
+        userId,
+        avatar,
+      );
+      user.avatar_url = avatarUrl;
+    }
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (dob) user.dob = dob;
+    await user.save();
   }
 
   async disableUser(_id: string) {

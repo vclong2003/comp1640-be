@@ -7,24 +7,40 @@ import {
   Put,
   Query,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { FindUsersDto, UpdateUserDto } from './user.dtos';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from './user.enums';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @Get('')
-  async getUserDetails(@Req() req) {
-    return await this.userService.findOneById(req.user._id);
-  }
-
-  @Put('')
-  async updateUser(@Req() req, @Body() dto: UpdateUserDto) {
-    return await this.userService.updateUser(req.user._id, dto);
+  @Put('/my-profile')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        phone: { type: 'string' },
+        dob: { type: 'string', format: 'date' },
+        avatar: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('avatar'))
+  async updateUser(
+    @Req() req,
+    @UploadedFile() avatar: Express.Multer.File,
+    @Body() dto: UpdateUserDto,
+  ) {
+    return await this.userService.updateUser(req.user._id, dto, avatar);
   }
 
   @Get('/all')
@@ -38,13 +54,27 @@ export class UserController {
     return await this.userService.findOneById(userId);
   }
 
-  @Post('/:userId')
+  @Put('/:userId')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        phone: { type: 'string' },
+        dob: { type: 'string', format: 'date' },
+        avatar: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('avatar'))
   @Roles([ERole.Admin])
   async updateUserById(
     @Param('userId') userId: string,
     @Body() dto: UpdateUserDto,
+    @UploadedFile() avatar: Express.Multer.File,
   ) {
-    return await this.userService.updateUser(userId, dto);
+    return await this.userService.updateUser(userId, dto, avatar);
   }
 
   @Post('/:userId/disable')
