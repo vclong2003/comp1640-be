@@ -187,6 +187,32 @@ export class AuthService {
     });
     return accessToken;
   }
+  // Google login callback ------------------------------------------------------
+  async googleLoginCallback(email: string, ua: string) {
+    const userAgent: IUserAgent = UAParser(ua);
+    const browser = userAgent.browser.name + ' on ' + userAgent.os.name;
+
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new UnauthorizedException('User not found!');
+    }
+
+    const accessToken = await this.jwtService.genAccessToken({
+      _id: user._id,
+      role: user.role,
+    });
+    const refreshToken = await this.jwtService.genRefreshToken({
+      _id: user._id,
+    });
+
+    user.sessions.push({
+      browser,
+      token: refreshToken,
+      date: new Date(),
+    });
+
+    return { accessToken, refreshToken };
+  }
 
   // Reset password ------------------------------------------------------
   async sendResetPasswordEmail(email: string) {

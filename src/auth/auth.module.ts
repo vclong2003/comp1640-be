@@ -8,10 +8,11 @@ import { JwtModule } from 'src/shared-modules/jwt/jwt.module';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { MailerModule } from 'src/shared-modules/mailer/mailer.module';
 import { FacultyModule } from 'src/faculty/faculty.module';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [UserModule, PasswordModule, JwtModule, MailerModule, FacultyModule],
-  providers: [AuthService, LocalStrategy, AccessTokenStrategy],
+  providers: [AuthService, LocalStrategy, AccessTokenStrategy, GoogleStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

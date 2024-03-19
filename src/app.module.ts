@@ -10,9 +10,20 @@ import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './auth/guards/access-token.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { DatabaseModule } from './shared-modules/database/database.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            singleLine: true,
+          },
+        },
+      },
+    }),
     ConfigModule,
     MongooseModule,
     DatabaseModule,

@@ -43,7 +43,7 @@ export class UserController {
     return await this.userService.updateUser(req.user._id, dto, avatar);
   }
 
-  @Get('/all')
+  @Get('/')
   async findUsers(@Query() dto: FindUsersDto) {
     return await this.userService.findUsers(dto);
   }

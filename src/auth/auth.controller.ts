@@ -24,6 +24,7 @@ import {
 } from './dtos/reset-password.dto';
 import { Roles } from './decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -120,7 +121,21 @@ export class AuthController {
 
   // Get current user --------------------------------------------------------
   @Get('')
-  async test(@Request() req) {
+  async getCurrentUser(@Request() req) {
     return await this.authService.getCurrentUser(req.user);
+  }
+
+  // Google login ------------------------------------------------------------
+  @Get('google-login')
+  @NoAccessToken()
+  @UseGuards(GoogleAuthGuard)
+  async googleLoginCallback(@Request() req, @Response() res) {
+    const ua = req.headers['user-agent'];
+    const { refreshToken, accessToken } =
+      await this.authService.googleLoginCallback(req.user.email, ua);
+    res.cookie('refresh_token', refreshToken, this.cookieOptions);
+    res.cookie('access_token', accessToken, this.cookieOptions);
+
+    return res.status(200).send();
   }
 }
