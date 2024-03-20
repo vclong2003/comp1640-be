@@ -27,7 +27,7 @@ async function bootstrap() {
   const port = configService.get(EApiConfigKey.Port);
 
   // Swagger
-  const config = new DocumentBuilder().setTitle('VCL API').build();
+  const config = new DocumentBuilder().setTitle('ALHKQ API').build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 

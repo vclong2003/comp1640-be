@@ -72,7 +72,7 @@ export class ContributionController {
   }
 
   @Get('')
-  async getAllContributions(@Req() req, @Query() dto: FindContributionsDto) {
+  async findContributions(@Req() req, @Query() dto: FindContributionsDto) {
     if (
       req.user.role === ERole.MarketingManager ||
       req.user.role === ERole.Admin

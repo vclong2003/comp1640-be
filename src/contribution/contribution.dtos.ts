@@ -44,15 +44,15 @@ export class FindContributionsDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  is_publication?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   skip?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   limit?: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  is_publication?: boolean;
 }
