@@ -18,7 +18,7 @@ export class ContributionService {
     private strorageSerive: StorageService,
   ) {}
 
-  async createNewContribution(
+  async createContribution(
     studentId: string,
     dto: AddContributionDto,
     files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },

@@ -56,13 +56,13 @@ export class FacultyController {
 
   @Get('')
   @Roles([ERole.Admin, ERole.MarketingManager])
-  async getAllFaculty(@Query() dto: FindFacultiesDto) {
+  async findFaculties(@Query() dto: FindFacultiesDto) {
     return await this.facultyService.findFaculties(dto);
   }
 
   @Get(':facultyId')
   @Roles([ERole.Admin, ERole.MarketingManager])
-  async getFaculty(@Param('facultyId') facultyId: string) {
+  async findFaculty(@Param('facultyId') facultyId: string) {
     return await this.facultyService.findOneById(facultyId);
   }
 }

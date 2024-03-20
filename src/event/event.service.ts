@@ -46,14 +46,14 @@ export class EventService {
     return newEvent;
   }
 
-  async createEvent(createEventDto: CreateEventDTO): Promise<Event> {
+  async createEvent(dto: CreateEventDTO): Promise<Event> {
     const {
       name,
       start_date,
       first_closure_date,
       final_closure_date,
       facultyId,
-    } = createEventDto;
+    } = dto;
     const faculty = await this.facultyModel.findById(facultyId);
     if (!faculty) throw new BadRequestException('Faculty not found');
 

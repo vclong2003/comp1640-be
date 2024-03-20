@@ -59,7 +59,7 @@ export class ContributionController {
     @UploadedFiles()
     files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
   ) {
-    return await this.contributionService.createNewContribution(
+    return await this.contributionService.createContribution(
       user._id,
       dto,
       files,
