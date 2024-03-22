@@ -18,22 +18,22 @@ export class GetUserResponseDto {
 }
 
 export class UpdateUserDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   dob?: Date;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsEnum(EGender)
   gender?: EGender;
