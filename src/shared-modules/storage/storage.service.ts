@@ -36,7 +36,7 @@ export class StorageService {
       .publicUrl();
   }
 
-  async removePublicFile(publicUrl: string): Promise<void> {
+  async delete(publicUrl: string): Promise<void> {
     const encodedFileName = publicUrl.split('/').pop();
     const fileName = decodeURIComponent(encodedFileName);
     await this.storage.bucket(this.PublicBucketName).file(fileName).delete();

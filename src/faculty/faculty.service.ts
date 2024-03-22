@@ -6,6 +6,7 @@ import { User } from 'src/user/schemas/user.schema';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
+  GetFacultyResponseDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
@@ -38,7 +39,7 @@ export class FacultyService {
   async createFaculty(
     dto: CreateFacultyDto,
     bannerImage?: Express.Multer.File,
-  ): Promise<Faculty> {
+  ): Promise<GetFacultyResponseDto> {
     const { name, description, mcId } = dto;
 
     // Find MC if id is provided
@@ -70,13 +71,23 @@ export class FacultyService {
     }
 
     await newFaculty.save();
-    return newFaculty;
+    return {
+      _id: newFaculty._id,
+      name: newFaculty.name,
+      description: newFaculty.description,
+      banner_image_url: newFaculty.banner_image_url,
+      mc: newFaculty.mc,
+    };
   }
 
-  async updateFaculty(facultyId: string, dto: UpdateFacultyDto) {
-    const { name, mcId } = dto;
+  async updateFaculty(
+    facultyId: string,
+    dto: UpdateFacultyDto,
+    bannerImage?: Express.Multer.File,
+  ): Promise<GetFacultyResponseDto> {
+    const { name, description, mcId } = dto;
 
-    let mc;
+    let mc: HydratedDocument<User>;
     if (mcId) {
       mc = await this.userModel.findById(mcId);
       if (mc.role != ERole.MarketingCoordinator) {
@@ -84,45 +95,53 @@ export class FacultyService {
       }
     }
 
-    const updateData: Partial<Faculty> = {};
-    if (name) updateData.name = name;
-    if (mc)
-      updateData.mc = {
+    const faculty = await this.facultyModel.findById(facultyId);
+
+    if (name) faculty.name = name;
+    if (description) faculty.description = description;
+    if (mc) {
+      faculty.mc = {
         _id: mc._id,
         name: mc.name,
         email: mc.email,
         avatar_url: mc.avatar_url,
       };
-
-    const faculty = await this.facultyModel.findByIdAndUpdate(
-      facultyId,
-      updateData,
-      {
-        new: true,
-      },
-    );
-
-    if (mc) {
+      // update mc
       mc.faculty = { _id: faculty._id, name: faculty.name };
       await mc.save();
     }
-
+    // upload, remove and update banner image
+    if (bannerImage) {
+      if (faculty.banner_image_url) {
+        await this.storageService.delete(faculty.banner_image_url);
+      }
+      faculty.banner_image_url =
+        await this.storageService.uploadPublicFile(bannerImage);
+    }
+    // update leated events
     await this.eventModel.updateMany(
       { _id: { $in: faculty.event_ids } },
       { faculty: { _id: faculty._id, name: faculty.name } },
     );
-
+    // update related contributions
     await this.contributionModel.updateMany(
       { _id: { $in: faculty.contribution_ids } },
       { faculty: { _id: faculty._id, name: faculty.name } },
     );
-
+    // update related students
     await this.userModel.updateMany(
       { _id: { $in: faculty.student_ids } },
       { faculty: { _id: faculty._id, name: faculty.name } },
     );
 
-    return faculty;
+    await faculty.save();
+    return {
+      _id: faculty._id,
+      name: faculty.name,
+      description: faculty.description,
+      banner_image_url: faculty.banner_image_url,
+      mc: faculty.mc,
+    };
   }
 
   async moveStudent(facultyId: string, studentId: string) {

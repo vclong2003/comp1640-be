@@ -41,7 +41,7 @@ export class FacultyController {
   async updateFaculty(
     @Param('facultyId') facultyId: string,
     @Body() dto: UpdateFacultyDto,
-  ) {
+  ): Promise<GetFacultyResponseDto> {
     return await this.facultyService.updateFaculty(facultyId, dto);
   }
 
