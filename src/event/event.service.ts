@@ -1,8 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage } from 'mongoose';
+import mongoose, { Model, PipelineStage } from 'mongoose';
 import { Event } from './schemas/event.schema';
-import { CreateEventDTO, FindEventsDTO, UpdateEventDTO } from './event.dtos';
+import {
+  CreateEventDTO,
+  FindEventsDTO,
+  GetEventResponseDto,
+  GetEventsResponseDto,
+  UpdateEventDTO,
+} from './event.dtos';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
@@ -76,40 +82,78 @@ export class EventService {
     return newEvent;
   }
 
-  async getEventDetails(_id: string): Promise<Event> {
-    const events = this.eventModel.aggregate([
-      { $match: { _id } },
-      {
-        $project: {
-          name: 1,
-          start_date: 1,
-          first_closure_date: 1,
-          final_closure_date: 1,
-          faculty: 1,
-          number_of_contributions: { $size: 'contribution_ids' },
-        },
-      },
-    ]);
-    return events[0];
+  async findEvent(_id: string): Promise<GetEventResponseDto> {
+    const event = await this.eventModel.findById(_id).exec();
+    return {
+      _id: event._id,
+      name: event.name,
+      start_date: event.start_date,
+      first_closure_date: event.first_closure_date,
+      final_closure_date: event.final_closure_date,
+      is_accepting_new_contribution: this.isAcceptingNewContributions(
+        event.first_closure_date,
+      ),
+      is_contributions_editable: this.isContributionsEditable(
+        event.final_closure_date,
+      ),
+      number_of_contributions: event.contribution_ids.length,
+      faculty: event.faculty,
+    };
   }
 
-  async findEventsByUserFaculty(
-    userId: string,
-    dto: FindEventsDTO,
-  ): Promise<Event[]> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user.faculty) throw new BadRequestException('User has no faculty');
+  async findEvents(dto: FindEventsDTO): Promise<GetEventsResponseDto[]> {
+    const {
+      facultyId,
+      name,
+      start_date,
+      final_closure_date,
+      mcName,
+      limit,
+      skip,
+      sort,
+    } = dto;
 
-    return this.eventModel.aggregate(
-      this.genFindEventsPipeline({
-        ...dto,
-        facultyId: user.faculty._id,
-      }),
-    );
-  }
+    const pipeline: PipelineStage[] = [];
 
-  async findEvents(dto: FindEventsDTO): Promise<Event[]> {
-    return this.eventModel.aggregate(this.genFindEventsPipeline(dto));
+    const match = {};
+
+    if (facultyId) {
+      const faculty = await this.facultyModel.findById(facultyId);
+      if (!faculty) throw new BadRequestException('Faculty not found');
+      match['_id'] = {
+        $in: faculty.event_ids.map((id) => new mongoose.Types.ObjectId(id)),
+      };
+    }
+    if (name) match['name'] = { $regex: name, $options: 'i' };
+    if (start_date) match['start_date'] = { $gte: start_date };
+    if (final_closure_date) {
+      match['final_closure_date'] = { $lte: final_closure_date };
+    }
+    if (mcName) {
+      match['faculty.mc.name'] = { $regex: mcName, $options: 'i' };
+    }
+
+    const project = {
+      name: 1,
+      start_date: 1,
+      first_closure_date: 1,
+      final_closure_date: 1,
+      number_of_contributions: { $size: '$contribution_ids' },
+      is_accepting_new_contribution: this.isAcceptingNewContributions(
+        new Date('$first_closure_date'),
+      ),
+      is_contributions_editable: this.isContributionsEditable(
+        new Date('$final_closure_date'),
+      ),
+    };
+
+    pipeline.push({ $match: match });
+    pipeline.push({ $project: project });
+    if (sort) pipeline.push({ $sort: { [sort]: -1 } });
+    if (skip) pipeline.push({ $skip: Number(skip) });
+    if (limit) pipeline.push({ $limit: Number(limit) });
+
+    return this.eventModel.aggregate(pipeline);
   }
 
   async updateEvent(id: string, dto: UpdateEventDTO): Promise<Event> {
@@ -185,50 +229,11 @@ export class EventService {
     await faculty.updateOne({ $pull: { event_ids: eventId } });
   }
 
-  genFindEventsPipeline(dto: FindEventsDTO): PipelineStage[] {
-    const {
-      facultyId,
-      name,
-      start_date,
-      final_closure_date,
-      mcName,
-      limit,
-      skip,
-      sort,
-    } = dto;
+  isAcceptingNewContributions(firstClosureDate: Date): boolean {
+    return firstClosureDate > new Date();
+  }
 
-    const pipeline: PipelineStage[] = [];
-
-    const matchConditions = {};
-    facultyId && (matchConditions['faculty._id'] = facultyId);
-    name && (matchConditions['name'] = { $regex: name, $options: 'i' });
-    start_date && (matchConditions['start_date'] = { $gte: start_date });
-    final_closure_date &&
-      (matchConditions['final_closure_date'] = { $lte: final_closure_date });
-    mcName &&
-      (matchConditions['faculty.mc.name'] = { $regex: mcName, $options: 'i' });
-
-    const project = {
-      name: 1,
-      start_date: 1,
-      first_closure_date: 1,
-      final_closure_date: 1,
-      number_of_contributions: {
-        $cond: {
-          if: { $isArray: '$contribution_ids' },
-          then: { $size: '$contribution_ids' },
-          else: 0,
-        },
-      },
-    };
-
-    pipeline.push({ $match: matchConditions });
-    pipeline.push({ $project: project });
-
-    if (sort) pipeline.push({ $sort: { [sort]: -1 } });
-    if (skip) pipeline.push({ $skip: Number(skip) });
-    if (limit) pipeline.push({ $limit: Number(limit) });
-
-    return pipeline;
+  isContributionsEditable(finalClosureDate: Date): boolean {
+    return finalClosureDate > new Date();
   }
 }

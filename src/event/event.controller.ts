@@ -12,10 +12,22 @@ import {
 import { EventService } from './event.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
-import { CreateEventDTO, FindEventsDTO, UpdateEventDTO } from './event.dtos';
+import {
+  CreateEventDTO,
+  FindEventsDTO,
+  GetEventResponseDto,
+  UpdateEventDTO,
+} from './event.dtos';
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
+
+  @Get(':eventId')
+  async findEvent(
+    @Param('eventId') eventId: string,
+  ): Promise<GetEventResponseDto> {
+    return await this.eventService.findEvent(eventId);
+  }
 
   @Post('')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
@@ -31,18 +43,7 @@ export class EventController {
 
   @Get('')
   async findEvents(@Req() req, @Query() dto: FindEventsDTO) {
-    if (
-      req.user.role === ERole.Student ||
-      req.user.role === ERole.MarketingCoordinator
-    ) {
-      return await this.eventService.findEventsByUserFaculty(req.user._id, dto);
-    }
     return await this.eventService.findEvents(dto);
-  }
-
-  @Get(':eventId')
-  async getEventDetails(@Param('eventId') eventId: string) {
-    return await this.eventService.getEventDetails(eventId);
   }
 
   @Put(':eventId')

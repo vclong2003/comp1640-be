@@ -87,3 +87,35 @@ export class FindEventsDTO {
   @IsString()
   limit?: number;
 }
+
+export class GetEventResponseDto {
+  _id: string;
+  name: string;
+  start_date: Date;
+  first_closure_date: Date;
+  final_closure_date: Date;
+  is_accepting_new_contribution: boolean;
+  is_contributions_editable: boolean;
+  number_of_contributions: number;
+  faculty: {
+    _id: string;
+    name: string;
+    mc: {
+      _id: string;
+      name: string;
+      email: string;
+    };
+  };
+}
+
+export class GetEventsResponseDto {
+  _id: string;
+  name: string;
+  is_accepting_new_contribution: boolean;
+  is_contributions_editable: boolean;
+  number_of_contributions: number;
+  faculty: {
+    _id: string;
+    name: string;
+  };
+}

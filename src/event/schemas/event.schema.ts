@@ -13,6 +13,12 @@ export class Event {
   start_date: Date;
 
   @Prop()
+  description: string;
+
+  @Prop()
+  banner_image_url: string;
+
+  @Prop()
   first_closure_date: Date;
 
   @Prop()
