@@ -15,7 +15,6 @@ import {
   SendRegisterEmailDto,
   SendRegisterEmailVerifycationDto,
   SetupAccountDto,
-  SetupGuestAccountDto,
 } from './dtos/register.dtos';
 import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -42,42 +41,46 @@ export class AuthController {
     private configService: ConfigService,
   ) {}
 
-  // Register ---------------------------------------------------------------
-  @Post('send-register-email')
+  @Post('register-email')
   @Roles([ERole.Admin])
-  async sendRegisterEmail(@Body() dto: SendRegisterEmailDto, @Response() res) {
+  async sendRegisterEmail(
+    @Body() dto: SendRegisterEmailDto,
+    @Response() res,
+  ): Promise<void> {
     await this.authService.sendRegisterEmail(dto);
     return res.status(200).send();
   }
 
   @Post('verify-register-token')
   @NoAccessToken()
-  async verifyRegisterToken(@Body() dto: SendRegisterEmailVerifycationDto) {
+  async verifyRegisterToken(
+    @Body() dto: SendRegisterEmailVerifycationDto,
+  ): Promise<void> {
     const { token } = dto;
-    this.authService.verifyRegisterToken(token);
+    await this.authService.verifyRegisterToken(token);
+    return;
   }
 
   @Post('setup-account')
   @NoAccessToken()
-  async setupAccount(@Body() dto: SetupAccountDto) {
+  async setupAccount(
+    @Body() dto: SetupAccountDto,
+  ): Promise<GetUserResponseDto> {
     return await this.authService.setupAccount(dto);
   }
 
-  // Guest Register ---------------------------------------------------------
-  @Post('send-guest-register-email')
+  @Post('guest-register-email')
   @NoAccessToken()
-  async sendGuestRegisterEmail(@Body() dto: SendGuestRegisterEmailDto) {
+  async sendGuestRegisterEmail(
+    @Body() dto: SendGuestRegisterEmailDto,
+  ): Promise<void> {
     const { email } = dto;
-    return await this.authService.sendGuestRegisterEmail(email);
+    return await this.authService.sendRegisterEmail({
+      email,
+      role: ERole.Guest,
+    });
   }
 
-  @Post('setup-guest-account')
-  @NoAccessToken()
-  async setupGuestAccount(@Body() dto: SetupGuestAccountDto) {
-    return await this.authService.setupGuestAccount(dto);
-  }
-
-  // Login ------------------------------------------------------------------
   @Post('login')
   @ApiBody({
     schema: {
@@ -101,7 +104,6 @@ export class AuthController {
     return res.send(user);
   }
 
-  // Forgot password ---------------------------------------------------------
   @Post('send-reset-password-email')
   async sendResetPasswordEmail(
     @Body() dto: SendResetPasswordEmailDto,
@@ -117,7 +119,6 @@ export class AuthController {
     await this.authService.resetPassword(dto);
   }
 
-  // Handle tokens -----------------------------------------------------------
   @Get('access-token')
   @NoAccessToken()
   async getAccessToken(@Request() req, @Response() res) {
@@ -127,7 +128,6 @@ export class AuthController {
     return res.status(200).send();
   }
 
-  // Google login ------------------------------------------------------------
   @Get('google')
   @NoAccessToken()
   @UseGuards(GoogleAuthGuard)

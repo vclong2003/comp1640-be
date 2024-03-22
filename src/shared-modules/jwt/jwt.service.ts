@@ -66,7 +66,9 @@ export class JwtService {
     const payload = await this.baseJwtService.verifyAsync(token, {
       secret,
     });
-    if (!payload) throw new UnauthorizedException('Invalid register token!');
+    if (!payload) {
+      throw new UnauthorizedException('This URL might have expired!');
+    }
     return payload;
   }
 

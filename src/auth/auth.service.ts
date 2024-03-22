@@ -10,16 +10,10 @@ import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
 import { UAParser } from 'ua-parser-js';
 import { IUserAgent } from './interfaces/user-agent.interface';
-import {
-  SendRegisterEmailDto,
-  SetupAccountDto,
-  SetupGuestAccountDto,
-} from './dtos/register.dtos';
+import { SendRegisterEmailDto, SetupAccountDto } from './dtos/register.dtos';
 import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
-import { ERole } from 'src/user/user.enums';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
-import { IRegisterTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TokensDto } from './dtos/tokens.dto';
@@ -36,26 +30,28 @@ export class AuthService {
   ) {}
 
   // Register ------------------------------------------------------
-  async sendRegisterEmail(dto: SendRegisterEmailDto) {
+  async sendRegisterEmail(dto: SendRegisterEmailDto): Promise<void> {
     const { email, role, facultyId } = dto;
 
     const user = await this.userModel.findOne({ email });
     if (user) throw new ConflictException('User already exists!');
 
-    const tokenPayload = facultyId
-      ? { email, role, facultyId }
-      : { email, role };
-    const token = await this.jwtService.genRegisterToken(tokenPayload);
-
+    const token = await this.jwtService.genRegisterToken({
+      email,
+      role,
+      facultyId,
+    });
     await this.mailerService.sendRegisterEmail(email, token);
+    return;
   }
 
-  async verifyRegisterToken(token: string): Promise<IRegisterTokenPayload> {
-    return this.jwtService.verifyRegisterToken(token);
+  async verifyRegisterToken(token: string): Promise<void> {
+    await this.jwtService.verifyRegisterToken(token);
+    return;
   }
 
   async setupAccount(dto: SetupAccountDto): Promise<GetUserResponseDto> {
-    const { token, name, password, dob, phone } = dto;
+    const { token, name, password, dob, phone, gender } = dto;
     const { email, role, facultyId } =
       await this.jwtService.verifyRegisterToken(token);
 
@@ -72,11 +68,11 @@ export class AuthService {
       email,
       role,
       name,
-      dob,
-      phone,
       password: await this.passwordService.hashPassword(password),
-      faculty: faculty && { _id: faculty._id, name: faculty.name },
     });
+    if (dob) newUser.dob = dob;
+    if (phone) newUser.phone = phone;
+    if (gender) newUser.gender = gender;
     await newUser.save();
 
     return {
@@ -89,46 +85,6 @@ export class AuthService {
       gender: newUser.gender,
       dob: newUser.dob,
     };
-  }
-
-  // Guest Register ------------------------------------------------------
-  async sendGuestRegisterEmail(email: string): Promise<string> {
-    const user = await this.userModel.findOne({ email });
-    if (user) throw new BadRequestException('User already exist!');
-
-    const tokenPayload = { email, role: ERole.Guest };
-    const token = await this.jwtService.genRegisterToken(tokenPayload);
-
-    return token;
-  }
-
-  async verifyGuestRegisterToken(
-    token: string,
-  ): Promise<IRegisterTokenPayload> {
-    return this.jwtService.verifyRegisterToken(token);
-  }
-
-  async setupGuestAccount(dto: SetupGuestAccountDto) {
-    const { token, facultyId, name, password, dob, phone } = dto;
-
-    const { email, role } = await this.jwtService.verifyRegisterToken(token);
-
-    const user = this.userModel.findOne({ email });
-    if (user) throw new BadRequestException('User already exist!');
-
-    const faculty = await this.facultyModel.findById(facultyId).exec();
-    if (!faculty) throw new BadRequestException('Faculty not found!');
-
-    const newUser = new this.userModel({
-      email,
-      role,
-      name,
-      dob,
-      phone,
-      password: await this.passwordService.hashPassword(password),
-      faculty: { _id: faculty._id, name: faculty.name },
-    });
-    await newUser.save();
   }
 
   // Get current user ------------------------------------------------------
