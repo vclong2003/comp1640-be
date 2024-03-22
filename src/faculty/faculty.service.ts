@@ -25,8 +25,11 @@ export class FacultyService {
     private storageService: StorageService,
   ) {}
 
-  async findOneById(id: string): Promise<Faculty> {
-    return this.facultyModel.findById(id).exec();
+  async findFacultyById(id: string): Promise<GetFacultyResponseDto> {
+    return this.facultyModel
+      .findById(id)
+      .select('_id name description banner_image_url mc')
+      .exec();
   }
 
   async findFaculties(

@@ -77,7 +77,7 @@ export class FacultyController {
 
   @Get(':facultyId')
   @Roles([ERole.Admin, ERole.MarketingManager])
-  async findFaculty(@Param('facultyId') facultyId: string) {
-    return await this.facultyService.findOneById(facultyId);
+  async findFacultyById(@Param('facultyId') facultyId: string) {
+    return await this.facultyService.findFacultyById(facultyId);
   }
 }
