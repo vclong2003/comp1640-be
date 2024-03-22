@@ -37,13 +37,16 @@ export class FacultyController {
     return await this.facultyService.createFaculty(dto, bannerImage);
   }
 
+  // Update a faculty
   @Put(':facultyId')
+  @UseInterceptors(FileInterceptor('file'))
   @Roles([ERole.Admin])
   async updateFaculty(
     @Param('facultyId') facultyId: string,
     @Body() dto: UpdateFacultyDto,
+    @UploadedFile() bannerImage?: Express.Multer.File,
   ): Promise<GetFacultyResponseDto> {
-    return await this.facultyService.updateFaculty(facultyId, dto);
+    return await this.facultyService.updateFaculty(facultyId, dto, bannerImage);
   }
 
   @Put(':facultyId/student/:studentId')

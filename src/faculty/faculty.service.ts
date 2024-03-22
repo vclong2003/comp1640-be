@@ -121,7 +121,7 @@ export class FacultyService {
     // upload, remove and update banner image
     if (bannerImage) {
       if (faculty.banner_image_url) {
-        await this.storageService.delete(faculty.banner_image_url);
+        await this.storageService.deletePublicFile(faculty.banner_image_url);
       }
       faculty.banner_image_url =
         await this.storageService.uploadPublicFile(bannerImage);
