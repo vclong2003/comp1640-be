@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { HydratedDocument, Model } from 'mongoose';
 import { Faculty } from './schemas/faculty.schema';
 import { User } from 'src/user/schemas/user.schema';
 import {
@@ -11,6 +11,7 @@ import {
 import { ERole } from 'src/user/user.enums';
 import { Event } from 'src/event/schemas/event.schema';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
+import { StorageService } from 'src/shared-modules/storage/storage.service';
 
 @Injectable()
 export class FacultyService {
@@ -19,6 +20,7 @@ export class FacultyService {
     @InjectModel('User') private userModel: Model<User>,
     @InjectModel('Event') private eventModel: Model<Event>,
     @InjectModel('Contribution') private contributionModel: Model<Contribution>,
+    private storageService: StorageService,
   ) {}
 
   async findOneById(id: string): Promise<Faculty> {
@@ -33,39 +35,41 @@ export class FacultyService {
     return this.facultyModel.find(query).skip(skip).limit(limit).exec();
   }
 
-  async createFaculty(dto: CreateFacultyDto): Promise<Faculty> {
-    const { name, mcId } = dto;
+  async createFaculty(
+    dto: CreateFacultyDto,
+    bannerImage?: Express.Multer.File,
+  ): Promise<Faculty> {
+    const { name, description, mcId } = dto;
 
-    let mc;
+    // Find MC if id is provided
+    let mc: HydratedDocument<User>;
     if (mc) {
       mc = await this.userModel.findById(mcId);
       if (!mc || mc.role != ERole.MarketingCoordinator) {
-        throw new BadRequestException('Invalid mc');
+        throw new BadRequestException('Invalid mc!');
       }
     }
 
-    const currentFaculty = await this.facultyModel
-      .findOne({
-        name: {
-          $regex: name,
-          $options: 'i',
-        },
-      })
-      .exec();
-    if (currentFaculty) {
-      throw new BadRequestException('Faculty already exists');
+    const newFaculty = new this.facultyModel({ name, description });
+    if (mc)
+      newFaculty.mc = {
+        _id: mc._id,
+        name: mc.name,
+        email: mc.email,
+        avatar_url: mc.avatar_url,
+      };
+
+    if (bannerImage) {
+      newFaculty.banner_image_url =
+        await this.storageService.uploadPublicFile(bannerImage);
     }
-    const newFaculty = new this.facultyModel({
-      name,
-      mc: mc && { _id: mc._id, name: mc.name, email: mc.email },
-    });
-    await newFaculty.save();
 
     if (mc) {
       mc.faculty = { _id: newFaculty._id, name: newFaculty.name };
       await mc.save();
     }
 
+    await newFaculty.save();
     return newFaculty;
   }
 

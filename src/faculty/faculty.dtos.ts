@@ -6,6 +6,10 @@ export class CreateFacultyDto {
   @IsString()
   name: string;
 
+  @ApiProperty()
+  @IsString()
+  description: string;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
@@ -17,6 +21,11 @@ export class UpdateFacultyDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -45,4 +54,26 @@ export class FindFacultiesDto {
   @IsOptional()
   @IsString()
   limit?: number;
+}
+
+export class GetFacultyResponseDto {
+  _id: string;
+  name: string;
+  description: string;
+  banner_image_url: string;
+  mc: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export class GetFacultiesResponseDto {
+  _id: string;
+  name: string;
+  mc: {
+    _id: string;
+    name: string;
+    email: string;
+  };
 }

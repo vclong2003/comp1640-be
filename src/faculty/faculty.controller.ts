@@ -7,24 +7,33 @@ import {
   Put,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { FacultyService } from './faculty.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
+  GetFacultyResponseDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('faculty')
 export class FacultyController {
   constructor(private facultyService: FacultyService) {}
 
+  // Create a new faculty
   @Post('')
+  @UseInterceptors(FileInterceptor('file'))
   @Roles([ERole.Admin])
-  async createFaculty(@Body() dto: CreateFacultyDto) {
-    return await this.facultyService.createFaculty(dto);
+  async createFaculty(
+    @Body() dto: CreateFacultyDto,
+    @UploadedFile() bannerImage?: Express.Multer.File,
+  ): Promise<GetFacultyResponseDto> {
+    return await this.facultyService.createFaculty(dto, bannerImage);
   }
 
   @Put(':facultyId')

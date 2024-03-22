@@ -9,6 +9,12 @@ export class Faculty {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ required: true })
+  description: string;
+
+  @Prop()
+  banner_image_url: string;
+
   @Prop({ type: FacultyMcSchema })
   mc: FacultyMc;
 
