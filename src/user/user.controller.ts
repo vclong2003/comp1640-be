@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { FindUsersDto, UpdateUserDto } from './user.dtos';
+import { FindUsersDto, GetUserResponseDto, UpdateUserDto } from './user.dtos';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from './user.enums';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -20,6 +20,11 @@ import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
+
+  @Get('/my-profile')
+  async getMyProfile(@Req() req): Promise<GetUserResponseDto> {
+    return await this.userService.findUserById(req.user._id);
+  }
 
   @Put('/my-profile')
   @ApiConsumes('multipart/form-data')
@@ -35,23 +40,25 @@ export class UserController {
     },
   })
   @UseInterceptors(FileInterceptor('avatar'))
-  async updateUser(
+  async updateMyProfile(
     @Req() req,
     @UploadedFile() avatar: Express.Multer.File,
     @Body() dto: UpdateUserDto,
-  ) {
-    return await this.userService.updateUser(req.user._id, dto, avatar);
+  ): Promise<GetUserResponseDto> {
+    return await this.userService.updateUserById(req.user._id, dto, avatar);
   }
 
   @Get('/')
-  async findUsers(@Query() dto: FindUsersDto) {
+  async findUsers(@Query() dto: FindUsersDto): Promise<GetUserResponseDto[]> {
     return await this.userService.findUsers(dto);
   }
 
   @Get('/:userId')
   @Roles([ERole.Admin])
-  async getUserById(@Param('userId') userId: string) {
-    return await this.userService.findOneById(userId);
+  async findUserById(
+    @Param('userId') userId: string,
+  ): Promise<GetUserResponseDto> {
+    return await this.userService.findUserById(userId);
   }
 
   @Put('/:userId')
@@ -73,19 +80,19 @@ export class UserController {
     @Param('userId') userId: string,
     @Body() dto: UpdateUserDto,
     @UploadedFile() avatar: Express.Multer.File,
-  ) {
-    return await this.userService.updateUser(userId, dto, avatar);
+  ): Promise<GetUserResponseDto> {
+    return await this.userService.updateUserById(userId, dto, avatar);
   }
 
   @Post('/:userId/disable')
   @Roles([ERole.Admin])
-  async disableUser(@Param('userId') userId: string) {
+  async disableUser(@Param('userId') userId: string): Promise<void> {
     return await this.userService.disableUser(userId);
   }
 
   @Post('/:userId/enable')
   @Roles([ERole.Admin])
-  async enableUser(@Param('userId') userId: string) {
+  async enableUser(@Param('userId') userId: string): Promise<void> {
     return await this.userService.enableUser(userId);
   }
 }

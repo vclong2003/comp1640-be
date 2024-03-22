@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
-import { FindUsersDto, UpdateUserDto } from './user.dtos';
+import { FindUsersDto, GetUserResponseDto, UpdateUserDto } from './user.dtos';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 
 @Injectable()
@@ -12,29 +12,23 @@ export class UserService {
     private storageService: StorageService,
   ) {}
 
-  async findOneByEmail(email: string): Promise<User | null> {
-    return await this.userModel.findOne({ email }).exec();
-  }
-
-  async findOneById(_id: string): Promise<User | null> {
-    return await this.userModel.findOne({ _id }).exec();
-  }
-
-  async getUserDetails(_id: string): Promise<User> {
+  async findUserById(userId: string): Promise<GetUserResponseDto> {
     return await this.userModel
-      .findById(_id)
+      .findById(userId)
       .select([
-        'name',
+        '_id',
         'email',
-        'phone',
+        'name',
         'avatar_url',
-        'role',
-        'faculty',
+        'phone',
         'dob',
+        'faculty',
+        'gender',
+        'role',
       ]);
   }
 
-  async findUsers(dto: FindUsersDto): Promise<User[] | null> {
+  async findUsers(dto: FindUsersDto): Promise<GetUserResponseDto[]> {
     const { name, email, role, facultyId, skip, limit } = dto;
     const query = {
       role,
@@ -44,19 +38,29 @@ export class UserService {
     if (facultyId) query['faculty._id'] = facultyId;
     return this.userModel
       .find(query)
-      .select(['_id', 'email', 'name', 'avatar_url'])
+      .select([
+        '_id',
+        'email',
+        'name',
+        'avatar_url',
+        'phone',
+        'dob',
+        'faculty',
+        'gender',
+        'role',
+      ])
       .skip(skip)
       .limit(limit)
       .exec();
   }
 
-  async updateUser(
+  async updateUserById(
     userId: string,
     dto: UpdateUserDto,
     avatar?: Express.Multer.File,
-  ) {
-    const { name, phone, dob } = dto;
-    const user = await this.userModel.findById(userId);
+  ): Promise<GetUserResponseDto> {
+    const { name, phone, dob, gender } = dto;
+    const user = await this.userModel.findOne({ _id: userId });
     if (avatar) {
       const avatarUrl = await this.storageService.uploadAvatarImage(
         userId,
@@ -67,15 +71,28 @@ export class UserService {
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (dob) user.dob = dob;
+    if (gender) user.gender = gender;
     await user.save();
+
+    return {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      avatar_url: user.avatar_url,
+      phone: user.phone,
+      dob: user.dob,
+      gender: user.gender,
+      role: user.role,
+      faculty: user.faculty,
+    };
   }
 
-  async disableUser(_id: string) {
+  async disableUser(_id: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(_id, { disabled: true });
     return;
   }
 
-  async enableUser(_id: string) {
+  async enableUser(_id: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(_id, { disabled: false });
     return;
   }
