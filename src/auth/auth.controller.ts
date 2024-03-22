@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Post,
   Query,
   Request,
@@ -82,6 +83,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(200)
   @ApiBody({
     schema: {
       type: 'object',

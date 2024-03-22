@@ -13,7 +13,7 @@ import {
 import { UserService } from './user.service';
 import { FindUsersDto, GetUserResponseDto, UpdateUserDto } from './user.dtos';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { ERole } from './user.enums';
+import { EGender, ERole } from './user.enums';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
@@ -35,6 +35,7 @@ export class UserController {
         name: { type: 'string' },
         phone: { type: 'string' },
         dob: { type: 'string', format: 'date' },
+        gender: { type: 'string', enum: Object.values(EGender) },
         avatar: { type: 'string', format: 'binary' },
       },
     },
