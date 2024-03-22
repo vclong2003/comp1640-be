@@ -2,7 +2,6 @@ import { Storage } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { ContributionFile } from 'src/contribution/schemas/contribution-file.schemas';
 import { FileDto } from './storage.dtos';
 
 @Injectable()
@@ -24,6 +23,11 @@ export class StorageService {
     });
   }
 
+  /**
+   * Uploads a public file to the storage bucket.
+   * @param file - The file to be uploaded.
+   * @returns A Promise that resolves to the public URL of the uploaded file.
+   */
   async uploadPublicFile(file: Express.Multer.File): Promise<string> {
     const fileName = uuidv4() + '/' + file.originalname;
     await this.storage
@@ -36,6 +40,11 @@ export class StorageService {
       .publicUrl();
   }
 
+  /**
+   * Deletes a public file from the storage.
+   * @param publicUrl - The public URL of the file to be deleted.
+   * @returns A Promise that resolves when the file is successfully deleted.
+   */
   async deletePublicFile(publicUrl: string): Promise<void> {
     const encodedFileName = publicUrl.split('/').pop();
     const fileName = decodeURIComponent(encodedFileName);
@@ -43,105 +52,53 @@ export class StorageService {
     return;
   }
 
-  async uploadContributionDocuments(
-    files: Express.Multer.File[],
-  ): Promise<ContributionFile[]> {
-    const uploadedFile = await Promise.all(
+  /**
+   * Uploads private files to the storage service.
+   * @param files - An array of Express.Multer.File objects representing the files to be uploaded.
+   * @returns A Promise that resolves to an array of FileDto objects representing the uploaded files.
+   */
+  async uploadPrivateFiles(files: Express.Multer.File[]): Promise<FileDto[]> {
+    const uploadedFiles = await Promise.all(
       files.map(async (file) => {
-        const fileUrl =
-          this.ContributionDocumentsFolder +
-          '/' +
-          uuidv4() +
-          '/' +
-          file.originalname;
-
+        const fileName = uuidv4() + '/' + file.originalname;
         await this.storage
           .bucket(this.PrivateBucketName)
-          .file(fileUrl)
+          .file(fileName)
           .save(file.buffer);
-
         return {
           file_name: file.originalname,
-          file_url: fileUrl,
+          file_url: fileName,
         };
       }),
     );
-
-    return uploadedFile;
+    return uploadedFiles;
   }
 
-  async getContributionDocuments(
-    savedFiles: ContributionFile[],
-  ): Promise<FileDto[]> {
-    const fileResponses: FileDto[] = await Promise.all(
-      savedFiles.map(async (file) => {
+  /**
+   * Retrieves the signed URLs for private files.
+   * @param files - An array of FileDto objects.
+   * @returns A Promise that resolves to an array of FileDto objects with signed URLs.
+   */
+  async getPrivateFilesUrls(files: FileDto[]): Promise<FileDto[]> {
+    return Promise.all(
+      files.map(async (file) => {
         const fileUrl = await this.storage
           .bucket(this.PrivateBucketName)
           .file(file.file_url)
           .getSignedUrl({
             action: 'read',
-            expires: Date.now() + 1000 * 60 * 60 * 12,
+            expires: Date.now() + 1000 * 60 * 60 * 1,
           });
-
         return {
           file_name: file.file_name,
           file_url: fileUrl.toString(),
         };
       }),
     );
-
-    return fileResponses;
   }
 
-  async uploadContributionImages(files: Express.Multer.File[]) {
-    const uploadedFile = await Promise.all(
-      files.map(async (file) => {
-        const fileUrl =
-          this.ContributionImagesFolder +
-          '/' +
-          uuidv4() +
-          '/' +
-          file.originalname;
-
-        await this.storage
-          .bucket(this.PrivateBucketName)
-          .file(fileUrl)
-          .save(file.buffer);
-
-        return {
-          file_name: file.originalname,
-          file_url: fileUrl,
-        };
-      }),
-    );
-
-    return uploadedFile;
-  }
-
-  async getContributionImages(
-    savedFiles: ContributionFile[],
-  ): Promise<FileDto[]> {
-    const fileResponses: FileDto[] = await Promise.all(
-      savedFiles.map(async (file) => {
-        const fileUrl = await this.storage
-          .bucket(this.PrivateBucketName)
-          .file(file.file_url)
-          .getSignedUrl({
-            action: 'read',
-            expires: Date.now() + 1000 * 60 * 60 * 12,
-          });
-
-        return {
-          file_name: file.file_name,
-          file_url: fileUrl.toString(),
-        };
-      }),
-    );
-
-    return fileResponses;
-  }
-
-  async removeFile(fileName: string) {
+  async deletePrivateFile(fileName: string): Promise<void> {
     await this.storage.bucket(this.PrivateBucketName).file(fileName).delete();
+    return;
   }
 }

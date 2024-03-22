@@ -64,10 +64,11 @@ export class ContributionService {
     faculty.contribution_ids.push(contribution._id);
     await faculty.save();
 
-    contribution.documents =
-      await this.strorageSerive.uploadContributionDocuments(files.documents);
+    contribution.documents = await this.strorageSerive.uploadPrivateFiles(
+      files.documents,
+    );
     if (files.images.length > 0) {
-      contribution.images = await this.strorageSerive.uploadContributionImages(
+      contribution.images = await this.strorageSerive.uploadPrivateFiles(
         files.images,
       );
     }
@@ -78,10 +79,10 @@ export class ContributionService {
 
   async getContributionById(contributionId: string) {
     const contribution = await this.contributionModel.findById(contributionId);
-    const images = await this.strorageSerive.getContributionImages(
+    const images = await this.strorageSerive.getPrivateFilesUrls(
       contribution.images,
     );
-    const documents = await this.strorageSerive.getContributionDocuments(
+    const documents = await this.strorageSerive.getPrivateFilesUrls(
       contribution.documents,
     );
     return {
