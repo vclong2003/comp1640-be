@@ -15,6 +15,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
+  GetFacultiesResponseDto,
   GetFacultyResponseDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
@@ -65,7 +66,9 @@ export class FacultyController {
 
   @Get('')
   @Roles([ERole.Admin, ERole.MarketingManager])
-  async findFaculties(@Query() dto: FindFacultiesDto) {
+  async findFaculties(
+    @Query() dto: FindFacultiesDto,
+  ): Promise<GetFacultiesResponseDto[]> {
     return await this.facultyService.findFaculties(dto);
   }
 

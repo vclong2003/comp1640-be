@@ -6,6 +6,7 @@ import { User } from 'src/user/schemas/user.schema';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
+  GetFacultiesResponseDto,
   GetFacultyResponseDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
@@ -28,12 +29,19 @@ export class FacultyService {
     return this.facultyModel.findById(id).exec();
   }
 
-  async findFaculties(dto: FindFacultiesDto): Promise<Faculty[]> {
+  async findFaculties(
+    dto: FindFacultiesDto,
+  ): Promise<GetFacultiesResponseDto[]> {
     const { name, skip, limit } = dto;
     const query = {
       name: { $regex: name || '', $options: 'i' },
     };
-    return this.facultyModel.find(query).skip(skip).limit(limit).exec();
+    return this.facultyModel
+      .find(query)
+      .select('_id name mc')
+      .skip(skip)
+      .limit(limit)
+      .exec();
   }
 
   async createFaculty(
@@ -144,7 +152,7 @@ export class FacultyService {
     };
   }
 
-  async moveStudent(facultyId: string, studentId: string) {
+  async moveStudent(facultyId: string, studentId: string): Promise<void> {
     const student = await this.userModel.findById(studentId);
     if (student.role != ERole.Student) {
       throw new BadRequestException('Invalid student');
@@ -163,9 +171,10 @@ export class FacultyService {
     );
     student.faculty = { _id: faculty._id, name: faculty.name };
     await student.save();
+    return;
   }
 
-  async removeStudent(facultyId: string, studentId: string) {
+  async removeStudent(facultyId: string, studentId: string): Promise<void> {
     await this.facultyModel.findByIdAndUpdate(facultyId, {
       $pull: { student_ids: studentId },
     });
