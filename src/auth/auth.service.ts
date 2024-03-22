@@ -23,6 +23,7 @@ import { IRegisterTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TokensDto } from './dtos/tokens.dto';
+import { GetUserResponseDto } from 'src/user/user.dtos';
 
 @Injectable()
 export class AuthService {
@@ -53,7 +54,7 @@ export class AuthService {
     return this.jwtService.verifyRegisterToken(token);
   }
 
-  async setupAccount(dto: SetupAccountDto) {
+  async setupAccount(dto: SetupAccountDto): Promise<GetUserResponseDto> {
     const { token, name, password, dob, phone } = dto;
     const { email, role, facultyId } =
       await this.jwtService.verifyRegisterToken(token);
@@ -77,6 +78,17 @@ export class AuthService {
       faculty: faculty && { _id: faculty._id, name: faculty.name },
     });
     await newUser.save();
+
+    return {
+      _id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      faculty: newUser.faculty,
+      avatar_url: newUser.avatar_url,
+      gender: newUser.gender,
+      dob: newUser.dob,
+    };
   }
 
   // Guest Register ------------------------------------------------------
