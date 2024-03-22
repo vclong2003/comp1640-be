@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   Request,
   Response,
   UseGuards,
@@ -27,6 +28,8 @@ import { ERole } from 'src/user/user.enums';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { EClientConfigKeys } from 'src/config/client.config';
+import { GetUserResponseDto } from 'src/user/user.dtos';
+import { GoogleLoginDto } from './dtos/google-login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -87,15 +90,15 @@ export class AuthController {
   })
   @NoAccessToken()
   @UseGuards(LocalAuthGuard)
-  async login(@Request() req, @Response() res) {
+  async login(@Request() req, @Response() res): Promise<GetUserResponseDto> {
     const ua = req.headers['user-agent'];
-    const { refreshToken, accessToken } = await this.authService.login(
+    const { refreshToken, accessToken, user } = await this.authService.login(
       req.user,
       ua,
     );
     res.cookie('refresh_token', refreshToken, this.cookieOptions);
     res.cookie('access_token', accessToken, this.cookieOptions);
-    return res.status(200).send();
+    return res.send(user);
   }
 
   // Forgot password ---------------------------------------------------------
@@ -124,17 +127,15 @@ export class AuthController {
     return res.status(200).send();
   }
 
-  // Get current user --------------------------------------------------------
-  @Get('')
-  async getCurrentUser(@Request() req) {
-    return await this.authService.getCurrentUser(req.user);
-  }
-
   // Google login ------------------------------------------------------------
   @Get('google')
   @NoAccessToken()
   @UseGuards(GoogleAuthGuard)
-  async googleLoginCallback(@Request() req, @Response() res) {
+  async googleLoginCallback(
+    @Request() req,
+    @Response() res,
+    @Query() dto: GoogleLoginDto,
+  ) {
     const clientUrl = await this.configService.get(EClientConfigKeys.Url);
     const ua = req.headers['user-agent'];
     const tokens = await this.authService.googleLoginCallback(
@@ -147,6 +148,7 @@ export class AuthController {
     res.cookie('refresh_token', refreshToken, this.cookieOptions);
     res.cookie('access_token', accessToken, this.cookieOptions);
 
-    return res.redirect(clientUrl);
+    const { redirect } = dto;
+    return res.redirect(clientUrl + redirect);
   }
 }

@@ -22,6 +22,7 @@ import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { IRegisterTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { TokensDto } from './dtos/tokens.dto';
 
 @Injectable()
 export class AuthService {
@@ -164,7 +165,20 @@ export class AuthService {
       },
     });
 
-    return { accessToken, refreshToken };
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        faculty: user.faculty,
+        avatar_url: user.avatar_url,
+        gender: user.gender,
+        dob: user.dob,
+      },
+    };
   }
 
   // Handle tokens ------------------------------------------------------
@@ -188,7 +202,7 @@ export class AuthService {
     return accessToken;
   }
   // Google login callback ------------------------------------------------------
-  async googleLoginCallback(email: string, ua: string) {
+  async googleLoginCallback(email: string, ua: string): Promise<TokensDto> {
     const userAgent: IUserAgent = UAParser(ua);
     const browser = userAgent.browser.name + ' on ' + userAgent.os.name;
 
@@ -213,21 +227,24 @@ export class AuthService {
   }
 
   // Reset password ------------------------------------------------------
-  async sendResetPasswordEmail(email: string) {
+  async sendResetPasswordEmail(email: string): Promise<void> {
     const user = await this.userModel.findOne({ email });
     if (!user) throw new BadRequestException('User not found!');
     const token = await this.jwtService.genResetPasswordToken({
       userId: user._id,
     });
     await this.mailerService.sendResetPasswordEmail(email, user.name, token);
+    return;
   }
 
-  async resetPassword(dto: ResetPasswordDto) {
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
     const { token, password } = dto;
     const { userId } = await this.jwtService.verifyResetPasswordToken(token);
 
     await this.userModel.findByIdAndUpdate(userId, {
       password: await this.passwordService.hashPassword(password),
     });
+
+    return;
   }
 }
