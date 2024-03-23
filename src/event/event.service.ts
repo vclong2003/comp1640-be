@@ -71,7 +71,12 @@ export class EventService {
   }
 
   async findEventById(_id: string): Promise<EventResponseDto> {
-    const event = await this.eventModel.findById(_id).exec();
+    const event = await this.eventModel
+      .findOne({
+        _id: new mongoose.Types.ObjectId(_id),
+        deleted_at: null,
+      })
+      .exec();
     return {
       _id: event._id,
       name: event.name,
@@ -105,6 +110,7 @@ export class EventService {
 
     const match = {};
 
+    match['deleted_at'] = null;
     if (facultyId) {
       const faculty = await this.facultyModel.findById(facultyId);
       if (!faculty) throw new BadRequestException('Faculty not found');
@@ -166,7 +172,7 @@ export class EventService {
         event: {
           _id: updatedEvent._id,
           name: updatedEvent.name,
-          first_closure_date: updatedEvent.first_closure_date,
+          final_closure_date: updatedEvent.first_closure_date,
         },
       },
     );
@@ -199,6 +205,14 @@ export class EventService {
       },
       { deleted_at: new Date() },
     );
+
+    await this.contributionModel.updateMany(
+      {
+        _id: { $in: event.contribution_ids },
+      },
+      { deleted_at: new Date() },
+    );
+
     await event.save();
     return;
   }

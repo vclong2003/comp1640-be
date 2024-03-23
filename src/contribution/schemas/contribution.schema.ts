@@ -65,7 +65,7 @@ export class Contribution {
   @Prop()
   versions: Partial<Contribution>[];
 
-  @Prop()
+  @Prop({ required: true, default: null })
   deleted_at: Date;
 }
 
