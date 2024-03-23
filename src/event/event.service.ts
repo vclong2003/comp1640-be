@@ -177,56 +177,19 @@ export class EventService {
     return updatedEvent;
   }
 
-  async updateEventByUserFaculty(
-    userId: string,
-    eventId: string,
-    dto: UpdateEventDTO,
-  ): Promise<Event> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user.faculty) throw new BadRequestException('User has no faculty');
-
-    const faculty = await this.facultyModel.findById(user.faculty._id);
-    if (!faculty) throw new BadRequestException('Faculty not found');
-    if (!faculty.event_ids.includes(eventId)) {
-      throw new BadRequestException('Event not found in faculty');
-    }
-
-    const { name, start_date, first_closure_date, final_closure_date } = dto;
-
-    const updatedEvent = await this.eventModel
-      .findByIdAndUpdate(
-        eventId,
-        { name, start_date, final_closure_date, first_closure_date },
-        { new: true },
-      )
-      .exec();
+  async removeEvent(id: string): Promise<void> {
+    const event = await this.eventModel.findById(id);
+    if (!event) throw new BadRequestException('Event not found');
+    event.deleted_at = new Date();
 
     await this.contributionModel.updateMany(
       {
-        _id: { $in: updatedEvent.contribution_ids },
+        _id: { $in: event.contribution_ids },
       },
-      { event: { _id: updatedEvent._id, name: updatedEvent.name } },
+      { deleted_at: new Date() },
     );
-
-    return updatedEvent;
-  }
-
-  async removeEvent(id: string) {
-    await this.eventModel.findByIdAndDelete(id).exec();
-  }
-
-  async removeEventFromUserFaculty(userId: string, eventId: string) {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user.faculty) throw new BadRequestException('User has no faculty');
-
-    const faculty = await this.facultyModel.findById(user.faculty._id);
-    if (!faculty) throw new BadRequestException('Faculty not found');
-    if (!faculty.event_ids.includes(eventId)) {
-      throw new BadRequestException('Event not found in faculty');
-    }
-
-    await this.eventModel.findByIdAndDelete(eventId).exec();
-    await faculty.updateOne({ $pull: { event_ids: eventId } });
+    await event.save();
+    return;
   }
 
   isAcceptingNewContributions(firstClosureDate: Date): boolean {

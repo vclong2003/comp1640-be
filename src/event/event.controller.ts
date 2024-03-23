@@ -53,25 +53,12 @@ export class EventController {
     @Param('eventId') eventId: string,
     @Body() dto: UpdateEventDTO,
   ) {
-    if (req.user.role === ERole.MarketingCoordinator) {
-      return await this.eventService.updateEventByUserFaculty(
-        req.user._id,
-        eventId,
-        dto,
-      );
-    }
     return await this.eventService.updateEvent(eventId, dto);
   }
 
   @Delete(':eventId')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
   async deleteEvent(@Req() req, @Param('eventId') eventId: string) {
-    if (req.user.role === ERole.MarketingCoordinator) {
-      return await this.eventService.removeEventFromUserFaculty(
-        req.user._id,
-        eventId,
-      );
-    }
     return await this.eventService.removeEvent(eventId);
   }
 }

@@ -29,6 +29,9 @@ export class Event {
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
   contribution_ids: string[];
+
+  @Prop()
+  deleted_at: Date;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);
