@@ -64,6 +64,9 @@ export class Contribution {
 
   @Prop()
   versions: Partial<Contribution>[];
+
+  @Prop()
+  deleted_at: Date;
 }
 
 export const ContributionSchema = SchemaFactory.createForClass(Contribution);
