@@ -162,7 +162,13 @@ export class EventService {
       {
         _id: { $in: updatedEvent.contribution_ids },
       },
-      { event: { _id: updatedEvent._id, name: updatedEvent.name } },
+      {
+        event: {
+          _id: updatedEvent._id,
+          name: updatedEvent.name,
+          first_closure_date: updatedEvent.first_closure_date,
+        },
+      },
     );
 
     return {
