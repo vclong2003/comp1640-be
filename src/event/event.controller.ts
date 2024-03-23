@@ -15,6 +15,7 @@ import { ERole } from 'src/user/user.enums';
 import {
   CreateEventDTO,
   EventResponseDto,
+  EventsResponseDto,
   FindEventsDTO,
   UpdateEventDTO,
 } from './event.dtos';
@@ -31,18 +32,18 @@ export class EventController {
 
   @Post('')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
-  async createEvent(@Req() req, @Body() dto: CreateEventDTO) {
-    if (req.user.role === ERole.MarketingCoordinator) {
-      return await this.eventService.createEventByUserFaculty(
-        req.user._id,
-        dto,
-      );
-    }
+  async createEvent(
+    @Req() req,
+    @Body() dto: CreateEventDTO,
+  ): Promise<EventResponseDto> {
     return await this.eventService.createEvent(dto);
   }
 
   @Get('')
-  async findEvents(@Req() req, @Query() dto: FindEventsDTO) {
+  async findEvents(
+    @Req() req,
+    @Query() dto: FindEventsDTO,
+  ): Promise<EventsResponseDto[]> {
     return await this.eventService.findEvents(dto);
   }
 
@@ -52,13 +53,16 @@ export class EventController {
     @Req() req,
     @Param('eventId') eventId: string,
     @Body() dto: UpdateEventDTO,
-  ) {
+  ): Promise<EventResponseDto> {
     return await this.eventService.updateEvent(eventId, dto);
   }
 
   @Delete(':eventId')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
-  async deleteEvent(@Req() req, @Param('eventId') eventId: string) {
+  async deleteEvent(
+    @Req() req,
+    @Param('eventId') eventId: string,
+  ): Promise<void> {
     return await this.eventService.removeEvent(eventId);
   }
 }

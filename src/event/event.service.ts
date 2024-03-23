@@ -22,36 +22,6 @@ export class EventService {
     @InjectModel('Contribution') private contributionModel: Model<Contribution>,
   ) {}
 
-  async createEventByUserFaculty(
-    userId: string,
-    createEventDto: CreateEventDTO,
-  ): Promise<Event> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user.faculty) throw new BadRequestException('User has no faculty');
-
-    const faculty = await this.facultyModel.findById(user.faculty._id);
-
-    const { name, start_date, first_closure_date, final_closure_date } =
-      createEventDto;
-
-    const newEvent = new this.eventModel({
-      name,
-      start_date,
-      first_closure_date,
-      final_closure_date,
-      faculty: {
-        _id: faculty._id,
-        name: faculty.name,
-        mc: faculty.mc,
-      },
-    });
-    await newEvent.save();
-
-    await faculty.updateOne({ $push: { event_ids: newEvent._id } });
-
-    return newEvent;
-  }
-
   async createEvent(dto: CreateEventDTO): Promise<EventResponseDto> {
     const {
       name,
@@ -174,7 +144,10 @@ export class EventService {
     return this.eventModel.aggregate(pipeline);
   }
 
-  async updateEvent(id: string, dto: UpdateEventDTO): Promise<Event> {
+  async updateEvent(
+    id: string,
+    dto: UpdateEventDTO,
+  ): Promise<EventResponseDto> {
     const { name, start_date, first_closure_date, final_closure_date } = dto;
 
     const updatedEvent = await this.eventModel
@@ -192,7 +165,21 @@ export class EventService {
       { event: { _id: updatedEvent._id, name: updatedEvent.name } },
     );
 
-    return updatedEvent;
+    return {
+      _id: updatedEvent._id,
+      name: updatedEvent.name,
+      start_date: updatedEvent.start_date,
+      first_closure_date: updatedEvent.first_closure_date,
+      final_closure_date: updatedEvent.final_closure_date,
+      is_accepting_new_contribution: this.isAcceptingNewContributions(
+        updatedEvent.first_closure_date,
+      ),
+      is_contributions_editable: this.isContributionsEditable(
+        updatedEvent.final_closure_date,
+      ),
+      number_of_contributions: updatedEvent.contribution_ids.length,
+      faculty: updatedEvent.faculty,
+    };
   }
 
   async removeEvent(id: string): Promise<void> {
