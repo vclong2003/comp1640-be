@@ -4,9 +4,9 @@ import mongoose, { Model, PipelineStage } from 'mongoose';
 import { Event } from './schemas/event.schema';
 import {
   CreateEventDTO,
+  EventResponseDto,
+  EventsResponseDto,
   FindEventsDTO,
-  GetEventResponseDto,
-  GetEventsResponseDto,
   UpdateEventDTO,
 } from './event.dtos';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
@@ -52,7 +52,7 @@ export class EventService {
     return newEvent;
   }
 
-  async createEvent(dto: CreateEventDTO): Promise<Event> {
+  async createEvent(dto: CreateEventDTO): Promise<EventResponseDto> {
     const {
       name,
       start_date,
@@ -79,10 +79,28 @@ export class EventService {
     faculty.event_ids.push(newEvent._id);
     await faculty.save();
 
-    return newEvent;
+    return {
+      _id: newEvent._id,
+      name: newEvent.name,
+      start_date: newEvent.start_date,
+      first_closure_date: newEvent.first_closure_date,
+      final_closure_date: newEvent.final_closure_date,
+      is_accepting_new_contribution: this.isAcceptingNewContributions(
+        newEvent.first_closure_date,
+      ),
+      is_contributions_editable: this.isContributionsEditable(
+        newEvent.final_closure_date,
+      ),
+      number_of_contributions: newEvent.contribution_ids.length,
+      faculty: {
+        _id: faculty._id,
+        name: faculty.name,
+        mc: faculty.mc,
+      },
+    };
   }
 
-  async findEvent(_id: string): Promise<GetEventResponseDto> {
+  async findEventById(_id: string): Promise<EventResponseDto> {
     const event = await this.eventModel.findById(_id).exec();
     return {
       _id: event._id,
@@ -101,7 +119,7 @@ export class EventService {
     };
   }
 
-  async findEvents(dto: FindEventsDTO): Promise<GetEventsResponseDto[]> {
+  async findEvents(dto: FindEventsDTO): Promise<EventsResponseDto[]> {
     const {
       facultyId,
       name,

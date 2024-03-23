@@ -88,7 +88,7 @@ export class FindEventsDTO {
   limit?: number;
 }
 
-export class GetEventResponseDto {
+export class EventResponseDto {
   _id: string;
   name: string;
   start_date: Date;
@@ -108,7 +108,7 @@ export class GetEventResponseDto {
   };
 }
 
-export class GetEventsResponseDto {
+export class EventsResponseDto {
   _id: string;
   name: string;
   is_accepting_new_contribution: boolean;

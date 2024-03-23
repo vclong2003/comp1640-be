@@ -14,8 +14,8 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import {
   CreateEventDTO,
+  EventResponseDto,
   FindEventsDTO,
-  GetEventResponseDto,
   UpdateEventDTO,
 } from './event.dtos';
 @Controller('event')
@@ -25,8 +25,8 @@ export class EventController {
   @Get(':eventId')
   async findEvent(
     @Param('eventId') eventId: string,
-  ): Promise<GetEventResponseDto> {
-    return await this.eventService.findEvent(eventId);
+  ): Promise<EventResponseDto> {
+    return await this.eventService.findEventById(eventId);
   }
 
   @Post('')
