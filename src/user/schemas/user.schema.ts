@@ -46,8 +46,8 @@ export class User {
   @Prop({ type: [UserSessionSchema] })
   sessions: UserSession[];
 
-  @Prop()
-  disabled?: boolean;
+  @Prop({ required: true, default: false })
+  disabled: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -2,7 +2,7 @@ import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { EGender, ERole } from './user.enums';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GetUserResponseDto {
+export class UserResponseDto {
   _id: string;
   email: string;
   name: string;

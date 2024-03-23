@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
-import { FindUsersDto, GetUserResponseDto, UpdateUserDto } from './user.dtos';
+import { FindUsersDto, UpdateUserDto, UserResponseDto } from './user.dtos';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 
 @Injectable()
@@ -12,9 +12,9 @@ export class UserService {
     private storageService: StorageService,
   ) {}
 
-  async findUserById(userId: string): Promise<GetUserResponseDto> {
+  async findUserById(userId: string): Promise<UserResponseDto> {
     return await this.userModel
-      .findById(userId)
+      .findOne({ _id: userId, disabled: false })
       .select([
         '_id',
         'email',
@@ -28,12 +28,13 @@ export class UserService {
       ]);
   }
 
-  async findUsers(dto: FindUsersDto): Promise<GetUserResponseDto[]> {
+  async findUsers(dto: FindUsersDto): Promise<UserResponseDto[]> {
     const { name, email, role, facultyId, skip, limit } = dto;
     const query = {
       role,
       name: { $regex: name || '', $options: 'i' },
       email: { $regex: email || '', $options: 'i' },
+      disabled: false,
     };
     if (facultyId) query['faculty._id'] = facultyId;
     return this.userModel
@@ -58,7 +59,7 @@ export class UserService {
     userId: string,
     dto: UpdateUserDto,
     avatar?: Express.Multer.File,
-  ): Promise<GetUserResponseDto> {
+  ): Promise<UserResponseDto> {
     const { name, phone, dob, gender } = dto;
     const user = await this.userModel.findOne({ _id: userId });
     if (avatar) {

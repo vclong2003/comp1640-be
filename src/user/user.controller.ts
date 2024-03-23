@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { FindUsersDto, GetUserResponseDto, UpdateUserDto } from './user.dtos';
+import { FindUsersDto, UpdateUserDto, UserResponseDto } from './user.dtos';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { EGender, ERole } from './user.enums';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -22,7 +22,7 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('/my-profile')
-  async getMyProfile(@Req() req): Promise<GetUserResponseDto> {
+  async getMyProfile(@Req() req): Promise<UserResponseDto> {
     return await this.userService.findUserById(req.user._id);
   }
 
@@ -45,12 +45,12 @@ export class UserController {
     @Req() req,
     @UploadedFile() avatar: Express.Multer.File,
     @Body() dto: UpdateUserDto,
-  ): Promise<GetUserResponseDto> {
+  ): Promise<UserResponseDto> {
     return await this.userService.updateUserById(req.user._id, dto, avatar);
   }
 
   @Get('/')
-  async findUsers(@Query() dto: FindUsersDto): Promise<GetUserResponseDto[]> {
+  async findUsers(@Query() dto: FindUsersDto): Promise<UserResponseDto[]> {
     return await this.userService.findUsers(dto);
   }
 
@@ -58,7 +58,7 @@ export class UserController {
   @Roles([ERole.Admin])
   async findUserById(
     @Param('userId') userId: string,
-  ): Promise<GetUserResponseDto> {
+  ): Promise<UserResponseDto> {
     return await this.userService.findUserById(userId);
   }
 
@@ -81,7 +81,7 @@ export class UserController {
     @Param('userId') userId: string,
     @Body() dto: UpdateUserDto,
     @UploadedFile() avatar: Express.Multer.File,
-  ): Promise<GetUserResponseDto> {
+  ): Promise<UserResponseDto> {
     return await this.userService.updateUserById(userId, dto, avatar);
   }
 
