@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -21,6 +22,7 @@ import {
   ContributionResponseDto,
   ContributionsResponseDto,
 } from './dtos/contribution-res.dtos';
+import { AddCommentDto } from './dtos/comment.dtos';
 
 @Controller('contribution')
 export class ContributionController {
@@ -81,5 +83,36 @@ export class ContributionController {
     @Query() dto: FindContributionsDto,
   ): Promise<ContributionsResponseDto[]> {
     return await this.contributionService.findContributions(dto);
+  }
+
+  @Get(':contributionId/comment')
+  async findAllComments(@Param('contributionId') contributionId: string) {
+    return await this.contributionService.findAllComments(contributionId);
+  }
+
+  @Post(':contributionId/comment')
+  async addComment(
+    @Req() req,
+    @Param('contributionId') contributionId: string,
+    @Body() dto: AddCommentDto,
+  ) {
+    return await this.contributionService.addComment(
+      req.user._id,
+      contributionId,
+      dto,
+    );
+  }
+
+  @Delete(':contributionId/comment/:commentId')
+  async removeComment(
+    @Req() req,
+    @Param('contributionId') contributionId: string,
+    @Param('commentId') commentId: string,
+  ) {
+    return await this.contributionService.removeComment(
+      req.user._id,
+      contributionId,
+      commentId,
+    );
   }
 }

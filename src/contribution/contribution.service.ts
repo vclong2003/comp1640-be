@@ -185,8 +185,12 @@ export class ContributionService {
     return contribution.comments as CommentResponseDto[];
   }
 
-  async addComment(userId, dto: AddCommentDto): Promise<void> {
-    const { contributionId, content } = dto;
+  async addComment(
+    userId,
+    contributionId: string,
+    dto: AddCommentDto,
+  ): Promise<CommentResponseDto> {
+    const { content } = dto;
 
     const user = await this.userModel.findById(userId);
     if (!user) throw new BadRequestException('User not found');
@@ -207,10 +211,14 @@ export class ContributionService {
     );
     if (!contribution) throw new BadRequestException('Cotribution not found!');
 
-    return;
+    return comment as CommentResponseDto;
   }
 
-  async removeComment(userId, contributionId, commentId): Promise<void> {
+  async removeComment(
+    userId,
+    contributionId: string,
+    commentId: string,
+  ): Promise<void> {
     const contribution = await this.contributionModel.findById(contributionId);
     if (!contribution) throw new BadRequestException('Contribution not found!');
 
