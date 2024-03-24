@@ -13,6 +13,7 @@ import {
   ContributionResponseDto,
   ContributionsResponseDto,
 } from './dtos/contribution-res.dtos';
+import { AddCommentDto, CommentResponseDto } from './dtos/comment.dtos';
 
 @Injectable()
 export class ContributionService {
@@ -174,26 +175,58 @@ export class ContributionService {
     return contributions;
   }
 
-  // async addComment(userId, dto: AddCommentDto): Promise<CommentResponseDto> {
-  //   const { contributionId, content } = dto;
-  //   const contribution = await this.contributionModel.findById(contributionId);
-  //   if (!contribution) throw new BadRequestException('Contribution not found');
+  async findAllComments(contributionId: string): Promise<CommentResponseDto[]> {
+    const contribution = await this.contributionModel.findOne({
+      _id: contributionId,
+      deleted_at: null,
+    });
+    if (!contribution) throw new BadRequestException('Contribution not found!');
 
-  //   const user = await this.userModel.findById(userId);
-  //   if (!user) throw new BadRequestException('User not found');
+    return contribution.comments as CommentResponseDto[];
+  }
 
-  //   const comment = {
-  //     content,
-  //     posted_at: new Date(),
-  //     author: {
-  //       _id: user._id,
-  //       avatar_url: user.avatar_url,
-  //       name: user.name,
-  //     },
-  //   };
+  async addComment(userId, dto: AddCommentDto): Promise<void> {
+    const { contributionId, content } = dto;
 
-  //   contribution.comments.push();
-  // }
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new BadRequestException('User not found');
+
+    const comment = {
+      content,
+      posted_at: new Date(),
+      author: {
+        _id: user._id,
+        avatar_url: user.avatar_url,
+        name: user.name,
+      },
+    };
+
+    const contribution = await this.contributionModel.findByIdAndUpdate(
+      contributionId,
+      { $push: { comments: comment } },
+    );
+    if (!contribution) throw new BadRequestException('Cotribution not found!');
+
+    return;
+  }
+
+  async removeComment(userId, contributionId, commentId): Promise<void> {
+    const contribution = await this.contributionModel.findById(contributionId);
+    if (!contribution) throw new BadRequestException('Contribution not found!');
+
+    const commentIndex = contribution.comments.findIndex(
+      (comment) => comment._id.toString() === commentId,
+    );
+    if (commentIndex < 0) throw new BadRequestException('Comment not found!');
+
+    if (contribution.comments[commentIndex].author._id.toString() !== userId) {
+      throw new BadRequestException('Unauthorized!');
+    }
+
+    contribution.comments.splice(commentIndex, 1);
+    await contribution.save();
+    return;
+  }
 
   checkContributionEditable(finalClosureDate: Date) {
     return finalClosureDate > new Date();

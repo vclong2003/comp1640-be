@@ -13,7 +13,7 @@ import {
 } from './contribution-event.schema';
 
 import mongoose from 'mongoose';
-import { CommentSchema } from './contribution-comment/comment.schema';
+import { Comment, CommentSchema } from './contribution-comment/comment.schema';
 import {
   ContributionFile,
   ContributionFileSchema,
