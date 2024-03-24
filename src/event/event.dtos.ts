@@ -9,6 +9,10 @@ export class CreateEventDTO {
 
   @ApiProperty()
   @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsString()
   start_date: Date;
 
   @ApiProperty()
@@ -29,6 +33,11 @@ export class UpdateEventDTO {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @ApiProperty()
   @IsOptional()
@@ -91,6 +100,8 @@ export class FindEventsDTO {
 export class EventResponseDto {
   _id: string;
   name: string;
+  description: string;
+  banner_image_url: string;
   start_date: Date;
   first_closure_date: Date;
   final_closure_date: Date;

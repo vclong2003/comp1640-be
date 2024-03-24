@@ -1,11 +1,10 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { EventService } from './event.service';
 import { EventController } from './event.controller';
-import { FacultyModule } from 'src/faculty/faculty.module';
-import { UserModule } from 'src/user/user.module';
+import { StorageModule } from 'src/shared-modules/storage/storage.module';
 
 @Module({
-  imports: [forwardRef(() => FacultyModule), UserModule],
+  imports: [StorageModule],
   controllers: [EventController],
   providers: [EventService],
   exports: [EventService],

@@ -12,6 +12,7 @@ import {
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
+import { StorageService } from 'src/shared-modules/storage/storage.service';
 
 @Injectable()
 export class EventService {
@@ -20,11 +21,16 @@ export class EventService {
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     @InjectModel('User') private userModel: Model<User>,
     @InjectModel('Contribution') private contributionModel: Model<Contribution>,
+    private storageService: StorageService,
   ) {}
 
-  async createEvent(dto: CreateEventDTO): Promise<EventResponseDto> {
+  async createEvent(
+    dto: CreateEventDTO,
+    bannerImage?: Express.Multer.File,
+  ): Promise<EventResponseDto> {
     const {
       name,
+      description,
       start_date,
       first_closure_date,
       final_closure_date,
@@ -35,6 +41,7 @@ export class EventService {
 
     const newEvent = new this.eventModel({
       name,
+      description,
       start_date,
       first_closure_date,
       final_closure_date,
@@ -44,6 +51,10 @@ export class EventService {
         mc: faculty.mc,
       },
     });
+    if (bannerImage) {
+      newEvent.banner_image_url =
+        await this.storageService.uploadPublicFile(bannerImage);
+    }
     await newEvent.save();
 
     faculty.event_ids.push(newEvent._id);
@@ -52,6 +63,8 @@ export class EventService {
     return {
       _id: newEvent._id,
       name: newEvent.name,
+      description: newEvent.description,
+      banner_image_url: newEvent.banner_image_url,
       start_date: newEvent.start_date,
       first_closure_date: newEvent.first_closure_date,
       final_closure_date: newEvent.final_closure_date,
@@ -80,6 +93,8 @@ export class EventService {
     return {
       _id: event._id,
       name: event.name,
+      description: event.description,
+      banner_image_url: event.banner_image_url,
       start_date: event.start_date,
       first_closure_date: event.first_closure_date,
       final_closure_date: event.final_closure_date,
@@ -110,7 +125,6 @@ export class EventService {
 
     const match = {};
 
-    match['deleted_at'] = null;
     if (facultyId) {
       const faculty = await this.facultyModel.findById(facultyId);
       if (!faculty) throw new BadRequestException('Faculty not found');
@@ -118,6 +132,7 @@ export class EventService {
         $in: faculty.event_ids.map((id) => new mongoose.Types.ObjectId(id)),
       };
     }
+    match['deleted_at'] = null;
     if (name) match['name'] = { $regex: name, $options: 'i' };
     if (start_date) match['start_date'] = { $gte: start_date };
     if (final_closure_date) {
@@ -151,51 +166,72 @@ export class EventService {
   }
 
   async updateEvent(
-    id: string,
+    eventId: string,
     dto: UpdateEventDTO,
+    bannerImage?: Express.Multer.File,
   ): Promise<EventResponseDto> {
-    const { name, start_date, first_closure_date, final_closure_date } = dto;
+    const {
+      name,
+      description,
+      start_date,
+      first_closure_date,
+      final_closure_date,
+    } = dto;
 
-    const updatedEvent = await this.eventModel
-      .findByIdAndUpdate(
-        id,
-        { name, start_date, final_closure_date, first_closure_date },
-        { new: true },
-      )
-      .exec();
+    const event = await this.eventModel.findOne({
+      _id: new mongoose.Types.ObjectId(eventId),
+      deleted_at: null,
+    });
+    if (!event) throw new BadRequestException('Event not found');
+
+    if (name) event.name = name;
+    if (description) event.description = description;
+    if (start_date) event.start_date = start_date;
+    if (first_closure_date) event.first_closure_date = first_closure_date;
+    if (final_closure_date) event.final_closure_date = final_closure_date;
+
+    if (bannerImage) {
+      if (event.banner_image_url) {
+        await this.storageService.deletePublicFile(event.banner_image_url);
+      }
+      event.banner_image_url =
+        await this.storageService.uploadPublicFile(bannerImage);
+    }
 
     await this.contributionModel.updateMany(
       {
-        _id: { $in: updatedEvent.contribution_ids },
+        _id: { $in: event.contribution_ids },
       },
       {
         event: {
-          _id: updatedEvent._id,
-          name: updatedEvent.name,
-          final_closure_date: updatedEvent.first_closure_date,
+          _id: event._id,
+          name: event.name,
+          final_closure_date: event.first_closure_date,
         },
       },
     );
 
     return {
-      _id: updatedEvent._id,
-      name: updatedEvent.name,
-      start_date: updatedEvent.start_date,
-      first_closure_date: updatedEvent.first_closure_date,
-      final_closure_date: updatedEvent.final_closure_date,
+      _id: event._id,
+      name: event.name,
+      description: event.description,
+      banner_image_url: event.banner_image_url,
+      start_date: event.start_date,
+      first_closure_date: event.first_closure_date,
+      final_closure_date: event.final_closure_date,
       is_accepting_new_contribution: this.isAcceptingNewContributions(
-        updatedEvent.first_closure_date,
+        event.first_closure_date,
       ),
       is_contributions_editable: this.isContributionsEditable(
-        updatedEvent.final_closure_date,
+        event.final_closure_date,
       ),
-      number_of_contributions: updatedEvent.contribution_ids.length,
-      faculty: updatedEvent.faculty,
+      number_of_contributions: event.contribution_ids.length,
+      faculty: event.faculty,
     };
   }
 
-  async removeEvent(id: string): Promise<void> {
-    const event = await this.eventModel.findById(id);
+  async removeEvent(eventId: string): Promise<void> {
+    const event = await this.eventModel.findById(eventId);
     if (!event) throw new BadRequestException('Event not found');
     event.deleted_at = new Date();
 

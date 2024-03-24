@@ -6,8 +6,8 @@ import { User } from 'src/user/schemas/user.schema';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
-  GetFacultiesResponseDto,
-  GetFacultyResponseDto,
+  FacultiesResponseDto,
+  FacultyResponseDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
@@ -25,16 +25,14 @@ export class FacultyService {
     private storageService: StorageService,
   ) {}
 
-  async findFacultyById(id: string): Promise<GetFacultyResponseDto> {
+  async findFacultyById(id: string): Promise<FacultyResponseDto> {
     return this.facultyModel
       .findById(id)
       .select('_id name description banner_image_url mc')
       .exec();
   }
 
-  async findFaculties(
-    dto: FindFacultiesDto,
-  ): Promise<GetFacultiesResponseDto[]> {
+  async findFaculties(dto: FindFacultiesDto): Promise<FacultiesResponseDto[]> {
     const { name, skip, limit } = dto;
     const query = {
       name: { $regex: name || '', $options: 'i' },
@@ -50,7 +48,7 @@ export class FacultyService {
   async createFaculty(
     dto: CreateFacultyDto,
     bannerImage?: Express.Multer.File,
-  ): Promise<GetFacultyResponseDto> {
+  ): Promise<FacultyResponseDto> {
     const { name, description, mcId } = dto;
 
     // Find MC if id is provided
@@ -95,7 +93,7 @@ export class FacultyService {
     facultyId: string,
     dto: UpdateFacultyDto,
     bannerImage?: Express.Multer.File,
-  ): Promise<GetFacultyResponseDto> {
+  ): Promise<FacultyResponseDto> {
     const { name, description, mcId } = dto;
 
     let mc: HydratedDocument<User>;

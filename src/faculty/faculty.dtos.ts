@@ -56,7 +56,7 @@ export class FindFacultiesDto {
   limit?: number;
 }
 
-export class GetFacultyResponseDto {
+export class FacultyResponseDto {
   _id: string;
   name: string;
   description: string;
@@ -68,7 +68,7 @@ export class GetFacultyResponseDto {
   };
 }
 
-export class GetFacultiesResponseDto {
+export class FacultiesResponseDto {
   _id: string;
   name: string;
   mc: {

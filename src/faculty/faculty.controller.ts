@@ -15,8 +15,8 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
-  GetFacultiesResponseDto,
-  GetFacultyResponseDto,
+  FacultiesResponseDto,
+  FacultyResponseDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
@@ -46,7 +46,7 @@ export class FacultyController {
   async createFaculty(
     @Body() dto: CreateFacultyDto,
     @UploadedFile() bannerImage?: Express.Multer.File,
-  ): Promise<GetFacultyResponseDto> {
+  ): Promise<FacultyResponseDto> {
     return await this.facultyService.createFaculty(dto, bannerImage);
   }
 
@@ -70,7 +70,7 @@ export class FacultyController {
     @Param('facultyId') facultyId: string,
     @Body() dto: UpdateFacultyDto,
     @UploadedFile() bannerImage?: Express.Multer.File,
-  ): Promise<GetFacultyResponseDto> {
+  ): Promise<FacultyResponseDto> {
     return await this.facultyService.updateFaculty(facultyId, dto, bannerImage);
   }
 
@@ -96,7 +96,7 @@ export class FacultyController {
   @Roles([ERole.Admin, ERole.MarketingManager])
   async findFaculties(
     @Query() dto: FindFacultiesDto,
-  ): Promise<GetFacultiesResponseDto[]> {
+  ): Promise<FacultiesResponseDto[]> {
     return await this.facultyService.findFaculties(dto);
   }
 

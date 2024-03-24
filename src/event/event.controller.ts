@@ -8,6 +8,8 @@ import {
   Delete,
   Req,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -19,6 +21,8 @@ import {
   FindEventsDTO,
   UpdateEventDTO,
 } from './event.dtos';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
@@ -32,11 +36,51 @@ export class EventController {
 
   @Post('')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
+  @UseInterceptors(FileInterceptor('bannerImage'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        start_date: { type: 'string' },
+        first_closure_date: { type: 'string' },
+        final_closure_date: { type: 'string' },
+        facultyId: { type: 'string' },
+      },
+    },
+  })
   async createEvent(
     @Req() req,
     @Body() dto: CreateEventDTO,
+    @UploadedFile() bannerImage?: Express.Multer.File,
   ): Promise<EventResponseDto> {
-    return await this.eventService.createEvent(dto);
+    return await this.eventService.createEvent(dto, bannerImage);
+  }
+
+  @Put(':eventId')
+  @Roles([ERole.Admin, ERole.MarketingCoordinator])
+  @UseInterceptors(FileInterceptor('bannerImage'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        start_date: { type: 'string' },
+        first_closure_date: { type: 'string' },
+        final_closure_date: { type: 'string' },
+      },
+    },
+  })
+  async updateEvent(
+    @Param('eventId') eventId: string,
+    @Body() dto: UpdateEventDTO,
+    @UploadedFile() bannerImage?: Express.Multer.File,
+  ): Promise<EventResponseDto> {
+    return await this.eventService.updateEvent(eventId, dto, bannerImage);
   }
 
   @Get('')
@@ -45,16 +89,6 @@ export class EventController {
     @Query() dto: FindEventsDTO,
   ): Promise<EventsResponseDto[]> {
     return await this.eventService.findEvents(dto);
-  }
-
-  @Put(':eventId')
-  @Roles([ERole.Admin, ERole.MarketingCoordinator])
-  async updateEvent(
-    @Req() req,
-    @Param('eventId') eventId: string,
-    @Body() dto: UpdateEventDTO,
-  ): Promise<EventResponseDto> {
-    return await this.eventService.updateEvent(eventId, dto);
   }
 
   @Delete(':eventId')
