@@ -174,6 +174,27 @@ export class ContributionService {
     return contributions;
   }
 
+  // async addComment(userId, dto: AddCommentDto): Promise<CommentResponseDto> {
+  //   const { contributionId, content } = dto;
+  //   const contribution = await this.contributionModel.findById(contributionId);
+  //   if (!contribution) throw new BadRequestException('Contribution not found');
+
+  //   const user = await this.userModel.findById(userId);
+  //   if (!user) throw new BadRequestException('User not found');
+
+  //   const comment = {
+  //     content,
+  //     posted_at: new Date(),
+  //     author: {
+  //       _id: user._id,
+  //       avatar_url: user.avatar_url,
+  //       name: user.name,
+  //     },
+  //   };
+
+  //   contribution.comments.push();
+  // }
+
   checkContributionEditable(finalClosureDate: Date) {
     return finalClosureDate > new Date();
   }

@@ -4,6 +4,10 @@ import { IsString } from 'class-validator';
 export class AddCommentDto {
   @ApiProperty()
   @IsString()
+  contributionId: string;
+
+  @ApiProperty()
+  @IsString()
   content: string;
 }
 
