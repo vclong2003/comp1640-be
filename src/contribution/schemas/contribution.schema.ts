@@ -30,6 +30,9 @@ export class Contribution {
   description: string;
 
   @Prop()
+  banner_image_url: string;
+
+  @Prop()
   submitted_at: Date;
 
   @Prop()
