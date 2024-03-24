@@ -1,7 +1,7 @@
-import { GetUserResponseDto } from 'src/user/user.dtos';
+import { UserResponseDto } from 'src/user/user.dtos';
 
 export class LoginResponseDto {
   accessToken: string;
   refreshToken: string;
-  user: GetUserResponseDto;
+  user: UserResponseDto;
 }

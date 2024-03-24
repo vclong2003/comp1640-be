@@ -28,7 +28,7 @@ import { ERole } from 'src/user/user.enums';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { EClientConfigKeys } from 'src/config/client.config';
-import { GetUserResponseDto } from 'src/user/user.dtos';
+import { UserResponseDto } from 'src/user/user.dtos';
 import { GoogleLoginDto } from './dtos/google-login.dto';
 
 @Controller('auth')
@@ -64,9 +64,7 @@ export class AuthController {
 
   @Post('setup-account')
   @NoAccessToken()
-  async setupAccount(
-    @Body() dto: SetupAccountDto,
-  ): Promise<GetUserResponseDto> {
+  async setupAccount(@Body() dto: SetupAccountDto): Promise<UserResponseDto> {
     return await this.authService.setupAccount(dto);
   }
 
@@ -95,7 +93,7 @@ export class AuthController {
   })
   @NoAccessToken()
   @UseGuards(LocalAuthGuard)
-  async login(@Request() req, @Response() res): Promise<GetUserResponseDto> {
+  async login(@Request() req, @Response() res): Promise<UserResponseDto> {
     const ua = req.headers['user-agent'];
     const { refreshToken, accessToken, user } = await this.authService.login(
       req.user,

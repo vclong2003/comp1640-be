@@ -17,7 +17,7 @@ import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TokensDto } from './dtos/tokens.dto';
-import { GetUserResponseDto } from 'src/user/user.dtos';
+import { UserResponseDto } from 'src/user/user.dtos';
 
 @Injectable()
 export class AuthService {
@@ -50,7 +50,7 @@ export class AuthService {
     return;
   }
 
-  async setupAccount(dto: SetupAccountDto): Promise<GetUserResponseDto> {
+  async setupAccount(dto: SetupAccountDto): Promise<UserResponseDto> {
     const { token, name, password, dob, phone, gender } = dto;
     const { email, role, facultyId } =
       await this.jwtService.verifyRegisterToken(token);
