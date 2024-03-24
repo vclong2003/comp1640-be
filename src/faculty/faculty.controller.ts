@@ -21,6 +21,7 @@ import {
 } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 @Controller('faculty')
 export class FacultyController {
@@ -28,7 +29,19 @@ export class FacultyController {
 
   // Create a new faculty
   @Post('')
-  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        mcId: { type: 'string' },
+        bannerImage: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('bannerImage'))
   @Roles([ERole.Admin])
   async createFaculty(
     @Body() dto: CreateFacultyDto,
@@ -39,7 +52,19 @@ export class FacultyController {
 
   // Update a faculty
   @Put(':facultyId')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('bannerImage'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        mcId: { type: 'string' },
+        bannerImage: { type: 'string', format: 'binary' },
+      },
+    },
+  })
   @Roles([ERole.Admin])
   async updateFaculty(
     @Param('facultyId') facultyId: string,

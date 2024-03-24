@@ -46,7 +46,7 @@ export class User {
   @Prop({ type: [UserSessionSchema] })
   sessions: UserSession[];
 
-  @Prop({ required: true, default: false })
+  @Prop({ default: false })
   disabled: boolean;
 }
 

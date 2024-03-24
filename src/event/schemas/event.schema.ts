@@ -30,7 +30,7 @@ export class Event {
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
   contribution_ids: string[];
 
-  @Prop({ required: true, default: null })
+  @Prop({ default: null })
   deleted_at: Date;
 }
 

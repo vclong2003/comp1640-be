@@ -26,6 +26,9 @@ export class Faculty {
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
   student_ids: string[];
+
+  @Prop({ default: null })
+  deleted_at: Date;
 }
 
 export const FacultySchema = SchemaFactory.createForClass(Faculty);
