@@ -1,5 +1,10 @@
+export class AddContributionResponseDto {
+  _id: string;
+}
+
 export class ContributionResponseDto {
   _id: string;
+  title: string;
   description: string;
   banner_image_url: string;
   submitted_at: Date;

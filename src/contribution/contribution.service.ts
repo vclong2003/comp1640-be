@@ -1,12 +1,18 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
-import { AddContributionDto, FindContributionsDto } from './contribution.dtos';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, PipelineStage } from 'mongoose';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { Event } from 'src/event/schemas/event.schema';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
+import { AddContributionDto } from './dtos/add-contribution.dto';
+import { FindContributionsDto } from './dtos/find-contributions.dto';
+import {
+  AddContributionResponseDto,
+  ContributionResponseDto,
+  ContributionsResponseDto,
+} from './dtos/contribution-res.dtos';
 
 @Injectable()
 export class ContributionService {
@@ -18,11 +24,11 @@ export class ContributionService {
     private strorageSerive: StorageService,
   ) {}
 
-  async createContribution(
+  async addContribution(
     studentId: string,
     dto: AddContributionDto,
     files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
-  ) {
+  ): Promise<AddContributionResponseDto> {
     if (!files.documents || files.documents.length <= 0) {
       throw new BadRequestException(1);
     }
@@ -51,6 +57,7 @@ export class ContributionService {
       event: {
         _id: event._id,
         name: event.name,
+        final_closure_date: event.final_closure_date,
       },
       faculty: {
         _id: faculty._id,
@@ -74,10 +81,14 @@ export class ContributionService {
     }
 
     await contribution.save();
-    return { _id: contribution._id };
+    return {
+      _id: contribution._id,
+    };
   }
 
-  async getContributionById(contributionId: string) {
+  async findContributionById(
+    contributionId: string,
+  ): Promise<ContributionResponseDto> {
     const contribution = await this.contributionModel.findById(contributionId);
     const images = await this.strorageSerive.getPrivateFilesUrls(
       contribution.images,
@@ -86,37 +97,26 @@ export class ContributionService {
       contribution.documents,
     );
     return {
-      contribution,
-      images,
+      _id: contribution._id,
+      title: contribution.title,
+      description: contribution.description,
+      banner_image_url: contribution.banner_image_url,
+      submitted_at: contribution.submitted_at,
+      is_publication: contribution.is_publication,
+      is_editable: this.checkContributionEditable(
+        contribution.event.final_closure_date,
+      ),
+      author: contribution.author,
+      faculty: contribution.faculty,
+      event: contribution.event,
       documents,
+      images,
     };
   }
 
-  async getContributionsByUserFaculty(
-    userId: string,
+  async findContributions(
     dto: FindContributionsDto,
-  ) {
-    const user = await this.userModel.findById(userId);
-    if (!user.faculty) throw new BadRequestException(1);
-
-    const pipeLine = await this.genFindContributionsPipeline({
-      ...dto,
-      facultyId: user.faculty._id,
-    });
-
-    const contributions = await this.contributionModel.aggregate(pipeLine);
-    return contributions;
-  }
-
-  async getContributions(dto: FindContributionsDto) {
-    const pipeLine = await this.genFindContributionsPipeline(dto);
-    const contributions = await this.contributionModel.aggregate(pipeLine);
-    return contributions;
-  }
-
-  async genFindContributionsPipeline(
-    dto: FindContributionsDto,
-  ): Promise<PipelineStage[]> {
+  ): Promise<ContributionsResponseDto[]> {
     const {
       title,
       eventId,
@@ -137,26 +137,22 @@ export class ContributionService {
       match['author.name'] = { $regex: authorName, $options: 'i' };
     }
     if (is_publication) match['is_publication'] = is_publication;
-
-    const event_contribution_ids = [];
-    const faculty_contribution_ids = [];
-    if (eventId) {
+    if (eventId && !facultyId) {
       const event = await this.eventModel.findById(eventId);
       if (!event) throw new BadRequestException(1);
-      event_contribution_ids.push(event.contribution_ids);
+      match['_id'] = {
+        $in: event.contribution_ids.map(
+          (id) => new mongoose.Types.ObjectId(id),
+        ),
+      };
     }
     if (facultyId) {
       const faculty = await this.facultyModel.findById(facultyId);
       if (!faculty) throw new BadRequestException(2);
-      faculty_contribution_ids.push(faculty.contribution_ids);
-    }
-    const join_ids = new Set<string>();
-    event_contribution_ids.forEach((id) => join_ids.add(id.toString()));
-    faculty_contribution_ids.forEach((id) => join_ids.add(id.toString()));
-
-    if (join_ids.size > 0) {
       match['_id'] = {
-        $in: Array.from(join_ids).map((id) => new mongoose.Types.ObjectId(id)),
+        $in: faculty.contribution_ids.map(
+          (id) => new mongoose.Types.ObjectId(id),
+        ),
       };
     }
 
@@ -173,7 +169,12 @@ export class ContributionService {
     pipeLine.push({ $project: projection });
     if (limit) pipeLine.push({ $limit: limit });
     if (skip) pipeLine.push({ $skip: skip });
-    console.log(pipeLine);
-    return pipeLine;
+
+    const contributions = await this.contributionModel.aggregate(pipeLine);
+    return contributions;
+  }
+
+  checkContributionEditable(finalClosureDate: Date) {
+    return finalClosureDate > new Date();
   }
 }
