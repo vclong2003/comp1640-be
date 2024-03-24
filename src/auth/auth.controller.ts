@@ -23,7 +23,6 @@ import {
   ResetPasswordDto,
   SendResetPasswordEmailDto,
 } from './dtos/reset-password.dto';
-import { Roles } from './decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { ConfigService } from '@nestjs/config';
@@ -43,7 +42,8 @@ export class AuthController {
   ) {}
 
   @Post('register-email')
-  @Roles([ERole.Admin])
+  // @Roles([ERole.Admin])
+  @NoAccessToken()
   async sendRegisterEmail(
     @Body() dto: SendRegisterEmailDto,
     @Response() res,
@@ -53,6 +53,7 @@ export class AuthController {
   }
 
   @Post('verify-register-token')
+  @HttpCode(200)
   @NoAccessToken()
   async verifyRegisterToken(
     @Body() dto: SendRegisterEmailVerifycationDto,

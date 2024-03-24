@@ -42,6 +42,10 @@ export class SetupAccountDto {
   @IsString()
   name: string;
 
+  @ApiProperty({ type: 'enum', enum: Object.values(EGender) })
+  @IsEnum(EGender)
+  gender: EGender;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
@@ -51,9 +55,4 @@ export class SetupAccountDto {
   @IsOptional()
   @IsString()
   dob?: Date;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsEnum(EGender)
-  gender?: EGender;
 }

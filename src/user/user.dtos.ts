@@ -33,9 +33,9 @@ export class UpdateUserDto {
   @IsString()
   dob?: Date;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ type: 'enum', required: false })
   @IsOptional()
-  @IsEnum(EGender)
+  @IsString()
   gender?: EGender;
 }
 

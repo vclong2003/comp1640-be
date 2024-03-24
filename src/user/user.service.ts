@@ -63,7 +63,9 @@ export class UserService {
     const { name, phone, dob, gender } = dto;
     const user = await this.userModel.findOne({ _id: userId });
     if (avatar) {
-      await this.storageService.deletePublicFile(user.avatar_url);
+      if (user.avatar_url) {
+        await this.storageService.deletePublicFile(user.avatar_url);
+      }
       const avatarUrl = await this.storageService.uploadPublicFile(avatar);
       user.avatar_url = avatarUrl;
     }

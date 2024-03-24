@@ -11,9 +11,6 @@ export class StorageService {
   private readonly PrivateBucketName = 'alhkq-private';
   private readonly PublicBucketName = 'alhkq-public';
 
-  private readonly ContributionImagesFolder = 'contribution-images';
-  private readonly ContributionDocumentsFolder = 'contribution-documents';
-
   constructor() {
     this.storage = new Storage({
       keyFilename: join(
