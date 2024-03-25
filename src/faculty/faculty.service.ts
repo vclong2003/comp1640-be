@@ -6,7 +6,6 @@ import { User } from 'src/user/schemas/user.schema';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
-  FacultiesResponseDto,
   FacultyResponseDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
@@ -32,7 +31,9 @@ export class FacultyService {
       .exec();
   }
 
-  async findFaculties(dto: FindFacultiesDto): Promise<FacultiesResponseDto[]> {
+  async findFaculties(
+    dto: FindFacultiesDto,
+  ): Promise<Omit<FacultyResponseDto, 'description' | 'banner_image_url'>[]> {
     const { name, skip, limit } = dto;
     const query = {
       name: { $regex: name || '', $options: 'i' },

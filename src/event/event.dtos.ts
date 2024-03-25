@@ -118,15 +118,3 @@ export class EventResponseDto {
     };
   };
 }
-
-export class EventsResponseDto {
-  _id: string;
-  name: string;
-  is_accepting_new_contribution: boolean;
-  is_contributions_editable: boolean;
-  number_of_contributions: number;
-  faculty: {
-    _id: string;
-    name: string;
-  };
-}

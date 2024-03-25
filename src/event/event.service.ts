@@ -5,7 +5,6 @@ import { Event } from './schemas/event.schema';
 import {
   CreateEventDTO,
   EventResponseDto,
-  EventsResponseDto,
   FindEventsDTO,
   UpdateEventDTO,
 } from './event.dtos';
@@ -109,7 +108,11 @@ export class EventService {
     };
   }
 
-  async findEvents(dto: FindEventsDTO): Promise<EventsResponseDto[]> {
+  async findEvents(
+    dto: FindEventsDTO,
+  ): Promise<
+    Omit<EventResponseDto, 'description' | 'banner_image_url' | 'faculty.mc'>[]
+  > {
     const {
       facultyId,
       name,

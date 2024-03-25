@@ -67,13 +67,3 @@ export class FacultyResponseDto {
     email: string;
   };
 }
-
-export class FacultiesResponseDto {
-  _id: string;
-  name: string;
-  mc: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-}

@@ -17,7 +17,6 @@ import { ERole } from 'src/user/user.enums';
 import {
   CreateEventDTO,
   EventResponseDto,
-  EventsResponseDto,
   FindEventsDTO,
   UpdateEventDTO,
 } from './event.dtos';
@@ -87,7 +86,9 @@ export class EventController {
   async findEvents(
     @Req() req,
     @Query() dto: FindEventsDTO,
-  ): Promise<EventsResponseDto[]> {
+  ): Promise<
+    Omit<EventResponseDto, 'description' | 'banner_image_url' | 'faculty.mc'>[]
+  > {
     return await this.eventService.findEvents(dto);
   }
 

@@ -15,7 +15,6 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import {
   CreateFacultyDto,
   FindFacultiesDto,
-  FacultiesResponseDto,
   FacultyResponseDto,
   UpdateFacultyDto,
 } from './faculty.dtos';
@@ -96,7 +95,7 @@ export class FacultyController {
   @Roles([ERole.Admin, ERole.MarketingManager])
   async findFaculties(
     @Query() dto: FindFacultiesDto,
-  ): Promise<FacultiesResponseDto[]> {
+  ): Promise<Omit<FacultyResponseDto, 'description' | 'banner_image_url'>[]> {
     return await this.facultyService.findFaculties(dto);
   }
 
