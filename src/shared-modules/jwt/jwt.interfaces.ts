@@ -6,6 +6,7 @@ export interface IRefreshTokenPayload {
 
 export interface IAccessTokenPayload {
   _id: string;
+  facultyId?: string;
   role: ERole;
 }
 

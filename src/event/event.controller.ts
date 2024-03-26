@@ -47,6 +47,7 @@ export class EventController {
         first_closure_date: { type: 'string' },
         final_closure_date: { type: 'string' },
         facultyId: { type: 'string' },
+        bannerImage: { type: 'string', format: 'binary' },
       },
     },
   })
@@ -71,6 +72,7 @@ export class EventController {
         start_date: { type: 'string' },
         first_closure_date: { type: 'string' },
         final_closure_date: { type: 'string' },
+        bannerImage: { type: 'string', format: 'binary' },
       },
     },
   })
