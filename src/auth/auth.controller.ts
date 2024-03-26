@@ -105,7 +105,8 @@ export class AuthController {
     return res.send(user);
   }
 
-  @Post('send-reset-password-email')
+  @Post('reset-password-email')
+  @NoAccessToken()
   async sendResetPasswordEmail(
     @Body() dto: SendResetPasswordEmailDto,
     @Response() res,
@@ -116,6 +117,8 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @HttpCode(200)
+  @NoAccessToken()
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto);
   }

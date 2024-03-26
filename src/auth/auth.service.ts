@@ -104,9 +104,7 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userModel.findOne({ email });
     if (!user) return null;
-    if (user.disabled) {
-      throw new UnauthorizedException('This user account is revoked!');
-    }
+    if (user.disabled) return null;
     const isPasswordValid = await this.passwordService.comparePassword(
       password,
       user.password,
