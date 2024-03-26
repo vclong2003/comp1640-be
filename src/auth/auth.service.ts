@@ -213,4 +213,15 @@ export class AuthService {
 
     return;
   }
+
+  // Logout ----------------------------------------------------------------
+  async logout(userId: string, refreshToken: string): Promise<void> {
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token is required!');
+    }
+    await this.userModel.findByIdAndUpdate(userId, {
+      $pull: { sessions: { token: refreshToken } },
+    });
+    return;
+  }
 }

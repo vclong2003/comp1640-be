@@ -153,6 +153,15 @@ export class AuthController {
     res.cookie('access_token', accessToken, this.cookieOptions);
 
     const { redirect } = dto;
-    return res.redirect(clientUrl + redirect);
+    if (redirect) return res.redirect(`${clientUrl}${redirect}`);
+    return res.redirect(clientUrl);
+  }
+
+  @Post('logout')
+  async logout(@Request() req, @Response() res) {
+    await this.authService.logout(req.user._id, req.cookies['refresh_token']);
+    res.clearCookie('refresh_token');
+    res.clearCookie('access_token');
+    return res.status(200).send();
   }
 }
