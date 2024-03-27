@@ -1,29 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService as BaseMailerService } from '@nestjs-modules/mailer';
+import {
+  SendGuestRegisterEmailDto,
+  SendResetPasswordEmailDto,
+} from './mailer.dtos';
 
 @Injectable()
 export class MailerService {
   constructor(private baseMailerService: BaseMailerService) {}
 
-  async test() {
-    try {
-      await this.baseMailerService.sendMail({
-        to: 'vclong2003@gmail.com',
-        from: 'System <vclong2003@gmail.com>',
-        subject: 'Testing Nest Mailermodule with template ✔',
-        template: 'reset-password', // The `.pug`, `.ejs` or `.hbs` extension is appended automatically.
-        context: {
-          testLink: 'https://google.com',
-          username: 'Vu Cong Long',
-        },
-      });
-    } catch (error) {
-      console.log(error);
-      throw new Error('Error when sending email');
-    }
-  }
-
-  async sendRegisterEmail(email: string, token: string) {
+  async sendRegisterEmail(dto: SendGuestRegisterEmailDto) {
+    const { email, url } = dto;
     try {
       await this.baseMailerService.sendMail({
         to: email,
@@ -32,16 +19,17 @@ export class MailerService {
         template: 'create-account', // The `.pug`, `.ejs` or `.hbs` extension is appended automatically.
         context: {
           email: email,
-          registerUrl: token,
+          registerUrl: url,
         },
       });
     } catch (error) {
       console.log(error);
-      throw new Error('Error when sending email');
+      throw new Error('Error when sending email!');
     }
   }
 
-  async sendResetPasswordEmail(email: string, name: string, token: string) {
+  async sendResetPasswordEmail(dto: SendResetPasswordEmailDto) {
+    const { email, name, url } = dto;
     try {
       await this.baseMailerService.sendMail({
         to: email,
@@ -50,12 +38,12 @@ export class MailerService {
         template: 'reset-password', // The `.pug`, `.ejs` or `.hbs` extension is appended automatically.
         context: {
           name: name,
-          resetPasswordUrl: token,
+          resetPasswordUrl: url,
         },
       });
     } catch (error) {
       console.log(error);
-      throw new Error('Error when sending email');
+      throw new Error('Error when sending email!');
     }
   }
 }

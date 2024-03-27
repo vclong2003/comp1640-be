@@ -21,6 +21,7 @@ import {
 import { ERole } from 'src/user/user.enums';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { NoAccessToken } from 'src/auth/decorators/no-access-token.decorator';
 
 @Controller('faculty')
 export class FacultyController {
@@ -92,7 +93,7 @@ export class FacultyController {
   }
 
   @Get('')
-  @Roles([ERole.Admin, ERole.MarketingManager])
+  @NoAccessToken()
   async findFaculties(
     @Query() dto: FindFacultiesDto,
   ): Promise<Omit<FacultyResponseDto, 'description' | 'banner_image_url'>[]> {

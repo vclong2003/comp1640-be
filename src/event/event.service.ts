@@ -85,7 +85,7 @@ export class EventService {
   async findEventById(_id: string): Promise<EventResponseDto> {
     const event = await this.eventModel
       .findOne({
-        _id: new mongoose.Types.ObjectId(_id),
+        _id,
         deleted_at: null,
       })
       .exec();
@@ -182,7 +182,7 @@ export class EventService {
     } = dto;
 
     const event = await this.eventModel.findOne({
-      _id: new mongoose.Types.ObjectId(eventId),
+      _id: eventId,
       deleted_at: null,
     });
     if (!event) throw new BadRequestException('Event not found');

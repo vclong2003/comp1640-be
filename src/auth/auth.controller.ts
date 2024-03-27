@@ -69,14 +69,15 @@ export class AuthController {
     return await this.authService.setupAccount(dto);
   }
 
-  @Post('guest-register-email')
+  @Post('guest-register')
   @NoAccessToken()
   async sendGuestRegisterEmail(
     @Body() dto: SendGuestRegisterEmailDto,
   ): Promise<void> {
-    const { email } = dto;
+    const { email, facultyId } = dto;
     return await this.authService.sendRegisterEmail({
       email,
+      facultyId,
       role: ERole.Guest,
     });
   }

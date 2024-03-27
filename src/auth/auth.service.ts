@@ -18,6 +18,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TokensDto } from './dtos/tokens.dto';
 import { UserResponseDto } from 'src/user/user.dtos';
+import { ConfigService } from '@nestjs/config';
+import { EClientConfigKeys } from 'src/config/client.config';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +29,7 @@ export class AuthService {
     private passwordService: PasswordService,
     private jwtService: JwtService,
     private mailerService: MailerService,
+    private configService: ConfigService,
   ) {}
 
   // Register ------------------------------------------------------
@@ -36,12 +39,20 @@ export class AuthService {
     const user = await this.userModel.findOne({ email });
     if (user) throw new ConflictException('User already exists!');
 
+    if (facultyId) {
+      const faculty = await this.facultyModel.findById(facultyId).exec();
+      if (!faculty) throw new BadRequestException('Faculty not found!');
+    }
+
     const token = await this.jwtService.genRegisterToken({
       email,
       role,
       facultyId,
     });
-    await this.mailerService.sendRegisterEmail(email, token);
+
+    const clientUrl = await this.configService.get(EClientConfigKeys.Url);
+    const url = `${clientUrl}/setup-account?token=${token}`;
+    await this.mailerService.sendRegisterEmail({ email, url });
     return;
   }
 
@@ -199,7 +210,10 @@ export class AuthService {
     const token = await this.jwtService.genResetPasswordToken({
       userId: user._id,
     });
-    await this.mailerService.sendResetPasswordEmail(email, user.name, token);
+    const clientUrl = await this.configService.get(EClientConfigKeys.Url);
+    const url = `${clientUrl}/reset-password?token=${token}`;
+    const { name } = user;
+    await this.mailerService.sendResetPasswordEmail({ email, name, url });
     return;
   }
 

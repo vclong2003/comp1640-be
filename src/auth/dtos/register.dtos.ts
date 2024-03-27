@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, IsEnum, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsNotEmpty,
+} from 'class-validator';
 import { EGender, ERole } from 'src/user/user.enums';
 
 export class SendRegisterEmailDto {
@@ -20,7 +26,13 @@ export class SendRegisterEmailDto {
 export class SendGuestRegisterEmailDto {
   @ApiProperty()
   @IsEmail()
+  @IsNotEmpty()
   email: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  facultyId: string;
 }
 
 export class SendRegisterEmailVerifycationDto {
