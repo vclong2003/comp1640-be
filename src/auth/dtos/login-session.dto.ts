@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
-export class findLoginSessionsDto {
+export class FindLoginSessionsDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
@@ -11,4 +11,11 @@ export class findLoginSessionsDto {
   @IsOptional()
   @IsString()
   skip?: number;
+}
+
+export class LoginSessionResponseDto {
+  _id: string;
+  browser: string;
+  date: Date;
+  isCurrentDevice: boolean;
 }
