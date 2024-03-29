@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Post,
+  Put,
   Query,
   Request,
   Response,
@@ -17,7 +18,7 @@ import {
   SendRegisterEmailVerifycationDto,
   SetupAccountDto,
   VerifyRegisterTokenResponseDto,
-} from './dtos/register.dtos';
+} from './dtos/register.dto';
 import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import {
@@ -30,6 +31,7 @@ import { ConfigService } from '@nestjs/config';
 import { EClientConfigKeys } from 'src/config/client.config';
 import { UserResponseDto } from 'src/user/user.dtos';
 import { GoogleLoginDto } from './dtos/google-login.dto';
+import { ChangePasswordDto } from './dtos/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -42,6 +44,7 @@ export class AuthController {
     private configService: ConfigService,
   ) {}
 
+  // Send Register Email ------------------------------------------------------
   @Post('register-email')
   // @Roles([ERole.Admin])
   @NoAccessToken()
@@ -53,6 +56,7 @@ export class AuthController {
     return res.status(200).send();
   }
 
+  // Verify Register Token ----------------------------------------------------
   @Post('verify-register-token')
   @HttpCode(200)
   @NoAccessToken()
@@ -63,12 +67,14 @@ export class AuthController {
     return await this.authService.verifyRegisterToken(token);
   }
 
+  // Setup Account ------------------------------------------------------------
   @Post('setup-account')
   @NoAccessToken()
   async setupAccount(@Body() dto: SetupAccountDto): Promise<UserResponseDto> {
     return await this.authService.setupAccount(dto);
   }
 
+  // Send Guest Register Email ------------------------------------------------
   @Post('guest-register')
   @NoAccessToken()
   async sendGuestRegisterEmail(
@@ -82,6 +88,7 @@ export class AuthController {
     });
   }
 
+  // Login --------------------------------------------------------------------
   @Post('login')
   @HttpCode(200)
   @ApiBody({
@@ -106,6 +113,7 @@ export class AuthController {
     return res.send(user);
   }
 
+  // Send Reset Password Email ------------------------------------------------
   @Post('reset-password-email')
   @NoAccessToken()
   async sendResetPasswordEmail(
@@ -117,6 +125,7 @@ export class AuthController {
     return res.status(200).send();
   }
 
+  // Reset Password -----------------------------------------------------------
   @Post('reset-password')
   @HttpCode(200)
   @NoAccessToken()
@@ -124,6 +133,16 @@ export class AuthController {
     await this.authService.resetPassword(dto);
   }
 
+  // Change Password ----------------------------------------------------------
+  @Put('password')
+  async changePassword(
+    @Request() req,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<void> {
+    return await this.authService.changePassword(req.user._id, dto);
+  }
+
+  // Get Access Token ---------------------------------------------------------
   @Get('access-token')
   @NoAccessToken()
   async getAccessToken(@Request() req, @Response() res) {
@@ -133,6 +152,7 @@ export class AuthController {
     return res.status(200).send();
   }
 
+  // Google Login -------------------------------------------------------------
   @Get('google')
   @NoAccessToken()
   @UseGuards(GoogleAuthGuard)
@@ -158,6 +178,7 @@ export class AuthController {
     return res.redirect(clientUrl);
   }
 
+  // Logout -------------------------------------------------------------------
   @Post('logout')
   async logout(@Request() req, @Response() res) {
     await this.authService.logout(req.user._id, req.cookies['refresh_token']);

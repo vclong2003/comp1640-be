@@ -14,7 +14,7 @@ import {
   SendRegisterEmailDto,
   SetupAccountDto,
   VerifyRegisterTokenResponseDto,
-} from './dtos/register.dtos';
+} from './dtos/register.dto';
 import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import {
@@ -27,6 +27,7 @@ import { TokensDto } from './dtos/tokens.dto';
 import { UserResponseDto } from 'src/user/user.dtos';
 import { ConfigService } from '@nestjs/config';
 import { EClientConfigKeys } from 'src/config/client.config';
+import { ChangePasswordDto } from './dtos/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -241,6 +242,24 @@ export class AuthService {
       password: await this.passwordService.hashPassword(password),
     });
 
+    return;
+  }
+
+  // Change password ------------------------------------------------------
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new BadRequestException('User not found!');
+    const { oldPassword, newPassword } = dto;
+    const isPasswordValid = await this.passwordService.comparePassword(
+      oldPassword,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new BadRequestException('Old password is incorrect!');
+    }
+    await this.userModel.findByIdAndUpdate(userId, {
+      password: await this.passwordService.hashPassword(newPassword),
+    });
     return;
   }
 
