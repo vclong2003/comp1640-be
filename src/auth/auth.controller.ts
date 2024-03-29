@@ -16,6 +16,7 @@ import {
   SendRegisterEmailDto,
   SendRegisterEmailVerifycationDto,
   SetupAccountDto,
+  VerifyRegisterTokenResponseDto,
 } from './dtos/register.dtos';
 import { ApiBody } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -57,10 +58,9 @@ export class AuthController {
   @NoAccessToken()
   async verifyRegisterToken(
     @Body() dto: SendRegisterEmailVerifycationDto,
-  ): Promise<void> {
+  ): Promise<VerifyRegisterTokenResponseDto> {
     const { token } = dto;
-    await this.authService.verifyRegisterToken(token);
-    return;
+    return await this.authService.verifyRegisterToken(token);
   }
 
   @Post('setup-account')

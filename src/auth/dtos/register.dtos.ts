@@ -68,3 +68,7 @@ export class SetupAccountDto {
   @IsString()
   dob?: Date;
 }
+
+export class VerifyRegisterTokenResponseDto {
+  email: string;
+}

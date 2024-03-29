@@ -10,10 +10,17 @@ import { LoginResponseDto } from './dtos/login-response.dto';
 import { JwtService } from 'src/shared-modules/jwt/jwt.service';
 import { UAParser } from 'ua-parser-js';
 import { IUserAgent } from './interfaces/user-agent.interface';
-import { SendRegisterEmailDto, SetupAccountDto } from './dtos/register.dtos';
+import {
+  SendRegisterEmailDto,
+  SetupAccountDto,
+  VerifyRegisterTokenResponseDto,
+} from './dtos/register.dtos';
 import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
-import { ResetPasswordDto } from './dtos/reset-password.dto';
+import {
+  ResetPasswordDto,
+  VerifyResetTokenResponseDto,
+} from './dtos/reset-password.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TokensDto } from './dtos/tokens.dto';
@@ -56,25 +63,27 @@ export class AuthService {
     return;
   }
 
-  async verifyRegisterToken(token: string): Promise<void> {
-    await this.jwtService.verifyRegisterToken(token);
-    return;
+  async verifyRegisterToken(
+    token: string,
+  ): Promise<VerifyRegisterTokenResponseDto> {
+    const payload = await this.jwtService.verifyRegisterToken(token);
+    if (!payload) {
+      throw new BadRequestException('This URL might have been expired!');
+    }
+    return { email: payload.email };
   }
 
   async setupAccount(dto: SetupAccountDto): Promise<UserResponseDto> {
     const { token, name, password, dob, phone, gender } = dto;
     const { email, role, facultyId } =
       await this.jwtService.verifyRegisterToken(token);
-
     const user = await this.userModel.findOne({ email });
     if (user) throw new BadRequestException('User already exists!');
-
     let faculty: Faculty;
     if (facultyId) {
       faculty = await this.facultyModel.findById(facultyId).exec();
       if (!faculty) throw new BadRequestException('Faculty not found!');
     }
-
     const newUser = new this.userModel({
       email,
       role,
@@ -85,7 +94,6 @@ export class AuthService {
     if (phone) newUser.phone = phone;
     if (gender) newUser.gender = gender;
     await newUser.save();
-
     return {
       _id: newUser._id,
       name: newUser.name,
@@ -128,10 +136,8 @@ export class AuthService {
     const { _id, role } = user;
     const accessToken = await this.jwtService.genAccessToken({ _id, role });
     const refreshToken = await this.jwtService.genRefreshToken({ _id });
-
     const userAgent: IUserAgent = UAParser(ua);
     const browser = userAgent.browser.name + ' on ' + userAgent.os.name;
-
     await this.userModel.findByIdAndUpdate(_id, {
       $push: {
         sessions: {
@@ -141,7 +147,6 @@ export class AuthService {
         },
       },
     });
-
     return {
       accessToken,
       refreshToken,
@@ -215,6 +220,17 @@ export class AuthService {
     const { name } = user;
     await this.mailerService.sendResetPasswordEmail({ email, name, url });
     return;
+  }
+
+  async verifyResetToken(token: string): Promise<VerifyResetTokenResponseDto> {
+    const payload = await this.jwtService.verifyResetPasswordToken(token);
+    if (!payload) {
+      throw new BadRequestException('This URL might have been expired!');
+    }
+    const { userId } = payload;
+    const user = await this.userModel.findOne({ _id: userId, disabled: false });
+    if (!user) throw new BadRequestException('User not found!');
+    return { email: user.email };
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {

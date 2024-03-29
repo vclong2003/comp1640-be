@@ -16,3 +16,7 @@ export class SendResetPasswordEmailDto {
   @IsEmail()
   email: string;
 }
+
+export class VerifyResetTokenResponseDto {
+  email: string;
+}
