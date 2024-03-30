@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Post,
@@ -32,6 +33,10 @@ import { EClientConfigKeys } from 'src/config/client.config';
 import { UserResponseDto } from 'src/user/user.dtos';
 import { GoogleLoginDto } from './dtos/google-login.dto';
 import { ChangePasswordDto } from './dtos/change-password.dto';
+import {
+  FindLoginSessionsDto,
+  RemoveLoginSessionDto,
+} from './dtos/login-session.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -176,6 +181,23 @@ export class AuthController {
     const { redirect } = dto;
     if (redirect) return res.redirect(`${clientUrl}${redirect}`);
     return res.redirect(clientUrl);
+  }
+
+  // Find Login Sessions ------------------------------------------------------
+  @Get('login-sessions')
+  async findLoginSessions(@Request() req, @Query() dto: FindLoginSessionsDto) {
+    const refreshToken = req.cookies['refresh_token'];
+    return await this.authService.findLoginSessions(
+      req.user._id,
+      refreshToken,
+      dto,
+    );
+  }
+
+  // Remove Login Session -----------------------------------------------------
+  @Delete('login-session')
+  async removeLoginSession(@Request() req, @Body() dto: RemoveLoginSessionDto) {
+    return await this.authService.removeLoginSession(req.user._id, dto);
   }
 
   // Logout -------------------------------------------------------------------

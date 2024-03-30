@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsOptional, Matches } from 'class-validator';
 import { EGender, ERole } from './user.enums';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -26,16 +26,19 @@ export class UpdateUserDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  @Matches(/^(?!\s+$).+/, { message: 'Name cannot be empty' })
   name?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  @Matches(/^(?!\s+$).+/, { message: 'DOB cannot be empty' })
   dob?: Date;
 
   @ApiProperty({ type: 'enum', required: false })
   @IsOptional()
   @IsString()
+  @Matches(/^(?!\s+$).+/, { message: 'Gender cannot be empty' })
   gender?: EGender;
 }
 

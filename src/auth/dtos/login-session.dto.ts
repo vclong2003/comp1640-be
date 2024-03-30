@@ -19,3 +19,9 @@ export class LoginSessionResponseDto {
   date: Date;
   isCurrentDevice: boolean;
 }
+
+export class RemoveLoginSessionDto {
+  @ApiProperty()
+  @IsString()
+  sessionId: string;
+}

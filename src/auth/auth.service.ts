@@ -28,6 +28,11 @@ import { UserResponseDto } from 'src/user/user.dtos';
 import { ConfigService } from '@nestjs/config';
 import { EClientConfigKeys } from 'src/config/client.config';
 import { ChangePasswordDto } from './dtos/change-password.dto';
+import {
+  FindLoginSessionsDto,
+  LoginSessionResponseDto,
+  RemoveLoginSessionDto,
+} from './dtos/login-session.dto';
 
 @Injectable()
 export class AuthService {
@@ -64,6 +69,7 @@ export class AuthService {
     return;
   }
 
+  // Verify Register Token ------------------------------------------------------
   async verifyRegisterToken(
     token: string,
   ): Promise<VerifyRegisterTokenResponseDto> {
@@ -74,6 +80,7 @@ export class AuthService {
     return { email: payload.email };
   }
 
+  // Setup Account ------------------------------------------------------
   async setupAccount(dto: SetupAccountDto): Promise<UserResponseDto> {
     const { token, name, password, dob, phone, gender } = dto;
     const { email, role, facultyId } =
@@ -120,7 +127,7 @@ export class AuthService {
     };
   }
 
-  // Login ------------------------------------------------------
+  // Validate user (local strategy) ----------------------------------------------
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userModel.findOne({ email });
     if (!user) return null;
@@ -133,6 +140,7 @@ export class AuthService {
     return null;
   }
 
+  // Login ---------------------------------------------------------------------
   async login(user: User, ua: string): Promise<LoginResponseDto> {
     const { _id, role } = user;
     const accessToken = await this.jwtService.genAccessToken({ _id, role });
@@ -164,13 +172,12 @@ export class AuthService {
     };
   }
 
-  // Handle tokens ------------------------------------------------------
+  // Get new Access Token --------------------------------------------------------
   async refreshAccessToken(refreshToken: string): Promise<string> {
     if (!refreshToken) {
       throw new BadRequestException('Refresh token is required!');
     }
     const { _id } = await this.jwtService.verifyRefreshToken(refreshToken);
-    // const session = await this.userService.findSession(_id, refreshToken);
     const user = await this.userModel.findById(_id);
     if (!user) {
       throw new UnauthorizedException('User not found!');
@@ -184,6 +191,7 @@ export class AuthService {
     });
     return accessToken;
   }
+
   // Google login callback ------------------------------------------------------
   async googleLoginCallback(email: string, ua: string): Promise<TokensDto> {
     const userAgent: IUserAgent = UAParser(ua);
@@ -223,6 +231,7 @@ export class AuthService {
     return;
   }
 
+  // Verify Reset Token ------------------------------------------------------
   async verifyResetToken(token: string): Promise<VerifyResetTokenResponseDto> {
     const payload = await this.jwtService.verifyResetPasswordToken(token);
     if (!payload) {
@@ -234,6 +243,7 @@ export class AuthService {
     return { email: user.email };
   }
 
+  // Reset Password -----------------------------------------------------------
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
     const { token, password } = dto;
     const { userId } = await this.jwtService.verifyResetPasswordToken(token);
@@ -259,6 +269,36 @@ export class AuthService {
     }
     await this.userModel.findByIdAndUpdate(userId, {
       password: await this.passwordService.hashPassword(newPassword),
+    });
+    return;
+  }
+
+  // Find Login Sessions ------------------------------------------------------
+  async findLoginSessions(
+    userId: string,
+    currentRefreshToken: string,
+    dto: FindLoginSessionsDto,
+  ): Promise<LoginSessionResponseDto[]> {
+    const { limit, skip } = dto;
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new BadRequestException('User not found!');
+    const sessions = user.sessions.slice(skip, skip + limit).map((session) => ({
+      _id: session._id,
+      browser: session.browser,
+      date: session.date,
+      isCurrentDevice: session.token === currentRefreshToken,
+    }));
+    return sessions;
+  }
+
+  // Remove Login Session ------------------------------------------------------
+  async removeLoginSession(
+    userId: string,
+    dto: RemoveLoginSessionDto,
+  ): Promise<void> {
+    const { sessionId } = dto;
+    await this.userModel.findByIdAndUpdate(userId, {
+      $pull: { sessions: { _id: sessionId } },
     });
     return;
   }
