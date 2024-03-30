@@ -200,6 +200,15 @@ export class AuthController {
     return await this.authService.removeLoginSession(req.user._id, dto);
   }
 
+  // Logout All Devices -------------------------------------------------------
+  @Post('logout-all')
+  async logoutAll(@Request() req, @Response() res) {
+    await this.authService.removeAllLoginSessions(req.user._id);
+    res.clearCookie('refresh_token');
+    res.clearCookie('access_token');
+    return res.status(200).send();
+  }
+
   // Logout -------------------------------------------------------------------
   @Post('logout')
   async logout(@Request() req, @Response() res) {

@@ -303,6 +303,12 @@ export class AuthService {
     return;
   }
 
+  // Remove All Login Sessions --------------------------------------------------
+  async removeAllLoginSessions(userId: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, { sessions: [] });
+    return;
+  }
+
   // Logout ----------------------------------------------------------------
   async logout(userId: string, refreshToken: string): Promise<void> {
     if (!refreshToken) {
