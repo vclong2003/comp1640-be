@@ -24,7 +24,6 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TokensDto } from './dtos/tokens.dto';
-import { UserResponseDto } from 'src/user/user.dtos';
 import { ConfigService } from '@nestjs/config';
 import { EClientConfigKeys } from 'src/config/client.config';
 import { ChangePasswordDto } from './dtos/change-password.dto';
@@ -81,7 +80,7 @@ export class AuthService {
   }
 
   // Setup Account ------------------------------------------------------
-  async setupAccount(dto: SetupAccountDto): Promise<UserResponseDto> {
+  async setupAccount(dto: SetupAccountDto): Promise<void> {
     const { token, name, password, dob, phone, gender } = dto;
     const { email, role, facultyId } =
       await this.jwtService.verifyRegisterToken(token);
@@ -102,16 +101,7 @@ export class AuthService {
     if (phone) newUser.phone = phone;
     if (gender) newUser.gender = gender;
     await newUser.save();
-    return {
-      _id: newUser._id,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      faculty: newUser.faculty,
-      avatar_url: newUser.avatar_url,
-      gender: newUser.gender,
-      dob: newUser.dob,
-    };
+    return;
   }
 
   // Get current user ------------------------------------------------------
@@ -142,8 +132,12 @@ export class AuthService {
 
   // Login ---------------------------------------------------------------------
   async login(user: User, ua: string): Promise<LoginResponseDto> {
-    const { _id, role } = user;
-    const accessToken = await this.jwtService.genAccessToken({ _id, role });
+    const { _id, role, faculty } = user;
+    const accessToken = await this.jwtService.genAccessToken({
+      _id,
+      role,
+      facultyId: faculty?._id,
+    });
     const refreshToken = await this.jwtService.genRefreshToken({ _id });
     const userAgent: IUserAgent = UAParser(ua);
     const browser = userAgent.browser.name + ' on ' + userAgent.os.name;
@@ -179,15 +173,15 @@ export class AuthService {
     }
     const { _id } = await this.jwtService.verifyRefreshToken(refreshToken);
     const user = await this.userModel.findById(_id);
-    if (!user) {
-      throw new UnauthorizedException('User not found!');
-    }
+    if (!user) throw new UnauthorizedException('User not found!');
+
     if (!user.sessions.find((session) => session.token === refreshToken)) {
       throw new UnauthorizedException('Refresh token not stored!');
     }
     const accessToken = await this.jwtService.genAccessToken({
       _id,
       role: user.role,
+      facultyId: user.faculty?._id,
     });
     return accessToken;
   }
@@ -203,6 +197,7 @@ export class AuthService {
     const accessToken = await this.jwtService.genAccessToken({
       _id: user._id,
       role: user.role,
+      facultyId: user.faculty?._id,
     });
     const refreshToken = await this.jwtService.genRefreshToken({
       _id: user._id,
@@ -213,7 +208,7 @@ export class AuthService {
       token: refreshToken,
       date: new Date(),
     });
-
+    await user.save();
     return { accessToken, refreshToken };
   }
 

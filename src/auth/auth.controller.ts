@@ -73,7 +73,7 @@ export class AuthController {
   // Setup Account ------------------------------------------------------------
   @Post('setup-account')
   @NoAccessToken()
-  async setupAccount(@Body() dto: SetupAccountDto): Promise<UserResponseDto> {
+  async setupAccount(@Body() dto: SetupAccountDto): Promise<void> {
     return await this.authService.setupAccount(dto);
   }
 

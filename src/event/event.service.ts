@@ -85,12 +85,41 @@ export class EventService {
 
   // Find event by Id -------------------------------------------------------------
   async findEventById(_id: string): Promise<EventResponseDto> {
-    const event = await this.eventModel
-      .findOne({
-        _id,
-        deleted_at: null,
-      })
-      .exec();
+    const events = await this.eventModel.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(_id) } },
+      {
+        $project: {
+          name: 1,
+          description: 1,
+          banner_image_url: 1,
+          start_date: 1,
+          first_closure_date: 1,
+          final_closure_date: 1,
+          is_accepting_new_contribution: {
+            $cond: {
+              if: {
+                $gte: ['$first_closure_date', new Date()],
+              },
+              then: true,
+              else: false,
+            },
+          },
+          is_contributions_editable: {
+            $cond: {
+              if: {
+                $gte: ['$final_closure_date', new Date()],
+              },
+              then: true,
+              else: false,
+            },
+          },
+          number_of_contributions: { $size: '$contribution_ids' },
+          faculty: 1,
+        },
+      },
+    ]);
+    if (!events.length) throw new BadRequestException('Event not found');
+    const event = events[0];
     return {
       _id: event._id,
       name: event.name,
@@ -99,13 +128,9 @@ export class EventService {
       start_date: event.start_date,
       first_closure_date: event.first_closure_date,
       final_closure_date: event.final_closure_date,
-      is_accepting_new_contribution: this.isAcceptingNewContributions(
-        event.first_closure_date,
-      ),
-      is_contributions_editable: this.isContributionsEditable(
-        event.final_closure_date,
-      ),
-      number_of_contributions: event.contribution_ids.length,
+      is_accepting_new_contribution: event.is_accepting_new_contribution,
+      is_contributions_editable: event.is_contributions_editable,
+      number_of_contributions: event.number_of_contributions,
       faculty: event.faculty,
     };
   }
@@ -154,12 +179,24 @@ export class EventService {
       first_closure_date: 1,
       final_closure_date: 1,
       number_of_contributions: { $size: '$contribution_ids' },
-      is_accepting_new_contribution: this.isAcceptingNewContributions(
-        new Date('$first_closure_date'),
-      ),
-      is_contributions_editable: this.isContributionsEditable(
-        new Date('$final_closure_date'),
-      ),
+      is_accepting_new_contribution: {
+        $cond: {
+          if: {
+            $gte: ['$first_closure_date', new Date()],
+          },
+          then: true,
+          else: false,
+        },
+      },
+      is_contributions_editable: {
+        $cond: {
+          if: {
+            $gte: ['$final_closure_date', new Date()],
+          },
+          then: true,
+          else: false,
+        },
+      },
     };
 
     pipeline.push({ $match: match });

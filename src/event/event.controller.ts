@@ -10,6 +10,7 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  ForbiddenException,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -95,7 +96,18 @@ export class EventController {
   ): Promise<
     Omit<EventResponseDto, 'description' | 'banner_image_url' | 'faculty.mc'>[]
   > {
-    return await this.eventService.findEvents(dto);
+    if (
+      req.user.role === ERole.MarketingManager ||
+      req.user.role === ERole.Admin
+    ) {
+      return await this.eventService.findEvents(dto);
+    }
+
+    const facultyId = req.user.facultyId;
+    if (!facultyId) {
+      throw new ForbiddenException('You dont belong to any faculty!');
+    }
+    return await this.eventService.findEvents({ ...dto, facultyId });
   }
 
   // Delete event -------------------------------------------------------------

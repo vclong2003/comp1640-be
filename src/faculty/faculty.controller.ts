@@ -27,7 +27,7 @@ import { NoAccessToken } from 'src/auth/decorators/no-access-token.decorator';
 export class FacultyController {
   constructor(private facultyService: FacultyService) {}
 
-  // Create a new faculty
+  // Create a new faculty ----------------------------------------------
   @Post('')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -50,7 +50,7 @@ export class FacultyController {
     return await this.facultyService.createFaculty(dto, bannerImage);
   }
 
-  // Update a faculty
+  // Update a faculty --------------------------------------------------
   @Put(':facultyId')
   @UseInterceptors(FileInterceptor('bannerImage'))
   @ApiConsumes('multipart/form-data')
@@ -74,24 +74,27 @@ export class FacultyController {
     return await this.facultyService.updateFaculty(facultyId, dto, bannerImage);
   }
 
+  // Move student -----------------------------------------------------
   @Put(':facultyId/student/:studentId')
   @Roles([ERole.Admin])
   async moveStudent(
     @Param('facultyId') facultyId: string,
     @Param('studentId') studentId: string,
-  ) {
+  ): Promise<void> {
     return await this.facultyService.moveStudent(facultyId, studentId);
   }
 
+  // Remove student ---------------------------------------------------
   @Delete(':facultyId/student/:studentId')
   @Roles([ERole.Admin])
   async removeStudent(
     @Param('facultyId') facultyId: string,
     @Param('studentId') studentId: string,
-  ) {
+  ): Promise<void> {
     return await this.facultyService.removeStudent(facultyId, studentId);
   }
 
+  // Find faculties ---------------------------------------------------
   @Get('')
   @NoAccessToken()
   async findFaculties(
@@ -100,6 +103,7 @@ export class FacultyController {
     return await this.facultyService.findFaculties(dto);
   }
 
+  // Find faculty by id ------------------------------------------------
   @Get(':facultyId')
   @Roles([ERole.Admin, ERole.MarketingManager])
   async findFacultyById(@Param('facultyId') facultyId: string) {
