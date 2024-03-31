@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  Param,
   Post,
   Put,
   Query,
@@ -33,10 +34,7 @@ import { EClientConfigKeys } from 'src/config/client.config';
 import { UserResponseDto } from 'src/user/user.dtos';
 import { GoogleLoginDto } from './dtos/google-login.dto';
 import { ChangePasswordDto } from './dtos/change-password.dto';
-import {
-  FindLoginSessionsDto,
-  RemoveLoginSessionDto,
-} from './dtos/login-session.dto';
+import { FindLoginSessionsDto } from './dtos/login-session.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -184,7 +182,7 @@ export class AuthController {
   }
 
   // Find Login Sessions ------------------------------------------------------
-  @Get('login-sessions')
+  @Get('login-session')
   async findLoginSessions(@Request() req, @Query() dto: FindLoginSessionsDto) {
     const refreshToken = req.cookies['refresh_token'];
     return await this.authService.findLoginSessions(
@@ -195,9 +193,14 @@ export class AuthController {
   }
 
   // Remove Login Session -----------------------------------------------------
-  @Delete('login-session')
-  async removeLoginSession(@Request() req, @Body() dto: RemoveLoginSessionDto) {
-    return await this.authService.removeLoginSession(req.user._id, dto);
+  @Delete('login-session/:sessionId')
+  async removeLoginSession(
+    @Request() req,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return await this.authService.removeLoginSession(req.user._id, {
+      sessionId,
+    });
   }
 
   // Logout All Devices -------------------------------------------------------

@@ -282,12 +282,15 @@ export class AuthService {
     const { limit, skip } = dto;
     const user = await this.userModel.findById(userId);
     if (!user) throw new BadRequestException('User not found!');
-    const sessions = user.sessions.slice(skip, skip + limit).map((session) => ({
-      _id: session._id,
-      browser: session.browser,
-      date: session.date,
-      isCurrentDevice: session.token === currentRefreshToken,
-    }));
+    const sessions = user.sessions
+      .map((session) => ({
+        _id: session._id,
+        browser: session.browser,
+        date: session.date,
+        isCurrentDevice: session.token === currentRefreshToken,
+      }))
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+    if (skip || limit) return sessions.slice(skip || 0, limit || 100);
     return sessions;
   }
 

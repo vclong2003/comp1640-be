@@ -26,6 +26,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
+  // Find event by id ---------------------------------------------------------
   @Get(':eventId')
   async findEvent(
     @Param('eventId') eventId: string,
@@ -33,6 +34,7 @@ export class EventController {
     return await this.eventService.findEventById(eventId);
   }
 
+  // Create event -------------------------------------------------------------
   @Post('')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
   @UseInterceptors(FileInterceptor('bannerImage'))
@@ -59,6 +61,7 @@ export class EventController {
     return await this.eventService.createEvent(dto, bannerImage);
   }
 
+  // Update event -------------------------------------------------------------
   @Put(':eventId')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
   @UseInterceptors(FileInterceptor('bannerImage'))
@@ -84,6 +87,7 @@ export class EventController {
     return await this.eventService.updateEvent(eventId, dto, bannerImage);
   }
 
+  // Find events ----------------------------------------------------------
   @Get('')
   async findEvents(
     @Req() req,
@@ -94,6 +98,7 @@ export class EventController {
     return await this.eventService.findEvents(dto);
   }
 
+  // Delete event -------------------------------------------------------------
   @Delete(':eventId')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
   async deleteEvent(

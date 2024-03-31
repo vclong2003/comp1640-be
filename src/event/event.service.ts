@@ -23,6 +23,7 @@ export class EventService {
     private storageService: StorageService,
   ) {}
 
+  // Create event -------------------------------------------------------------
   async createEvent(
     dto: CreateEventDTO,
     bannerImage?: Express.Multer.File,
@@ -82,6 +83,7 @@ export class EventService {
     };
   }
 
+  // Find event by Id -------------------------------------------------------------
   async findEventById(_id: string): Promise<EventResponseDto> {
     const event = await this.eventModel
       .findOne({
@@ -108,6 +110,7 @@ export class EventService {
     };
   }
 
+  // Find events -------------------------------------------------------------
   async findEvents(
     dto: FindEventsDTO,
   ): Promise<
@@ -168,6 +171,7 @@ export class EventService {
     return this.eventModel.aggregate(pipeline);
   }
 
+  // Update event -------------------------------------------------------------
   async updateEvent(
     eventId: string,
     dto: UpdateEventDTO,
@@ -233,6 +237,7 @@ export class EventService {
     };
   }
 
+  // Remove event -------------------------------------------------------------
   async removeEvent(eventId: string): Promise<void> {
     const event = await this.eventModel.findById(eventId);
     if (!event) throw new BadRequestException('Event not found');
@@ -256,6 +261,7 @@ export class EventService {
     return;
   }
 
+  // Helper functions -------------------------------------------------------------
   isAcceptingNewContributions(firstClosureDate: Date): boolean {
     return firstClosureDate > new Date();
   }
