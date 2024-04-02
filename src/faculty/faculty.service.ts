@@ -54,7 +54,7 @@ export class FacultyService {
 
     // Find MC if id is provided
     let mc: HydratedDocument<User>;
-    if (mc) {
+    if (mcId) {
       mc = await this.userModel.findById(mcId);
       if (!mc || mc.role != ERole.MarketingCoordinator) {
         throw new BadRequestException('Invalid mc!');
@@ -76,6 +76,18 @@ export class FacultyService {
     }
 
     if (mc) {
+      if (mc.faculty) {
+        await this.facultyModel.findByIdAndUpdate(mc.faculty._id, {
+          mc: null,
+        });
+      }
+
+      newFaculty.mc = {
+        _id: mc._id,
+        name: mc.name,
+        email: mc.email,
+        avatar_url: mc.avatar_url,
+      };
       mc.faculty = { _id: newFaculty._id, name: newFaculty.name };
       await mc.save();
     }
@@ -110,13 +122,18 @@ export class FacultyService {
     if (name) faculty.name = name;
     if (description) faculty.description = description;
     if (mc) {
+      if (mc.faculty) {
+        await this.facultyModel.findByIdAndUpdate(mc.faculty._id, {
+          mc: null,
+        });
+      }
+
       faculty.mc = {
         _id: mc._id,
         name: mc.name,
         email: mc.email,
         avatar_url: mc.avatar_url,
       };
-      // update mc
       mc.faculty = { _id: faculty._id, name: faculty.name };
       await mc.save();
     }
