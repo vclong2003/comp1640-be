@@ -17,10 +17,7 @@ import {
 } from './dtos/register.dto';
 import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
-import {
-  ResetPasswordDto,
-  VerifyResetTokenResponseDto,
-} from './dtos/reset-password.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TokensDto } from './dtos/tokens.dto';
@@ -224,18 +221,6 @@ export class AuthService {
     const { name } = user;
     await this.mailerService.sendResetPasswordEmail({ email, name, url });
     return;
-  }
-
-  // Verify Reset Token ------------------------------------------------------
-  async verifyResetToken(token: string): Promise<VerifyResetTokenResponseDto> {
-    const payload = await this.jwtService.verifyResetPasswordToken(token);
-    if (!payload) {
-      throw new BadRequestException('This URL might have been expired!');
-    }
-    const { userId } = payload;
-    const user = await this.userModel.findOne({ _id: userId, disabled: false });
-    if (!user) throw new BadRequestException('User not found!');
-    return { email: user.email };
   }
 
   // Reset Password -----------------------------------------------------------

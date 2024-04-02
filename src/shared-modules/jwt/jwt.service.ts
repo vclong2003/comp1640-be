@@ -63,11 +63,13 @@ export class JwtService {
 
   async verifyRegisterToken(token: string): Promise<IRegisterTokenPayload> {
     const secret = this.configService.get(EJwtConfigKey.RegisterTokenSecret);
-    const payload = await this.baseJwtService.verifyAsync(token, {
-      secret,
-    });
-    if (!payload) {
-      throw new UnauthorizedException('This URL might have expired!');
+    let payload;
+    try {
+      payload = await this.baseJwtService.verifyAsync(token, { secret });
+    } catch (error) {
+      throw new UnauthorizedException(
+        'Invalid URL, this link might be expired!',
+      );
     }
     return payload;
   }
@@ -78,12 +80,15 @@ export class JwtService {
     const secret = this.configService.get(
       EJwtConfigKey.ResetPasswordTokenSecret,
     );
-    const payload = await this.baseJwtService.verifyAsync(token, {
-      secret,
-    });
-    if (!payload) {
-      throw new UnauthorizedException('Invalid reset password token!');
+    let payload;
+    try {
+      payload = await this.baseJwtService.verifyAsync(token, { secret });
+    } catch (error) {
+      throw new UnauthorizedException(
+        'Invalid URL, this link might be expired!',
+      );
     }
+
     return payload;
   }
 }
