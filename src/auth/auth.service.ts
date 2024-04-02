@@ -97,21 +97,9 @@ export class AuthService {
     if (dob) newUser.dob = dob;
     if (phone) newUser.phone = phone;
     if (gender) newUser.gender = gender;
+    if (faculty) newUser.faculty = { _id: faculty._id, name: faculty.name };
     await newUser.save();
     return;
-  }
-
-  // Get current user ------------------------------------------------------
-  async getCurrentUser(userId: string) {
-    const user = await this.userModel.findById(userId).exec();
-    return {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      faculty: user.faculty,
-      avatar_url: user.avatar_url,
-    };
   }
 
   // Validate user (local strategy) ----------------------------------------------
@@ -159,6 +147,7 @@ export class AuthService {
         avatar_url: user.avatar_url,
         gender: user.gender,
         dob: user.dob,
+        phone: user.phone,
       },
     };
   }
