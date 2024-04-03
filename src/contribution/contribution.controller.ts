@@ -79,7 +79,6 @@ export class ContributionController {
       properties: {
         title: { type: 'string' },
         description: { type: 'string' },
-        eventId: { type: 'string' },
         documents: {
           type: 'array',
           items: {
@@ -182,6 +181,60 @@ export class ContributionController {
       req.user._id,
       contributionId,
       commentId,
+    );
+  }
+  // Find all private comments ----------------------------------------
+  @Get(':contributionId/comment/private')
+  @Roles([ERole.Student, ERole.MarketingCoordinator, ERole.Admin])
+  async findAllPrivateComments(
+    @Req() req,
+    @Param('contributionId') contributionId: string,
+  ) {
+    return await this.contributionService.findAllPrivateComments(
+      req.user,
+      contributionId,
+    );
+  }
+
+  // Add private comment ----------------------------------------------
+  @Post(':contributionId/comment/private')
+  @Roles([ERole.Student, ERole.MarketingCoordinator, ERole.Admin])
+  async addPrivateComment(
+    @Req() req,
+    @Param('contributionId') contributionId: string,
+    @Body() dto: AddCommentDto,
+  ) {
+    return await this.contributionService.addPrivateComment(
+      req.user,
+      contributionId,
+      dto,
+    );
+  }
+
+  // Remove private comment ----------------------------------------------
+  @Delete(':contributionId/comment/private/:commentId')
+  @Roles([ERole.Student, ERole.MarketingCoordinator, ERole.Admin])
+  async removePrivateComment(
+    @Req() req,
+    @Param('contributionId') contributionId: string,
+    @Param('commentId') commentId: string,
+  ) {
+    return await this.contributionService.removePrivateComment(
+      req.user,
+      contributionId,
+      commentId,
+    );
+  }
+
+  // Like contribution ----------------------------------------------
+  @Post(':contributionId/like')
+  async likeContribution(
+    @Req() req,
+    @Param('contributionId') contributionId: string,
+  ) {
+    return await this.contributionService.likeContribution(
+      req.user._id,
+      contributionId,
     );
   }
 }

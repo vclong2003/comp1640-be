@@ -212,6 +212,9 @@ export class ContributionService {
       event: contribution.event,
       documents,
       images,
+      likes: contribution.liked_user_ids?.length || 0,
+      comments: contribution.comments?.length || 0,
+      private_comments: contribution.private_comments?.length || 0,
     };
   }
 
@@ -228,6 +231,7 @@ export class ContributionService {
       is_publication,
       limit,
       skip,
+      has_private_comments,
     } = dto;
 
     const pipeLine: PipelineStage[] = [];
@@ -239,6 +243,9 @@ export class ContributionService {
       match['author.name'] = { $regex: authorName, $options: 'i' };
     }
     if (is_publication) match['is_publication'] = is_publication;
+    if (has_private_comments) {
+      match['private_comments'] = { $exists: true, $ne: [] };
+    }
     if (eventId && !facultyId) {
       const event = await this.eventModel.findById(eventId);
       if (!event) throw new BadRequestException(1);
@@ -265,6 +272,10 @@ export class ContributionService {
       submitted_at: 1,
       faculty: 1,
       event: 1,
+      is_publication: 1,
+      likes: { $size: '$liked_user_ids' },
+      comments: { $size: '$comments' },
+      private_comments: { $size: '$private_comments' },
     };
 
     pipeLine.push({ $match: match });
@@ -336,6 +347,132 @@ export class ContributionService {
     }
 
     contribution.comments.splice(commentIndex, 1);
+    await contribution.save();
+    return;
+  }
+
+  // Find all private comments -------------------------------------------------
+  async findAllPrivateComments(
+    user: IAccessTokenPayload,
+    contributionId: string,
+  ): Promise<CommentResponseDto[]> {
+    const contribution = await this.contributionModel.findOne({
+      _id: contributionId,
+      deleted_at: null,
+    });
+    if (!contribution) throw new BadRequestException('Contribution not found!');
+
+    if (
+      user.role === ERole.Student &&
+      contribution.author._id.toString() !== user._id
+    ) {
+      throw new BadRequestException('Not your contribution!');
+    }
+
+    if (
+      user.role === ERole.MarketingCoordinator &&
+      user.facultyId.toString() !== contribution.faculty._id.toString()
+    ) {
+      throw new BadRequestException('Contribution not in your faculty!');
+    }
+
+    return contribution.private_comments as CommentResponseDto[];
+  }
+
+  // Add private comment -------------------------------------------------------
+  async addPrivateComment(
+    user: IAccessTokenPayload,
+    contributionId: string,
+    dto: AddCommentDto,
+  ): Promise<CommentResponseDto> {
+    const { content } = dto;
+    const commentUser = await this.userModel.findById(user._id);
+    if (!commentUser) throw new BadRequestException('User not found');
+
+    const contribution = await this.contributionModel.findById(contributionId);
+    if (!contribution) throw new BadRequestException('Cotribution not found!');
+
+    if (
+      user.role === ERole.Student &&
+      contribution.author._id.toString() !== user._id
+    ) {
+      throw new BadRequestException('Not your contribution!');
+    }
+
+    if (
+      user.role === ERole.MarketingCoordinator &&
+      user.facultyId.toString() !== contribution.faculty._id.toString()
+    ) {
+      throw new BadRequestException('Contribution not in your faculty!');
+    }
+
+    const comment = {
+      content,
+      posted_at: new Date(),
+      author: {
+        _id: user._id,
+        avatar_url: commentUser.avatar_url,
+        name: commentUser.name,
+      },
+    };
+
+    contribution.private_comments.push(comment);
+    await contribution.save();
+
+    return comment as CommentResponseDto;
+  }
+
+  // Remove private comment ----------------------------------------------------
+  async removePrivateComment(
+    user: IAccessTokenPayload,
+    contributionId: string,
+    commentId: string,
+  ): Promise<void> {
+    const contribution = await this.contributionModel.findById(contributionId);
+    if (!contribution) throw new BadRequestException('Contribution not found!');
+
+    if (
+      user.role === ERole.Student &&
+      contribution.author._id.toString() !== user._id
+    ) {
+      throw new BadRequestException('Not your contribution!');
+    }
+
+    if (
+      user.role === ERole.MarketingCoordinator &&
+      user.facultyId.toString() !== contribution.faculty._id.toString()
+    ) {
+      throw new BadRequestException('Contribution not in your faculty!');
+    }
+
+    const commentIndex = contribution.private_comments.findIndex(
+      (comment) => comment._id.toString() === commentId,
+    );
+    if (commentIndex < 0) throw new BadRequestException('Comment not found!');
+    if (
+      contribution.private_comments[commentIndex].author._id.toString() !==
+      user._id
+    ) {
+      throw new BadRequestException('Unauthorized!');
+    }
+    contribution.private_comments.splice(commentIndex, 1);
+    await contribution.save();
+    return;
+  }
+
+  // Like contribution ----------------------------------------------------------
+  async likeContribution(
+    userId: string,
+    contributionId: string,
+  ): Promise<void> {
+    const contribution = await this.contributionModel.findById(contributionId);
+    if (!contribution) throw new BadRequestException('Contribution not found!');
+
+    if (contribution.liked_user_ids.includes(userId)) {
+      throw new BadRequestException('Already liked!');
+    }
+
+    contribution.liked_user_ids.push(userId);
     await contribution.save();
     return;
   }
