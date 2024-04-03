@@ -105,7 +105,6 @@ export class FacultyController {
 
   // Find faculty by id ------------------------------------------------
   @Get(':facultyId')
-  @Roles([ERole.Admin, ERole.MarketingManager])
   async findFacultyById(@Param('facultyId') facultyId: string) {
     return await this.facultyService.findFacultyById(facultyId);
   }

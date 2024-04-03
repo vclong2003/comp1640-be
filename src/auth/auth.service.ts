@@ -29,7 +29,6 @@ import {
   LoginSessionResponseDto,
   RemoveLoginSessionDto,
 } from './dtos/login-session.dto';
-import { UserResponseDto } from 'src/user/user.dtos';
 
 @Injectable()
 export class AuthService {
@@ -42,15 +41,16 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
+  // Register ------------------------------------------------------
   async sendRegisterEmail(dto: SendRegisterEmailDto): Promise<void> {
     const { email, role, facultyId } = dto;
 
-    if (await this.userModel.exists({ email })) {
-      throw new ConflictException('User already exists!');
-    }
+    const user = await this.userModel.findOne({ email });
+    if (user) throw new ConflictException('User already exists!');
 
-    if (facultyId && !(await this.facultyModel.exists({ _id: facultyId }))) {
-      throw new BadRequestException('Faculty not found!');
+    if (facultyId) {
+      const faculty = await this.facultyModel.findById(facultyId).exec();
+      if (!faculty) throw new BadRequestException('Faculty not found!');
     }
 
     const token = await this.jwtService.genRegisterToken({
@@ -58,11 +58,14 @@ export class AuthService {
       role,
       facultyId,
     });
+
     const clientUrl = await this.configService.get(EClientConfigKeys.Url);
     const url = `${clientUrl}/setup-account?token=${token}`;
     await this.mailerService.sendRegisterEmail({ email, url });
+    return;
   }
 
+  // Verify Register Token ------------------------------------------------------
   async verifyRegisterToken(
     token: string,
   ): Promise<VerifyRegisterTokenResponseDto> {
@@ -73,38 +76,58 @@ export class AuthService {
     return { email: payload.email };
   }
 
+  // Setup Account ------------------------------------------------------
   async setupAccount(dto: SetupAccountDto): Promise<void> {
     const { token, name, password, dob, phone, gender } = dto;
     const { email, role, facultyId } =
       await this.jwtService.verifyRegisterToken(token);
-    if (await this.userModel.exists({ email })) {
-      throw new BadRequestException('User already exists!');
+    const user = await this.userModel.findOne({ email });
+    if (user) throw new BadRequestException('User already exists!');
+    let faculty: Faculty;
+    if (facultyId) {
+      faculty = await this.facultyModel.findById(facultyId).exec();
+      if (!faculty) throw new BadRequestException('Faculty not found!');
     }
     const newUser = new this.userModel({
       email,
       role,
       name,
       password: await this.passwordService.hashPassword(password),
-      dob,
-      phone,
-      gender,
-      faculty: facultyId ? { _id: facultyId } : null,
     });
+    if (dob) newUser.dob = dob;
+    if (phone) newUser.phone = phone;
+    if (gender) newUser.gender = gender;
     await newUser.save();
+    return;
   }
 
+  // Get current user ------------------------------------------------------
+  async getCurrentUser(userId: string) {
+    const user = await this.userModel.findById(userId).exec();
+    return {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      faculty: user.faculty,
+      avatar_url: user.avatar_url,
+    };
+  }
+
+  // Validate user (local strategy) ----------------------------------------------
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userModel.findOne({ email });
-    if (!user || user.disabled) {
-      return null;
-    }
+    if (!user) return null;
+    if (user.disabled) return null;
     const isPasswordValid = await this.passwordService.comparePassword(
       password,
       user.password,
     );
-    return isPasswordValid ? user : null;
+    if (isPasswordValid) return user;
+    return null;
   }
 
+  // Login ---------------------------------------------------------------------
   async login(user: User, ua: string): Promise<LoginResponseDto> {
     const { _id, role, faculty } = user;
     const accessToken = await this.jwtService.genAccessToken({
@@ -114,39 +137,60 @@ export class AuthService {
     });
     const refreshToken = await this.jwtService.genRefreshToken({ _id });
     const userAgent: IUserAgent = UAParser(ua);
-    const browser = `${userAgent.browser.name} on ${userAgent.os.name}`;
+    const browser = userAgent.browser.name + ' on ' + userAgent.os.name;
     await this.userModel.findByIdAndUpdate(_id, {
-      $push: { sessions: { browser, token: refreshToken, date: new Date() } },
+      $push: {
+        sessions: {
+          browser,
+          token: refreshToken,
+          date: new Date(),
+        },
+      },
     });
-    return { accessToken, refreshToken, user: this.sanitizeUser(user) };
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        faculty: user.faculty,
+        avatar_url: user.avatar_url,
+        gender: user.gender,
+        dob: user.dob,
+      },
+    };
   }
 
+  // Get new Access Token --------------------------------------------------------
   async refreshAccessToken(refreshToken: string): Promise<string> {
     if (!refreshToken) {
       throw new BadRequestException('Refresh token is required!');
     }
     const { _id } = await this.jwtService.verifyRefreshToken(refreshToken);
     const user = await this.userModel.findById(_id);
-    if (
-      !user ||
-      !user.sessions.find((session) => session.token === refreshToken)
-    ) {
-      throw new UnauthorizedException('Invalid refresh token!');
+    if (!user) throw new UnauthorizedException('User not found!');
+
+    if (!user.sessions.find((session) => session.token === refreshToken)) {
+      throw new UnauthorizedException('Refresh token not stored!');
     }
-    return await this.jwtService.genAccessToken({
+    const accessToken = await this.jwtService.genAccessToken({
       _id,
       role: user.role,
       facultyId: user.faculty?._id,
     });
+    return accessToken;
   }
 
+  // Google login callback ------------------------------------------------------
   async googleLoginCallback(email: string, ua: string): Promise<TokensDto> {
     const userAgent: IUserAgent = UAParser(ua);
-    const browser = `${userAgent.browser.name} on ${userAgent.os.name}`;
+    const browser = userAgent.browser.name + ' on ' + userAgent.os.name;
+
     const user = await this.userModel.findOne({ email });
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
+
     const accessToken = await this.jwtService.genAccessToken({
       _id: user._id,
       role: user.role,
@@ -155,41 +199,46 @@ export class AuthService {
     const refreshToken = await this.jwtService.genRefreshToken({
       _id: user._id,
     });
-    user.sessions.push({ browser, token: refreshToken, date: new Date() });
+
+    user.sessions.push({
+      browser,
+      token: refreshToken,
+      date: new Date(),
+    });
     await user.save();
     return { accessToken, refreshToken };
   }
 
+  // Reset password ------------------------------------------------------
   async sendResetPasswordEmail(email: string): Promise<void> {
     const user = await this.userModel.findOne({ email });
-    if (!user) {
-      throw new BadRequestException('User not found!');
-    }
+    if (!user) throw new BadRequestException('User not found!');
     const token = await this.jwtService.genResetPasswordToken({
       userId: user._id,
     });
     const clientUrl = await this.configService.get(EClientConfigKeys.Url);
     const url = `${clientUrl}/reset-password?token=${token}`;
-    await this.mailerService.sendResetPasswordEmail({
-      email,
-      name: user.name,
-      url,
-    });
+    const { name } = user;
+    await this.mailerService.sendResetPasswordEmail({ email, name, url });
+    return;
   }
 
+  // Reset Password -----------------------------------------------------------
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
     const { token, password } = dto;
     const { userId } = await this.jwtService.verifyResetPasswordToken(token);
+
     await this.userModel.findByIdAndUpdate(userId, {
       password: await this.passwordService.hashPassword(password),
     });
+    console.log('------------------------------------', userId);
+    return;
   }
 
+  // Change password ------------------------------------------------------
   async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
     const user = await this.userModel.findById(userId);
-    if (!user) {
-      throw new BadRequestException('User not found!');
-    }
+    if (!user) throw new BadRequestException('User not found!');
     const { oldPassword, newPassword } = dto;
     const isPasswordValid = await this.passwordService.comparePassword(
       oldPassword,
@@ -201,18 +250,18 @@ export class AuthService {
     await this.userModel.findByIdAndUpdate(userId, {
       password: await this.passwordService.hashPassword(newPassword),
     });
+    return;
   }
 
+  // Find Login Sessions ------------------------------------------------------
   async findLoginSessions(
     userId: string,
     currentRefreshToken: string,
     dto: FindLoginSessionsDto,
   ): Promise<LoginSessionResponseDto[]> {
-    const { limit = 100, skip = 0 } = dto;
+    const { limit, skip } = dto;
     const user = await this.userModel.findById(userId);
-    if (!user) {
-      throw new BadRequestException('User not found!');
-    }
+    if (!user) throw new BadRequestException('User not found!');
     const sessions = user.sessions
       .map((session) => ({
         _id: session._id,
@@ -220,11 +269,12 @@ export class AuthService {
         date: session.date,
         isCurrentDevice: session.token === currentRefreshToken,
       }))
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .slice(skip, skip + limit);
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+    if (skip || limit) return sessions.slice(skip || 0, limit || 100);
     return sessions;
   }
 
+  // Remove Login Session ------------------------------------------------------
   async removeLoginSession(
     userId: string,
     dto: RemoveLoginSessionDto,
@@ -233,12 +283,16 @@ export class AuthService {
     await this.userModel.findByIdAndUpdate(userId, {
       $pull: { sessions: { _id: sessionId } },
     });
+    return;
   }
 
+  // Remove All Login Sessions --------------------------------------------------
   async removeAllLoginSessions(userId: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, { sessions: [] });
+    return;
   }
 
+  // Logout ----------------------------------------------------------------
   async logout(userId: string, refreshToken: string): Promise<void> {
     if (!refreshToken) {
       throw new BadRequestException('Refresh token is required!');
@@ -246,11 +300,6 @@ export class AuthService {
     await this.userModel.findByIdAndUpdate(userId, {
       $pull: { sessions: { token: refreshToken } },
     });
-  }
-
-  private sanitizeUser(user: User): UserResponseDto {
-    const { _id, name, email, role, faculty, avatar_url, gender, dob, phone } =
-      user;
-    return { _id, name, email, role, faculty, avatar_url, gender, dob, phone };
+    return;
   }
 }

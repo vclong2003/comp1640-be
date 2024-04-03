@@ -11,9 +11,11 @@ import { FindContributionsDto } from './dtos/find-contributions.dto';
 import {
   AddContributionResponseDto,
   ContributionResponseDto,
-  ContributionsResponseDto,
 } from './dtos/contribution-res.dtos';
 import { AddCommentDto, CommentResponseDto } from './dtos/comment.dtos';
+import { UpdateContributionDto } from './dtos/update-contribution.dto';
+import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
+import { ERole } from 'src/user/user.enums';
 
 @Injectable()
 export class ContributionService {
@@ -25,6 +27,7 @@ export class ContributionService {
     private strorageSerive: StorageService,
   ) {}
 
+  // Add contribution ----------------------------------------------------------
   async addContribution(
     studentId: string,
     dto: AddContributionDto,
@@ -87,6 +90,103 @@ export class ContributionService {
     };
   }
 
+  // Update contribution -------------------------------------------------------
+  async updateContribution(
+    user: IAccessTokenPayload,
+    contributionId: string,
+    dto: UpdateContributionDto,
+    files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
+  ): Promise<void> {
+    const contribution = await this.contributionModel.findById(contributionId);
+    if (!contribution) throw new BadRequestException('Contribution not found!');
+
+    if (
+      user.role === ERole.Student &&
+      contribution.author._id.toString() !== user._id
+    ) {
+      throw new BadRequestException('Not your contribution!');
+    }
+
+    if (
+      user.role === ERole.MarketingCoordinator &&
+      user.facultyId.toString() !== contribution.faculty._id.toString()
+    ) {
+      throw new BadRequestException('Contribution not in your faculty!');
+    }
+
+    if (
+      !this.checkContributionEditable(contribution.event.final_closure_date)
+    ) {
+      throw new BadRequestException('Contribution is not editable!');
+    }
+
+    const { title, description } = dto;
+
+    if (title) contribution.title = title;
+    if (description) contribution.description = description;
+
+    if (files.documents.length > 0) {
+      const newDocuments = await this.strorageSerive.uploadPrivateFiles(
+        files.documents,
+      );
+      contribution.documents = contribution.documents.concat(newDocuments);
+    }
+
+    if (files.images.length > 0) {
+      const newImages = await this.strorageSerive.uploadPrivateFiles(
+        files.images,
+      );
+      contribution.images = contribution.images.concat(newImages);
+    }
+
+    await contribution.save();
+    return;
+  }
+
+  // Remove contribution file -------------------------------------------------
+  async removeContributionFile(
+    user: IAccessTokenPayload,
+    contributionId: string,
+    fileFullUrl: string,
+  ): Promise<void> {
+    const contribution = await this.contributionModel.findById(contributionId);
+    if (!contribution) throw new BadRequestException('Contribution not found!');
+
+    if (
+      user.role === ERole.Student &&
+      contribution.author._id.toString() !== user._id
+    ) {
+      throw new BadRequestException('Not your contribution!');
+    }
+
+    if (
+      user.role === ERole.MarketingCoordinator &&
+      user.facultyId.toString() !== contribution.faculty._id.toString()
+    ) {
+      throw new BadRequestException('Contribution not in your faculty!');
+    }
+
+    if (
+      !this.checkContributionEditable(contribution.event.final_closure_date)
+    ) {
+      throw new BadRequestException('Contribution is not editable!');
+    }
+
+    const fileBucketUrl = this.extractFileNameFromURL(fileFullUrl);
+    if (!fileBucketUrl) throw new BadRequestException('File not found!');
+
+    await this.strorageSerive.deletePrivateFile(fileBucketUrl);
+
+    const fileIndex = contribution.documents.findIndex(
+      (file) => file.file_url === fileBucketUrl,
+    );
+    if (fileIndex < 0) throw new BadRequestException('File not found!');
+    contribution.documents.splice(fileIndex, 1);
+
+    await contribution.save();
+  }
+
+  // Find contribution by id ---------------------------------------------------
   async findContributionById(
     contributionId: string,
   ): Promise<ContributionResponseDto> {
@@ -115,9 +215,10 @@ export class ContributionService {
     };
   }
 
+  // Find contributions --------------------------------------------------------
   async findContributions(
     dto: FindContributionsDto,
-  ): Promise<ContributionsResponseDto[]> {
+  ): Promise<Partial<ContributionResponseDto>[]> {
     const {
       title,
       eventId,
@@ -175,6 +276,7 @@ export class ContributionService {
     return contributions;
   }
 
+  // Find all comments --------------------------------------------------------
   async findAllComments(contributionId: string): Promise<CommentResponseDto[]> {
     const contribution = await this.contributionModel.findOne({
       _id: contributionId,
@@ -185,6 +287,7 @@ export class ContributionService {
     return contribution.comments as CommentResponseDto[];
   }
 
+  // Add comment --------------------------------------------------------------
   async addComment(
     userId,
     contributionId: string,
@@ -214,6 +317,7 @@ export class ContributionService {
     return comment as CommentResponseDto;
   }
 
+  // Remove comment -----------------------------------------------------------
   async removeComment(
     userId,
     contributionId: string,
@@ -236,7 +340,13 @@ export class ContributionService {
     return;
   }
 
+  // Helper functions ---------------------------------------------------------
   checkContributionEditable(finalClosureDate: Date) {
     return finalClosureDate > new Date();
+  }
+  extractFileNameFromURL(url: string): string | null {
+    const regex = /([^\/]+)\/([^\/?#]+)\?/;
+    const match = regex.exec(url);
+    return match ? decodeURIComponent(match[1] + '/' + match[2]) : null;
   }
 }

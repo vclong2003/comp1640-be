@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class FindContributionsDto {
   @ApiProperty({ required: false })
@@ -31,6 +31,11 @@ export class FindContributionsDto {
   @IsOptional()
   @IsString()
   is_publication?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  has_private_comments?: boolean;
 
   @ApiProperty({ required: false })
   @IsOptional()

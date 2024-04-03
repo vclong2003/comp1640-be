@@ -8,13 +8,6 @@ export class AddCommentDto {
   content: string;
 }
 
-export class UpdateCommentDto {
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  content: string;
-}
-
 export class CommentResponseDto {
   _id: string;
   content: string;
