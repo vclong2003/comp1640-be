@@ -118,7 +118,6 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userModel.findOne({ email });
     if (!user) return null;
-    if (user.disabled) return null;
     const isPasswordValid = await this.passwordService.comparePassword(
       password,
       user.password,
@@ -129,7 +128,10 @@ export class AuthService {
 
   // Login ---------------------------------------------------------------------
   async login(user: User, ua: string): Promise<LoginResponseDto> {
-    const { _id, role, faculty } = user;
+    const { _id, role, faculty, disabled } = user;
+    if (disabled) {
+      throw new UnauthorizedException('User is disabled!');
+    }
     const accessToken = await this.jwtService.genAccessToken({
       _id,
       role,

@@ -39,6 +39,11 @@ export class FindContributionsDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsBoolean()
+  popular?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
   skip?: number;
 

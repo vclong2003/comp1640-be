@@ -232,6 +232,7 @@ export class ContributionService {
       limit,
       skip,
       has_private_comments,
+      popular,
     } = dto;
 
     const pipeLine: PipelineStage[] = [];
@@ -280,6 +281,7 @@ export class ContributionService {
 
     pipeLine.push({ $match: match });
     pipeLine.push({ $project: projection });
+    if (popular) pipeLine.push({ $sort: { likes: -1 } });
     if (limit) pipeLine.push({ $limit: limit });
     if (skip) pipeLine.push({ $skip: skip });
 
