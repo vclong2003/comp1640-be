@@ -2,7 +2,8 @@ import { Storage } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { FileDto } from './storage.dtos';
+import { FileDto, FoldersToZipDto } from './storage.dtos';
+import * as JSZip from 'jszip';
 
 @Injectable()
 export class StorageService {
@@ -92,6 +93,39 @@ export class StorageService {
         };
       }),
     );
+  }
+
+  /**
+   * Organizes and zips the specified folders and files.
+   * @param foldersAndFiles - An array of objects containing folder names and file URLs.
+   * @returns A Promise that resolves to a NodeJS ReadableStream representing the zipped files.
+   */
+  async organizeAndZipFiles(
+    foldersAndFiles: FoldersToZipDto[],
+  ): Promise<NodeJS.ReadableStream> {
+    const zip = new JSZip();
+
+    await Promise.all(
+      foldersAndFiles.map(async ({ folder_name, files_url }) => {
+        const folder = zip.folder(folder_name);
+
+        await Promise.all(
+          files_url.map(async (fileUrl) => {
+            const [file] = await this.storage
+              .bucket(this.PrivateBucketName)
+              .file(fileUrl)
+              .download();
+
+            folder.file(fileUrl.split('/').pop()!, file);
+          }),
+        );
+      }),
+    );
+    const zipStream = await zip.generateNodeStream({
+      type: 'nodebuffer',
+      streamFiles: true,
+    });
+    return zipStream;
   }
 
   async deletePrivateFile(fileName: string): Promise<void> {

@@ -221,6 +221,7 @@ export class ContributionService {
   // Find contributions --------------------------------------------------------
   async findContributions(
     dto: FindContributionsDto,
+    withFiles: boolean = false,
   ): Promise<Partial<ContributionResponseDto>[]> {
     const {
       title,
@@ -278,6 +279,10 @@ export class ContributionService {
       comments: { $size: '$comments' },
       private_comments: { $size: '$private_comments' },
     };
+    if (withFiles) {
+      projection['documents'] = 1;
+      projection['images'] = 1;
+    }
 
     pipeLine.push({ $match: match });
     pipeLine.push({ $project: projection });
@@ -287,6 +292,24 @@ export class ContributionService {
 
     const contributions = await this.contributionModel.aggregate(pipeLine);
     return contributions;
+  }
+
+  // Find Contributions and download zip ---------------------------------------
+  async findContributionsAndDownloadZip(
+    dto: FindContributionsDto,
+  ): Promise<NodeJS.ReadableStream> {
+    const contributions = await this.findContributions(dto, true);
+    const foldersAndFiles = contributions.map((contribution) => {
+      return {
+        folder_name: contribution.title,
+        files_url: [
+          ...contribution.documents.map((file) => file.file_url),
+          ...contribution.images.map((image) => image.file_url),
+        ],
+      };
+    });
+
+    return await this.strorageSerive.organizeAndZipFiles(foldersAndFiles);
   }
 
   // Find all comments --------------------------------------------------------

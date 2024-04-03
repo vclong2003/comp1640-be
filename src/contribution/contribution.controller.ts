@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -133,14 +134,6 @@ export class ContributionController {
     );
   }
 
-  // Find contribution by id ----------------------------------------
-  @Get(':contributionId')
-  async findContributionById(
-    @Param('contributionId') contributionId: string,
-  ): Promise<ContributionResponseDto> {
-    return await this.contributionService.findContributionById(contributionId);
-  }
-
   // Find contributions ----------------------------------------
   @Get('')
   async findContributions(
@@ -148,6 +141,25 @@ export class ContributionController {
     @Query() dto: FindContributionsDto,
   ): Promise<Partial<ContributionResponseDto>[]> {
     return await this.contributionService.findContributions(dto);
+  }
+
+  // FindContributionsAndDownloadZip ----------------------------------------
+  @Get('download')
+  async findContributionsAndDownloadZip(
+    @Query() dto: FindContributionsDto,
+    @Res() res,
+  ) {
+    const file =
+      await this.contributionService.findContributionsAndDownloadZip(dto);
+    file.pipe(res);
+  }
+
+  // Find contribution by id ----------------------------------------
+  @Get(':contributionId')
+  async findContributionById(
+    @Param('contributionId') contributionId: string,
+  ): Promise<ContributionResponseDto> {
+    return await this.contributionService.findContributionById(contributionId);
   }
 
   // Find all comments ----------------------------------------
