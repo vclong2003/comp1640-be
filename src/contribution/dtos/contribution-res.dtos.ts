@@ -10,6 +10,7 @@ export class ContributionResponseDto {
   submitted_at: Date;
   is_publication: boolean;
   is_editable: boolean;
+  is_liked: boolean;
   likes: number;
   comments: number;
   private_comments: number;

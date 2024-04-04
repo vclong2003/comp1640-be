@@ -140,7 +140,7 @@ export class ContributionController {
     @Req() req,
     @Query() dto: FindContributionsDto,
   ): Promise<Partial<ContributionResponseDto>[]> {
-    return await this.contributionService.findContributions(dto);
+    return await this.contributionService.findContributions(dto, req.user);
   }
 
   // FindContributionsAndDownloadZip ----------------------------------------
@@ -157,9 +157,13 @@ export class ContributionController {
   // Find contribution by id ----------------------------------------
   @Get(':contributionId')
   async findContributionById(
+    @Req() req,
     @Param('contributionId') contributionId: string,
   ): Promise<ContributionResponseDto> {
-    return await this.contributionService.findContributionById(contributionId);
+    return await this.contributionService.findContributionById(
+      req.user,
+      contributionId,
+    );
   }
 
   // Find all comments ----------------------------------------

@@ -188,6 +188,7 @@ export class ContributionService {
 
   // Find contribution by id ---------------------------------------------------
   async findContributionById(
+    user: IAccessTokenPayload,
     contributionId: string,
   ): Promise<ContributionResponseDto> {
     const contribution = await this.contributionModel.findById(contributionId);
@@ -215,6 +216,7 @@ export class ContributionService {
       likes: contribution.liked_user_ids?.length || 0,
       comments: contribution.comments?.length || 0,
       private_comments: contribution.private_comments?.length || 0,
+      is_liked: contribution.liked_user_ids.includes(user._id),
     };
   }
 
@@ -222,6 +224,7 @@ export class ContributionService {
   async findContributions(
     dto: FindContributionsDto,
     withFiles: boolean = false,
+    user?: IAccessTokenPayload,
   ): Promise<Partial<ContributionResponseDto>[]> {
     const {
       title,
@@ -283,6 +286,7 @@ export class ContributionService {
       projection['documents'] = 1;
       projection['images'] = 1;
     }
+    if (user) projection['is_liked'] = { $in: [user._id, '$liked_user_ids'] };
 
     pipeLine.push({ $match: match });
     pipeLine.push({ $project: projection });
