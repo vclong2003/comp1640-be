@@ -178,6 +178,7 @@ export class EventService {
       start_date: 1,
       first_closure_date: 1,
       final_closure_date: 1,
+      faculty: 1,
       number_of_contributions: { $size: '$contribution_ids' },
       is_accepting_new_contribution: {
         $cond: {
