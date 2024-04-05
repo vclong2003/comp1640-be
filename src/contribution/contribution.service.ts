@@ -16,6 +16,10 @@ import { AddCommentDto, CommentResponseDto } from './dtos/comment.dtos';
 import { UpdateContributionDto } from './dtos/update-contribution.dto';
 import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 import { ERole } from 'src/user/user.enums';
+import {
+  NumberOfContributionsByFacultyPerYearDto,
+  TotalNumberOfContributionByFacultyDto,
+} from './dtos/analytics.dtos';
 
 @Injectable()
 export class ContributionService {
@@ -536,6 +540,70 @@ export class ContributionService {
     contribution.deleted_at = new Date();
     await contribution.save();
     return;
+  }
+
+  // Get analytics -------------------------------------------------------------
+  // number of contributions by faculty per selected month
+  async numberOfContributionsByFacultyPerYear(
+    year: number,
+  ): Promise<NumberOfContributionsByFacultyPerYearDto[]> {
+    const result = await this.contributionModel.aggregate([
+      {
+        $match: {
+          deleted_at: null,
+          submitted_at: {
+            $gte: new Date(year, 0, 1),
+            $lt: new Date(year + 1, 0, 1),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            faculty: '$faculty._id',
+            month: { $month: '$submitted_at' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          faculty: '$_id.faculty',
+          month: '$_id.month',
+          count: 1,
+        },
+      },
+    ]);
+
+    return result;
+  }
+  // total number of contributions by faculty
+  async totalNumberOfContributionByFaculty(): Promise<
+    TotalNumberOfContributionByFacultyDto[]
+  > {
+    const result = await this.contributionModel.aggregate([
+      {
+        $match: {
+          deleted_at: null,
+        },
+      },
+      {
+        $group: {
+          _id: '$faculty._id',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          faculty: '$faculty.name',
+          count: 1,
+        },
+      },
+    ]);
+
+    return result;
   }
 
   // Helper functions ---------------------------------------------------------
