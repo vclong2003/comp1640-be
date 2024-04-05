@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -35,6 +36,7 @@ import { UserResponseDto } from 'src/user/user.dtos';
 import { GoogleLoginDto } from './dtos/google-login.dto';
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { FindLoginSessionsDto } from './dtos/login-session.dto';
+import { Roles } from './decorators/roles.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -49,12 +51,14 @@ export class AuthController {
 
   // Send Register Email ------------------------------------------------------
   @Post('register-email')
-  // @Roles([ERole.Admin])
-  @NoAccessToken()
+  @Roles([ERole.Admin])
   async sendRegisterEmail(
     @Body() dto: SendRegisterEmailDto,
     @Response() res,
   ): Promise<void> {
+    if (dto.role === ERole.Guest) {
+      throw new BadRequestException("Can't register guest account.");
+    }
     await this.authService.sendRegisterEmail(dto);
     return res.status(200).send();
   }

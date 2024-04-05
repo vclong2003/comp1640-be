@@ -233,7 +233,6 @@ export class AuthService {
     await this.userModel.findByIdAndUpdate(userId, {
       password: await this.passwordService.hashPassword(password),
     });
-    console.log('------------------------------------', userId);
     return;
   }
 
