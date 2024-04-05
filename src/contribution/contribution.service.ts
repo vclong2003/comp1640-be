@@ -242,6 +242,7 @@ export class ContributionService {
     const pipeLine: PipelineStage[] = [];
 
     const match = {};
+    match['deleted_at'] = null;
     if (title) match['title'] = { $regex: title, $options: 'i' };
     if (authorId) match['author._id'] = authorId;
     if (authorName) {
