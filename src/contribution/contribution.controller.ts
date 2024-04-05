@@ -24,6 +24,10 @@ import {
   ContributionResponseDto,
 } from './dtos/contribution-res.dtos';
 import { AddCommentDto } from './dtos/comment.dtos';
+import {
+  NumberOfContributionsByFacultyPerYearDto,
+  TotalNumberOfContributionByFacultyDto,
+} from './dtos/analytics.dtos';
 
 @Controller('contribution')
 export class ContributionController {
@@ -265,5 +269,23 @@ export class ContributionController {
       req.user._id,
       contributionId,
     );
+  }
+
+  // Get yearly analysis ----------------------------------------------
+  @Get('yearly-analysis/:year')
+  @Roles([ERole.Admin])
+  async getYearlyAnalysis(
+    @Param('year') year: number,
+  ): Promise<NumberOfContributionsByFacultyPerYearDto[]> {
+    return await this.contributionService.yearlyAnalysis(year);
+  }
+
+  // Get lifetime analysis ----------------------------------------------
+  @Get('lifetime-analysis')
+  @Roles([ERole.Admin])
+  async getLifetimeAnalysis(): Promise<
+    TotalNumberOfContributionByFacultyDto[]
+  > {
+    return await this.contributionService.lifetimeAnalysis();
   }
 }

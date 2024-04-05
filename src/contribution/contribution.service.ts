@@ -544,7 +544,7 @@ export class ContributionService {
 
   // Get analytics -------------------------------------------------------------
   // number of contributions by faculty per selected month
-  async numberOfContributionsByFacultyPerYear(
+  async yearlyAnalysis(
     year: number,
   ): Promise<NumberOfContributionsByFacultyPerYearDto[]> {
     const result = await this.contributionModel.aggregate([
@@ -579,9 +579,7 @@ export class ContributionService {
     return result;
   }
   // total number of contributions by faculty
-  async totalNumberOfContributionByFaculty(): Promise<
-    TotalNumberOfContributionByFacultyDto[]
-  > {
+  async lifetimeAnalysis(): Promise<TotalNumberOfContributionByFacultyDto[]> {
     const result = await this.contributionModel.aggregate([
       {
         $match: {
