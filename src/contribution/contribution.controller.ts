@@ -166,6 +166,19 @@ export class ContributionController {
     );
   }
 
+  // Remove contribution ----------------------------------------
+  @Delete(':contributionId')
+  @Roles([ERole.Student, ERole.MarketingCoordinator, ERole.Admin])
+  async removeContribution(
+    @Req() req,
+    @Param('contributionId') contributionId: string,
+  ) {
+    return await this.contributionService.removeContribution(
+      req.user,
+      contributionId,
+    );
+  }
+
   // Find all comments ----------------------------------------
   @Get(':contributionId/comment')
   async findAllComments(@Param('contributionId') contributionId: string) {

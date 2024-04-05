@@ -507,6 +507,37 @@ export class ContributionService {
     return;
   }
 
+  // Remove contribution -------------------------------------------------------
+  async removeContribution(
+    user: IAccessTokenPayload,
+    contributionId: string,
+  ): Promise<void> {
+    const contribution = await this.contributionModel.findById(contributionId);
+    if (!contribution) throw new BadRequestException('Contribution not found!');
+
+    if (user.role === ERole.Student && contribution.author._id !== user._id) {
+      throw new BadRequestException('Not your contribution!');
+    }
+    if (
+      user.role === ERole.MarketingCoordinator &&
+      user.facultyId !== contribution.faculty._id
+    ) {
+      throw new BadRequestException('Contribution not in your faculty!');
+    }
+
+    await this.eventModel.findByIdAndUpdate(contribution.event._id, {
+      $pull: { contribution_ids: contributionId },
+    });
+
+    await this.facultyModel.findByIdAndUpdate(contribution.faculty._id, {
+      $pull: { contribution_ids: contributionId },
+    });
+
+    contribution.deleted_at = new Date();
+    await contribution.save();
+    return;
+  }
+
   // Helper functions ---------------------------------------------------------
   checkContributionEditable(finalClosureDate: Date) {
     return finalClosureDate > new Date();
