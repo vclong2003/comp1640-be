@@ -19,7 +19,7 @@ import { ERole } from 'src/user/user.enums';
 import {
   NumberOfContributionsByFacultyPerYearDto,
   TotalNumberOfContributionByFacultyDto,
-} from './dtos/analytics.dtos';
+} from './dtos/analysis.dtos';
 
 @Injectable()
 export class ContributionService {

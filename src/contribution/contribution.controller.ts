@@ -27,7 +27,7 @@ import { AddCommentDto } from './dtos/comment.dtos';
 import {
   NumberOfContributionsByFacultyPerYearDto,
   TotalNumberOfContributionByFacultyDto,
-} from './dtos/analytics.dtos';
+} from './dtos/analysis.dtos';
 
 @Controller('contribution')
 export class ContributionController {
