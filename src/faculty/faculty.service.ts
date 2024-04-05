@@ -24,6 +24,7 @@ export class FacultyService {
     private storageService: StorageService,
   ) {}
 
+  // Find faculty by id --------------------------------------------------------
   async findFacultyById(id: string): Promise<FacultyResponseDto> {
     return this.facultyModel
       .findById(id)
@@ -31,12 +32,14 @@ export class FacultyService {
       .exec();
   }
 
+  // Find faculties ------------------------------------------------------------
   async findFaculties(
     dto: FindFacultiesDto,
   ): Promise<Omit<FacultyResponseDto, 'description' | 'banner_image_url'>[]> {
     const { name, skip, limit } = dto;
     const query = {
       name: { $regex: name || '', $options: 'i' },
+      deleted_at: { $eq: null },
     };
     return this.facultyModel
       .find(query)
@@ -46,6 +49,7 @@ export class FacultyService {
       .exec();
   }
 
+  // Create a new faculty ------------------------------------------------------
   async createFaculty(
     dto: CreateFacultyDto,
     bannerImage?: Express.Multer.File,
@@ -102,6 +106,7 @@ export class FacultyService {
     };
   }
 
+  // Update a faculty ----------------------------------------------------------
   async updateFaculty(
     facultyId: string,
     dto: UpdateFacultyDto,
@@ -171,6 +176,7 @@ export class FacultyService {
     };
   }
 
+  // Move student --------------------------------------------------------------
   async moveStudent(facultyId: string, studentId: string): Promise<void> {
     const student = await this.userModel.findById(studentId);
     if (student.role != ERole.Student) {
@@ -193,6 +199,7 @@ export class FacultyService {
     return;
   }
 
+  // Remove student ------------------------------------------------------------
   async removeStudent(facultyId: string, studentId: string): Promise<void> {
     await this.facultyModel.findByIdAndUpdate(facultyId, {
       $pull: { student_ids: studentId },
@@ -200,6 +207,34 @@ export class FacultyService {
     await this.userModel.findByIdAndUpdate(studentId, {
       faculty: null,
     });
+    return;
+  }
+
+  // Remove faculty ------------------------------------------------------------
+  async removeFaculty(facultyId: string): Promise<void> {
+    const faculty = await this.facultyModel.findById(facultyId);
+    if (!faculty) {
+      throw new BadRequestException('Faculty not found');
+    }
+
+    await this.userModel.updateMany(
+      { _id: { $in: faculty.student_ids } },
+      { faculty: null },
+    );
+    await this.userModel.updateOne({ _id: faculty.mc._id }, { faculty: null });
+
+    await this.eventModel.updateMany(
+      { _id: { $in: faculty.event_ids } },
+      { deleted_at: new Date() },
+    );
+
+    await this.contributionModel.updateMany(
+      { _id: { $in: faculty.contribution_ids } },
+      { deleted_at: new Date() },
+    );
+
+    faculty.deleted_at = new Date();
+    await faculty.save();
     return;
   }
 }

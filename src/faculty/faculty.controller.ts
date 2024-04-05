@@ -74,6 +74,13 @@ export class FacultyController {
     return await this.facultyService.updateFaculty(facultyId, dto, bannerImage);
   }
 
+  // Delete a faculty --------------------------------------------------
+  @Delete(':facultyId')
+  @Roles([ERole.Admin])
+  async deleteFaculty(@Param('facultyId') facultyId: string): Promise<void> {
+    return await this.facultyService.removeFaculty(facultyId);
+  }
+
   // Move student -----------------------------------------------------
   @Put(':facultyId/student/:studentId')
   @Roles([ERole.Admin])

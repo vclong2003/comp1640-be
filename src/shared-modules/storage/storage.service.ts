@@ -128,6 +128,11 @@ export class StorageService {
     return zipStream;
   }
 
+  /**
+   * Deletes a private file from the storage.
+   * @param fileName - The name of the file to be deleted.
+   * @returns A Promise that resolves when the file is successfully deleted.
+   */
   async deletePrivateFile(fileName: string): Promise<void> {
     await this.storage.bucket(this.PrivateBucketName).file(fileName).delete();
     return;
