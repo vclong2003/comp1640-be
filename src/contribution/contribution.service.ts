@@ -6,20 +6,19 @@ import { Contribution } from 'src/contribution/schemas/contribution.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { Event } from 'src/event/schemas/event.schema';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
-import { AddContributionDto } from './dtos/add-contribution.dto';
-import { FindContributionsDto } from './dtos/find-contributions.dto';
-import {
-  AddContributionResponseDto,
-  ContributionResponseDto,
-} from './dtos/contribution-res.dtos';
-import { AddCommentDto, CommentResponseDto } from './dtos/comment.dtos';
-import { UpdateContributionDto } from './dtos/update-contribution.dto';
+import { AddCommentDto, CommentResponseDto } from './comment.dtos';
 import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 import { ERole } from 'src/user/user.enums';
+
 import {
+  AddContributionDto,
+  AddContributionResponseDto,
+  ContributionResponseDto,
+  FindContributionsDto,
   NumberOfContributionsByFacultyPerYearDto,
   TotalNumberOfContributionByFacultyDto,
-} from './dtos/analysis.dtos';
+  UpdateContributionDto,
+} from './contribution.dtos';
 
 @Injectable()
 export class ContributionService {
@@ -52,7 +51,11 @@ export class ContributionService {
     }
     const userFaculty = await this.facultyModel.findById(student.faculty._id);
 
-    const event = await this.eventModel.findById(eventId);
+    const event = await this.eventModel.findOne({
+      _id: eventId,
+      deleted_at: null,
+    });
+    if (!event) throw new BadRequestException('Event not found!');
     if (event.faculty._id.toString() !== userFaculty._id.toString()) {
       throw new BadRequestException(
         "Event's faculty doesn't match your faculty!",

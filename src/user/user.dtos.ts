@@ -2,6 +2,7 @@ import { IsString, IsEnum, IsOptional, Matches } from 'class-validator';
 import { EGender, ERole } from './user.enums';
 import { ApiProperty } from '@nestjs/swagger';
 
+// User res ------------------------
 export class UserResponseDto {
   _id: string;
   email: string;
@@ -17,6 +18,7 @@ export class UserResponseDto {
   role: ERole;
 }
 
+// Update user dto ------------------------------------------
 export class UpdateUserDto {
   @ApiProperty({ required: false })
   @IsOptional()
@@ -42,6 +44,7 @@ export class UpdateUserDto {
   gender?: EGender;
 }
 
+// Find user dto ------------------------------------------
 export class FindUsersDto {
   @ApiProperty({ required: false })
   @IsOptional()

@@ -21,17 +21,16 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { ContributionService } from './contribution.service';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { AddContributionDto } from './dtos/add-contribution.dto';
-import { FindContributionsDto } from './dtos/find-contributions.dto';
+import { AddCommentDto } from './comment.dtos';
+
 import {
+  AddContributionDto,
   AddContributionResponseDto,
   ContributionResponseDto,
-} from './dtos/contribution-res.dtos';
-import { AddCommentDto } from './dtos/comment.dtos';
-import {
+  FindContributionsDto,
   NumberOfContributionsByFacultyPerYearDto,
   TotalNumberOfContributionByFacultyDto,
-} from './dtos/analysis.dtos';
+} from './contribution.dtos';
 
 @Controller('contribution')
 export class ContributionController {

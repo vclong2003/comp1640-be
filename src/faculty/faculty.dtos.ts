@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
+// Create faculty dto ------------------------
 export class CreateFacultyDto {
   @ApiProperty()
   @IsString()
@@ -18,6 +19,7 @@ export class CreateFacultyDto {
   mcId?: string;
 }
 
+// Update faculty dto ------------------------
 export class UpdateFacultyDto {
   @ApiProperty({ required: false })
   @IsOptional()
@@ -35,12 +37,14 @@ export class UpdateFacultyDto {
   mcId?: string;
 }
 
+// Add student -----------------------------
 export class AddStudentDto {
   @ApiProperty()
   @IsString()
   studentId: string;
 }
 
+// Find faculty dto ------------------------
 export class FindFacultiesDto {
   @ApiProperty({ required: false })
   @IsOptional()
@@ -58,6 +62,7 @@ export class FindFacultiesDto {
   limit?: number;
 }
 
+// Faculty response dto ---------------------
 export class FacultyResponseDto {
   _id: string;
   name: string;

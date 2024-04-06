@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsNotEmpty } from 'class-validator';
 import { EEventSort } from './event.enums';
 
+// Create event dto ------------------------
 export class CreateEventDTO {
   @ApiProperty()
   @IsString()
@@ -34,6 +35,7 @@ export class CreateEventDTO {
   facultyId: string;
 }
 
+// Update event dto ------------------------
 export class UpdateEventDTO {
   @ApiProperty()
   @IsOptional()
@@ -61,6 +63,7 @@ export class UpdateEventDTO {
   final_closure_date?: Date;
 }
 
+// Find event dto ------------------------
 export class FindEventsDTO {
   @ApiProperty({ required: false })
   @IsOptional()
@@ -103,6 +106,7 @@ export class FindEventsDTO {
   limit?: number;
 }
 
+// Event response dto ------------------------
 export class EventResponseDto {
   _id: string;
   name: string;
