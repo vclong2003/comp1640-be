@@ -38,7 +38,7 @@ export class ContributionService {
     files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
   ): Promise<AddContributionResponseDto> {
     if (!files.documents || files.documents.length <= 0) {
-      throw new BadRequestException(1);
+      throw new BadRequestException("Document files can't be empty!");
     }
 
     const { eventId, title, description } = dto;
@@ -47,7 +47,9 @@ export class ContributionService {
       throw new BadRequestException('Invalid event id!');
     }
     const student = await this.userModel.findById(studentId);
-    if (!student.faculty) throw new BadRequestException(2);
+    if (!student.faculty) {
+      throw new BadRequestException("Student's faculty not found!");
+    }
     const userFaculty = await this.facultyModel.findById(student.faculty._id);
 
     const event = await this.eventModel.findById(eventId);
