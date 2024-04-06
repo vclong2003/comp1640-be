@@ -104,6 +104,7 @@ export class ContributionService {
     contributionId: string,
     dto: UpdateContributionDto,
     files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
+    bannerImage?: Express.Multer.File,
   ): Promise<void> {
     const contribution = await this.contributionModel.findById(contributionId);
     if (!contribution) throw new BadRequestException('Contribution not found!');
@@ -132,6 +133,17 @@ export class ContributionService {
 
     if (title) contribution.title = title;
     if (description) contribution.description = description;
+
+    if (bannerImage) {
+      const publicBannerImageUrl =
+        await this.strorageSerive.uploadPublicFile(bannerImage);
+      if (contribution.banner_image_url) {
+        await this.strorageSerive.deletePublicFile(
+          contribution.banner_image_url,
+        );
+      }
+      contribution.banner_image_url = publicBannerImageUrl;
+    }
 
     if (files.documents.length > 0) {
       const newDocuments = await this.strorageSerive.uploadPrivateFiles(

@@ -9,10 +9,14 @@ import {
   Query,
   Req,
   Res,
+  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { ContributionService } from './contribution.service';
@@ -84,6 +88,7 @@ export class ContributionController {
       properties: {
         title: { type: 'string' },
         description: { type: 'string' },
+        bannerImage: { type: 'string', format: 'binary' },
         documents: {
           type: 'array',
           items: {
@@ -106,6 +111,7 @@ export class ContributionController {
       { name: 'documents', maxCount: 5 },
       { name: 'images', maxCount: 5 },
     ]),
+    FileInterceptor('bannerImage'),
   )
   @Roles([ERole.Student, ERole.MarketingCoordinator, ERole.Admin])
   async updateContribution(
@@ -114,12 +120,14 @@ export class ContributionController {
     @Body() dto: AddContributionDto,
     @UploadedFiles()
     files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
+    @UploadedFile() bannerImage: Express.Multer.File,
   ) {
     return await this.contributionService.updateContribution(
       req.user._id,
       contributionId,
-      dto,
+      { ...dto },
       files,
+      bannerImage,
     );
   }
 

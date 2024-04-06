@@ -29,6 +29,7 @@ import {
   LoginSessionResponseDto,
   RemoveLoginSessionDto,
 } from './dtos/login-session.dto';
+import { ERole } from 'src/user/user.enums';
 
 @Injectable()
 export class AuthService {
@@ -81,13 +82,19 @@ export class AuthService {
     const { token, name, password, dob, phone, gender } = dto;
     const { email, role, facultyId } =
       await this.jwtService.verifyRegisterToken(token);
+
     const user = await this.userModel.findOne({ email });
     if (user) throw new BadRequestException('User already exists!');
-    let faculty: Faculty;
+
+    let faculty;
+    if (facultyId && role !== ERole.Student) {
+      throw new BadRequestException('You can only select faculty for student!');
+    }
     if (facultyId) {
-      faculty = await this.facultyModel.findById(facultyId).exec();
+      faculty = await this.facultyModel.findById(facultyId);
       if (!faculty) throw new BadRequestException('Faculty not found!');
     }
+
     const newUser = new this.userModel({
       email,
       role,
@@ -97,6 +104,15 @@ export class AuthService {
     if (dob) newUser.dob = dob;
     if (phone) newUser.phone = phone;
     if (gender) newUser.gender = gender;
+    if (role === ERole.Student && faculty) {
+      newUser.faculty = {
+        _id: faculty._id,
+        name: faculty.name,
+      };
+      faculty.students.push(newUser._id);
+      await faculty.save();
+    }
+
     await newUser.save();
     return;
   }
