@@ -23,7 +23,7 @@ export class EventService {
     private storageService: StorageService,
   ) {}
 
-  // Create event -----------------------------------------------------
+  // Create event -------------------------------------------------------------
   async createEvent(
     dto: CreateEventDTO,
     bannerImage?: Express.Multer.File,
@@ -36,6 +36,8 @@ export class EventService {
       final_closure_date,
       facultyId,
     } = dto;
+    this.ensureDateValid(start_date, first_closure_date, final_closure_date);
+
     const faculty = await this.facultyModel.findById(facultyId);
     if (!faculty) throw new BadRequestException('Faculty not found');
 
@@ -51,148 +53,85 @@ export class EventService {
         mc: faculty.mc,
       },
     });
-
     if (bannerImage) {
       newEvent.banner_image_url =
         await this.storageService.uploadPublicFile(bannerImage);
     }
-
     await newEvent.save();
+
     faculty.event_ids.push(newEvent._id);
     await faculty.save();
 
-    return this.mapEventToResponseDto(newEvent);
-  }
-
-  // Find event by id -----------------------------------------------------
-  async findEventById(_id: string): Promise<EventResponseDto> {
-    const events = await this.eventModel.aggregate([
-      { $match: { _id: new mongoose.Types.ObjectId(_id) } },
-      { $project: this.getEventProjectionStage() },
-    ]);
-
-    if (!events.length) throw new BadRequestException('Event not found');
-
-    return this.mapEventToResponseDto(events[0]);
-  }
-
-  // Find events ----------------------------------------------------------------
-  async findEvents(
-    dto: FindEventsDTO,
-  ): Promise<
-    Omit<EventResponseDto, 'description' | 'banner_image_url' | 'faculty.mc'>[]
-  > {
-    const pipeline: PipelineStage[] = [];
-    const match: any = {};
-
-    if (dto.facultyId) {
-      const faculty = await this.facultyModel.findById(dto.facultyId);
-      if (!faculty) throw new BadRequestException('Faculty not found');
-
-      match['_id'] = {
-        $in: faculty.event_ids.map((id) => new mongoose.Types.ObjectId(id)),
-      };
-    }
-
-    match['deleted_at'] = null;
-
-    if (dto.name) match['name'] = { $regex: dto.name, $options: 'i' };
-    if (dto.start_date) match['start_date'] = { $gte: dto.start_date };
-    if (dto.final_closure_date)
-      match['final_closure_date'] = { $lte: dto.final_closure_date };
-    if (dto.mcName)
-      match['faculty.mc.name'] = { $regex: dto.mcName, $options: 'i' };
-
-    pipeline.push({ $match: match });
-    pipeline.push({ $project: this.getEventProjectionStage() });
-
-    if (dto.sort) pipeline.push({ $sort: { [dto.sort]: -1 } });
-    if (dto.skip) pipeline.push({ $skip: Number(dto.skip) });
-    if (dto.limit) pipeline.push({ $limit: Number(dto.limit) });
-
-    const events = await this.eventModel.aggregate(pipeline);
-    return events.map((event) => this.mapEventToResponseDto(event));
-  }
-
-  // Update event -------------------------------------------------------------
-  async updateEvent(
-    eventId: string,
-    dto: UpdateEventDTO,
-    bannerImage?: Express.Multer.File,
-  ): Promise<EventResponseDto> {
-    const event = await this.eventModel.findOne({
-      _id: eventId,
-      deleted_at: null,
-    });
-    if (!event) throw new BadRequestException('Event not found');
-
-    const {
-      name,
-      description,
-      start_date,
-      first_closure_date,
-      final_closure_date,
-    } = dto;
-
-    if (name) event.name = name;
-    if (description) event.description = description;
-    if (start_date) event.start_date = start_date;
-    if (first_closure_date) event.first_closure_date = first_closure_date;
-    if (final_closure_date) event.final_closure_date = final_closure_date;
-
-    if (bannerImage) {
-      if (event.banner_image_url) {
-        await this.storageService.deletePublicFile(event.banner_image_url);
-      }
-      event.banner_image_url =
-        await this.storageService.uploadPublicFile(bannerImage);
-    }
-
-    await this.contributionModel.updateMany(
-      { _id: { $in: event.contribution_ids } },
-      {
-        event: {
-          _id: event._id,
-          name: event.name,
-          final_closure_date: event.first_closure_date,
-        },
-      },
-    );
-
-    return this.mapEventToResponseDto(await event.save());
-  }
-
-  // Remove event -------------------------------------------------------------
-  async removeEvent(eventId: string): Promise<void> {
-    const event = await this.eventModel.findById(eventId);
-    if (!event) throw new BadRequestException('Event not found');
-
-    event.deleted_at = new Date();
-    await this.contributionModel.updateMany(
-      { _id: { $in: event.contribution_ids } },
-      { deleted_at: new Date() },
-    );
-
-    await event.save();
-  }
-
-  private getEventProjectionStage(): any {
     return {
-      name: 1,
-      start_date: 1,
-      first_closure_date: 1,
-      final_closure_date: 1,
-      faculty: 1,
-      number_of_contributions: { $size: '$contribution_ids' },
-      is_accepting_new_contribution: {
-        $gte: ['$first_closure_date', new Date()],
+      _id: newEvent._id,
+      name: newEvent.name,
+      description: newEvent.description,
+      banner_image_url: newEvent.banner_image_url,
+      start_date: newEvent.start_date,
+      first_closure_date: newEvent.first_closure_date,
+      final_closure_date: newEvent.final_closure_date,
+      is_accepting_new_contribution: this.isAcceptingNewContributions(
+        newEvent.first_closure_date,
+      ),
+      is_contributions_editable: this.isContributionsEditable(
+        newEvent.final_closure_date,
+      ),
+      number_of_contributions: newEvent.contribution_ids.length,
+      faculty: {
+        _id: faculty._id,
+        name: faculty.name,
+        mc: faculty.mc,
       },
-      is_contributions_editable: { $gte: ['$final_closure_date', new Date()] },
     };
   }
 
-  // Map event to response dto -----------------------------------------------------
-  private mapEventToResponseDto(event: any): EventResponseDto {
+  // Find event by Id -------------------------------------------------------------
+  async findEventById(_id: string): Promise<EventResponseDto> {
+    const events = await this.eventModel.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(_id),
+          deleted_at: {
+            $eq: null,
+          },
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          description: 1,
+          banner_image_url: 1,
+          start_date: 1,
+          first_closure_date: 1,
+          final_closure_date: 1,
+          is_accepting_new_contribution: {
+            $cond: {
+              if: {
+                $and: [
+                  { $gte: ['$first_closure_date', new Date()] },
+                  { $lte: ['$start_date', new Date()] },
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+          is_contributions_editable: {
+            $cond: {
+              if: {
+                $gte: ['$final_closure_date', new Date()],
+              },
+              then: true,
+              else: false,
+            },
+          },
+          number_of_contributions: { $size: '$contribution_ids' },
+          faculty: 1,
+        },
+      },
+    ]);
+    if (events.length === 0) throw new BadRequestException('Event not found');
+    const event = events[0];
     return {
       _id: event._id,
       name: event.name,
@@ -206,5 +145,203 @@ export class EventService {
       number_of_contributions: event.number_of_contributions,
       faculty: event.faculty,
     };
+  }
+
+  // Find events -------------------------------------------------------------
+  async findEvents(
+    dto: FindEventsDTO,
+  ): Promise<
+    Omit<EventResponseDto, 'description' | 'banner_image_url' | 'faculty.mc'>[]
+  > {
+    const {
+      facultyId,
+      name,
+      start_date,
+      final_closure_date,
+      mcName,
+      limit,
+      skip,
+      sort,
+    } = dto;
+
+    const pipeline: PipelineStage[] = [];
+
+    const match = {};
+
+    if (facultyId) {
+      const faculty = await this.facultyModel.findById(facultyId);
+      if (!faculty) throw new BadRequestException('Faculty not found');
+      match['_id'] = {
+        $in: faculty.event_ids.map((id) => new mongoose.Types.ObjectId(id)),
+      };
+    }
+    match['deleted_at'] = null;
+    if (name) match['name'] = { $regex: name, $options: 'i' };
+    if (start_date) match['start_date'] = { $gte: start_date };
+    if (final_closure_date) {
+      match['final_closure_date'] = { $lte: final_closure_date };
+    }
+    if (mcName) {
+      match['faculty.mc.name'] = { $regex: mcName, $options: 'i' };
+    }
+
+    const project = {
+      name: 1,
+      start_date: 1,
+      first_closure_date: 1,
+      final_closure_date: 1,
+      faculty: 1,
+      number_of_contributions: { $size: '$contribution_ids' },
+      is_accepting_new_contribution: {
+        $cond: {
+          if: {
+            $gte: ['$first_closure_date', new Date()],
+          },
+          then: true,
+          else: false,
+        },
+      },
+      is_contributions_editable: {
+        $cond: {
+          if: {
+            $gte: ['$final_closure_date', new Date()],
+          },
+          then: true,
+          else: false,
+        },
+      },
+    };
+
+    pipeline.push({ $match: match });
+    pipeline.push({ $project: project });
+    if (sort) pipeline.push({ $sort: { [sort]: -1 } });
+    if (skip) pipeline.push({ $skip: Number(skip) });
+    if (limit) pipeline.push({ $limit: Number(limit) });
+
+    return this.eventModel.aggregate(pipeline);
+  }
+
+  // Update event -------------------------------------------------------------
+  async updateEvent(
+    eventId: string,
+    dto: UpdateEventDTO,
+    bannerImage?: Express.Multer.File,
+  ): Promise<EventResponseDto> {
+    const {
+      name,
+      description,
+      start_date,
+      first_closure_date,
+      final_closure_date,
+    } = dto;
+    const event = await this.eventModel.findOne({
+      _id: eventId,
+      deleted_at: null,
+    });
+    if (!event) throw new BadRequestException('Event not found');
+
+    if (name) event.name = name;
+    if (description) event.description = description;
+    if (start_date) event.start_date = start_date;
+    if (first_closure_date) event.first_closure_date = first_closure_date;
+    if (final_closure_date) event.final_closure_date = final_closure_date;
+
+    this.ensureDateValid(
+      event.start_date,
+      event.first_closure_date,
+      event.final_closure_date,
+    );
+
+    if (bannerImage) {
+      if (event.banner_image_url) {
+        await this.storageService.deletePublicFile(event.banner_image_url);
+      }
+      event.banner_image_url =
+        await this.storageService.uploadPublicFile(bannerImage);
+    }
+
+    await this.contributionModel.updateMany(
+      {
+        _id: { $in: event.contribution_ids },
+      },
+      {
+        event: {
+          _id: event._id,
+          name: event.name,
+          final_closure_date: event.first_closure_date,
+        },
+      },
+    );
+
+    return {
+      _id: event._id,
+      name: event.name,
+      description: event.description,
+      banner_image_url: event.banner_image_url,
+      start_date: event.start_date,
+      first_closure_date: event.first_closure_date,
+      final_closure_date: event.final_closure_date,
+      is_accepting_new_contribution: this.isAcceptingNewContributions(
+        event.first_closure_date,
+      ),
+      is_contributions_editable: this.isContributionsEditable(
+        event.final_closure_date,
+      ),
+      number_of_contributions: event.contribution_ids.length,
+      faculty: event.faculty,
+    };
+  }
+
+  // Remove event -------------------------------------------------------------
+  async removeEvent(eventId: string): Promise<void> {
+    const event = await this.eventModel.findById(eventId);
+    if (!event) throw new BadRequestException('Event not found');
+    event.deleted_at = new Date();
+
+    await this.contributionModel.updateMany(
+      {
+        _id: { $in: event.contribution_ids },
+      },
+      { deleted_at: new Date() },
+    );
+
+    await this.contributionModel.updateMany(
+      {
+        _id: { $in: event.contribution_ids },
+      },
+      { deleted_at: new Date() },
+    );
+
+    await event.save();
+    return;
+  }
+
+  // Helper functions -------------------------------------------------------------
+  isAcceptingNewContributions(firstClosureDate: Date): boolean {
+    return firstClosureDate > new Date();
+  }
+
+  isContributionsEditable(finalClosureDate: Date): boolean {
+    return finalClosureDate > new Date();
+  }
+
+  ensureDateValid(
+    startDate: Date,
+    firstClosureDate: Date,
+    finalClosureDate: Date,
+  ): void {
+    if (startDate < new Date()) {
+      throw new BadRequestException('Start date must be in the future');
+    }
+    if (firstClosureDate < startDate) {
+      throw new BadRequestException(
+        'First closure date must be after start date',
+      );
+    }
+    if (finalClosureDate < firstClosureDate) {
+      throw new BadRequestException(
+        'Final closure date must be after first closure date',
+      );
+    }
   }
 }
