@@ -44,7 +44,10 @@ export class UserService {
     avatar?: Express.Multer.File,
   ): Promise<UserResponseDto> {
     const { name, phone, dob, gender } = dto;
-    const user = await this.userModel.findById(userId);
+    const user = await this.userModel.findOne({
+      _id: userId,
+      disabled: false,
+    });
     if (!user) throw new BadRequestException('User not found');
 
     if (avatar) {
