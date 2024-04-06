@@ -43,14 +43,18 @@ export class ContributionService {
 
     const { eventId, title, description } = dto;
 
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      throw new BadRequestException('Invalid event id!');
+    }
     const student = await this.userModel.findById(studentId);
     if (!student.faculty) throw new BadRequestException(2);
-
-    const faculty = await this.facultyModel.findById(student.faculty._id);
+    const userFaculty = await this.facultyModel.findById(student.faculty._id);
 
     const event = await this.eventModel.findById(eventId);
-    if (event.faculty._id.toString() !== faculty._id.toString()) {
-      throw new BadRequestException(3);
+    if (event.faculty._id.toString() !== userFaculty._id.toString()) {
+      throw new BadRequestException(
+        "Event's faculty doesn't match your faculty!",
+      );
     }
 
     const contribution = new this.contributionModel({
@@ -68,16 +72,16 @@ export class ContributionService {
         final_closure_date: event.final_closure_date,
       },
       faculty: {
-        _id: faculty._id,
-        name: faculty.name,
+        _id: event.faculty._id,
+        name: event.faculty.name,
       },
     });
 
     event.contribution_ids.push(contribution._id);
     await event.save();
 
-    faculty.contribution_ids.push(contribution._id);
-    await faculty.save();
+    userFaculty.contribution_ids.push(contribution._id);
+    await userFaculty.save();
 
     contribution.documents = await this.strorageSerive.uploadPrivateFiles(
       files.documents,
@@ -195,7 +199,11 @@ export class ContributionService {
     user: IAccessTokenPayload,
     contributionId: string,
   ): Promise<ContributionResponseDto> {
+    if (!mongoose.Types.ObjectId.isValid(contributionId)) {
+      throw new BadRequestException('Invalid contribution id!');
+    }
     const contribution = await this.contributionModel.findById(contributionId);
+    if (!contribution) throw new BadRequestException('Contribution not found!');
     const images = await this.strorageSerive.getPrivateFilesUrls(
       contribution.images,
     );

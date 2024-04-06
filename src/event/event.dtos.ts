@@ -1,42 +1,36 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsEnum,
-  IsOptional,
-  IsNotEmpty,
-  Matches,
-} from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsNotEmpty } from 'class-validator';
 import { EEventSort } from './event.enums';
 
 export class CreateEventDTO {
   @ApiProperty()
   @IsString()
-  @Matches(/^(?!\s+$).+/, { message: 'Name cannot be empty' })
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty()
   @IsString()
-  @Matches(/^(?!\s+$).+/, { message: 'Description cannot be empty' })
+  @IsNotEmpty()
   description: string;
 
   @ApiProperty()
   @IsString()
-  @Matches(/^(?!\s+$).+/, { message: 'Start date cannot be empty' })
+  @IsNotEmpty()
   start_date: Date;
 
   @ApiProperty()
   @IsString()
-  @Matches(/^(?!\s+$).+/, { message: 'First closure date cannot be empty' })
+  @IsNotEmpty()
   first_closure_date: Date;
 
   @ApiProperty()
   @IsString()
-  @Matches(/^(?!\s+$).+/, { message: 'Final closure date cannot be empty' })
+  @IsNotEmpty()
   final_closure_date: Date;
 
   @ApiProperty()
   @IsString()
-  @Matches(/^(?!\s+$).+/, { message: 'Faculty ID cannot be empty' })
+  @IsNotEmpty()
   facultyId: string;
 }
 
