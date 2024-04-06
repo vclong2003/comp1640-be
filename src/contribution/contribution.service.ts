@@ -42,10 +42,9 @@ export class ContributionService {
 
     const { eventId, title, description } = dto;
 
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-      throw new BadRequestException('Invalid event id!');
-    }
-    const student = await this.userModel.findById(studentId);
+    const student = await this.userModel.findById(
+      new mongoose.Types.ObjectId(studentId),
+    );
     if (!student.faculty) {
       throw new BadRequestException("Student's faculty not found!");
     }
