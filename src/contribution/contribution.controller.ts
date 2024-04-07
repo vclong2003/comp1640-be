@@ -45,6 +45,7 @@ export class ContributionController {
         title: { type: 'string' },
         description: { type: 'string' },
         eventId: { type: 'string' },
+        bannerImage: { type: 'string', format: 'binary' },
         documents: {
           type: 'array',
           items: {
@@ -66,6 +67,7 @@ export class ContributionController {
     FileFieldsInterceptor([
       { name: 'documents', maxCount: 5 },
       { name: 'images', maxCount: 5 },
+      { name: 'bannerImage', maxCount: 1 },
     ]),
   )
   @Roles([ERole.Student])
@@ -73,7 +75,11 @@ export class ContributionController {
     @Req() { user },
     @Body() dto: AddContributionDto,
     @UploadedFiles()
-    files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
+    files: {
+      documents: Express.Multer.File[];
+      images: Express.Multer.File[];
+      bannerImage: Express.Multer.File[];
+    },
   ): Promise<AddContributionResponseDto> {
     return await this.contributionService.addContribution(user._id, dto, files);
   }

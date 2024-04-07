@@ -34,7 +34,11 @@ export class ContributionService {
   async addContribution(
     studentId: string,
     dto: AddContributionDto,
-    files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
+    files: {
+      documents: Express.Multer.File[];
+      images: Express.Multer.File[];
+      bannerImage: Express.Multer.File[];
+    },
   ): Promise<AddContributionResponseDto> {
     if (!files.documents || files.documents.length <= 0) {
       throw new BadRequestException("Document files can't be empty!");
@@ -62,6 +66,7 @@ export class ContributionService {
     const contribution = new this.contributionModel({
       title,
       description,
+      submitted_at: new Date(),
       author: {
         _id: student._id,
         name: student.name,
@@ -86,6 +91,10 @@ export class ContributionService {
       contribution.images = await this.strorageSerive.uploadPrivateFiles(
         files.images,
       );
+    }
+    if (files.bannerImage.length > 0) {
+      contribution.banner_image_url =
+        await this.strorageSerive.uploadPublicFile(files.bannerImage[0]);
     }
 
     await contribution.save();
