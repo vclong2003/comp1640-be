@@ -71,9 +71,11 @@ export class EventService {
       first_closure_date: newEvent.first_closure_date,
       final_closure_date: newEvent.final_closure_date,
       is_accepting_new_contribution: this.isAcceptingNewContributions(
+        newEvent.start_date,
         newEvent.first_closure_date,
       ),
       is_contributions_editable: this.isContributionsEditable(
+        newEvent.start_date,
         newEvent.final_closure_date,
       ),
       number_of_contributions: newEvent.contribution_ids.length,
@@ -282,9 +284,11 @@ export class EventService {
       first_closure_date: event.first_closure_date,
       final_closure_date: event.final_closure_date,
       is_accepting_new_contribution: this.isAcceptingNewContributions(
+        event.start_date,
         event.first_closure_date,
       ),
       is_contributions_editable: this.isContributionsEditable(
+        event.start_date,
         event.final_closure_date,
       ),
       number_of_contributions: event.contribution_ids.length,
@@ -317,12 +321,15 @@ export class EventService {
   }
 
   // Helper functions -------------------------------------------------------------
-  isAcceptingNewContributions(firstClosureDate: Date): boolean {
-    return firstClosureDate > new Date();
+  isAcceptingNewContributions(
+    startDate: Date,
+    firstClosureDate: Date,
+  ): boolean {
+    return firstClosureDate > new Date() && startDate < new Date();
   }
 
-  isContributionsEditable(finalClosureDate: Date): boolean {
-    return finalClosureDate > new Date();
+  isContributionsEditable(startDate: Date, finalClosureDate: Date): boolean {
+    return finalClosureDate > new Date() && startDate < new Date();
   }
 
   ensureDateValid(

@@ -42,9 +42,7 @@ export class ContributionService {
 
     const { eventId, title, description } = dto;
 
-    const student = await this.userModel.findById(
-      new mongoose.Types.ObjectId(studentId),
-    );
+    const student = await this.userModel.findById(studentId);
     if (!student.faculty) {
       throw new BadRequestException("Student's faculty not found!");
     }
@@ -81,12 +79,6 @@ export class ContributionService {
       },
     });
 
-    event.contribution_ids.push(contribution._id);
-    await event.save();
-
-    userFaculty.contribution_ids.push(contribution._id);
-    await userFaculty.save();
-
     contribution.documents = await this.strorageSerive.uploadPrivateFiles(
       files.documents,
     );
@@ -97,6 +89,11 @@ export class ContributionService {
     }
 
     await contribution.save();
+    event.contribution_ids.push(contribution._id);
+    await event.save();
+    userFaculty.contribution_ids.push(contribution._id);
+    await userFaculty.save();
+
     return {
       _id: contribution._id,
     };
@@ -272,7 +269,7 @@ export class ContributionService {
     const match = {};
     match['deleted_at'] = null;
     if (title) match['title'] = { $regex: title, $options: 'i' };
-    if (authorId) match['author._id'] = authorId;
+    if (authorId) match['author._id'] = this.mongoId(authorId);
     if (authorName) {
       match['author.name'] = { $regex: authorName, $options: 'i' };
     }
@@ -282,20 +279,16 @@ export class ContributionService {
     }
     if (eventId && !facultyId) {
       const event = await this.eventModel.findById(eventId);
-      if (!event) throw new BadRequestException(1);
+      if (!event) throw new BadRequestException("Event doesn't exist!");
       match['_id'] = {
-        $in: event.contribution_ids.map(
-          (id) => new mongoose.Types.ObjectId(id),
-        ),
+        $in: event.contribution_ids.map((id) => this.mongoId(id)),
       };
     }
     if (facultyId) {
       const faculty = await this.facultyModel.findById(facultyId);
-      if (!faculty) throw new BadRequestException(2);
+      if (!faculty) throw new BadRequestException("Faculty doesn't exist!");
       match['_id'] = {
-        $in: faculty.contribution_ids.map(
-          (id) => new mongoose.Types.ObjectId(id),
-        ),
+        $in: faculty.contribution_ids.map((id) => this.mongoId(id)),
       };
     }
 
@@ -636,5 +629,8 @@ export class ContributionService {
     const regex = /([^\/]+)\/([^\/?#]+)\?/;
     const match = regex.exec(url);
     return match ? decodeURIComponent(match[1] + '/' + match[2]) : null;
+  }
+  mongoId(id: string): mongoose.Types.ObjectId {
+    return new mongoose.Types.ObjectId(id);
   }
 }

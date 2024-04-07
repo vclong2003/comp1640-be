@@ -11,6 +11,7 @@ import { AccessTokenGuard } from './auth/guards/access-token.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { DatabaseModule } from './shared-modules/database/database.module';
 import { LoggerModule } from 'nestjs-pino';
+import { UtilModule } from './shared-modules/util/util.module';
 
 @Module({
   imports: [
@@ -18,12 +19,10 @@ import { LoggerModule } from 'nestjs-pino';
       pinoHttp: {
         transport: {
           target: 'pino-pretty',
-          // options: {
-          //   singleLine: true,
-          // },
         },
       },
     }),
+    UtilModule,
     ConfigModule,
     MongooseModule,
     DatabaseModule,
