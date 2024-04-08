@@ -30,6 +30,7 @@ import {
   RemoveLoginSessionDto,
 } from './dtos/login-session.dto';
 import { ERole } from 'src/user/user.enums';
+import { UtilService } from 'src/shared-modules/util/util.service';
 
 @Injectable()
 export class AuthService {
@@ -40,6 +41,7 @@ export class AuthService {
     private jwtService: JwtService,
     private mailerService: MailerService,
     private configService: ConfigService,
+    private utilService: UtilService,
   ) {}
 
   // Register ------------------------------------------------------
@@ -83,17 +85,16 @@ export class AuthService {
     const { email, role, facultyId } =
       await this.jwtService.verifyRegisterToken(token);
 
+    // Check if user already exists
     const user = await this.userModel.findOne({ email });
     if (user) throw new BadRequestException('User already exists!');
 
+    // Find faculty if role is student
     let faculty;
     if (facultyId && role !== ERole.Student) {
       throw new BadRequestException('You can only select faculty for student!');
     }
-    if (facultyId) {
-      faculty = await this.facultyModel.findById(facultyId);
-      if (!faculty) throw new BadRequestException('Faculty not found!');
-    }
+    if (facultyId) faculty = await this.facultyModel.findById(facultyId);
 
     const newUser = new this.userModel({
       email,
@@ -109,25 +110,10 @@ export class AuthService {
         _id: faculty._id,
         name: faculty.name,
       };
-      faculty.students.push(newUser._id);
-      await faculty.save();
     }
 
     await newUser.save();
     return;
-  }
-
-  // Get current user ------------------------------------------------------
-  async getCurrentUser(userId: string) {
-    const user = await this.userModel.findById(userId).exec();
-    return {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      faculty: user.faculty,
-      avatar_url: user.avatar_url,
-    };
   }
 
   // Validate user (local strategy) ----------------------------------------------
@@ -168,16 +154,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        faculty: user.faculty,
-        avatar_url: user.avatar_url,
-        gender: user.gender,
-        dob: user.dob,
-      },
+      user: this.utilService.sanitizeUser(user),
     };
   }
 
