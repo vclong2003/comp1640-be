@@ -6,11 +6,13 @@ import { StorageService } from 'src/shared-modules/storage/storage.service';
 import { User } from './schemas/user.schema';
 import { UtilService } from 'src/shared-modules/util/util.service';
 import { ERole } from './user.enums';
+import { Faculty } from 'src/faculty/schemas/faculty.schema';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel('User') private userModel: Model<User>,
+    @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     private storageService: StorageService,
     private utilService: UtilService,
   ) {}
@@ -73,14 +75,20 @@ export class UserService {
       user.avatar_url = avatarUrl;
     }
 
-    if (facultyId && user.role !== ERole.Student) {
-      throw new BadRequestException('Only student can have faculty');
+    let faculty;
+    if (facultyId) {
+      if (user.role !== ERole.Student) {
+        throw new BadRequestException('Only student can update faculty!');
+      }
+      faculty = await this.facultyModel.findById(facultyId);
+      if (!faculty) throw new BadRequestException('Faculty not found');
     }
 
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (dob) user.dob = dob;
     if (gender) user.gender = gender;
+    if (faculty) user.faculty = { _id: faculty._id, name: faculty.name };
     await user.save();
 
     return this.utilService.sanitizeUser(user);

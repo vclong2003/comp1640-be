@@ -157,7 +157,11 @@ export class ContributionController {
     @Req() req,
     @Query() dto: FindContributionsDto,
   ): Promise<Partial<ContributionResponseDto>[]> {
-    return await this.contributionService.findContributions(dto, req.user);
+    return await this.contributionService.findContributions(
+      dto,
+      false,
+      req.user,
+    );
   }
 
   // FindContributionsAndDownloadZip ----------------------------------------

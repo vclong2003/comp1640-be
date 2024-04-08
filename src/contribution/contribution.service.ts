@@ -328,7 +328,10 @@ export class ContributionService {
       projection['documents'] = 1;
       projection['images'] = 1;
     }
-    if (user) projection['is_liked'] = { $in: [user._id, '$liked_user_ids'] };
+    if (user)
+      projection['is_liked'] = {
+        $in: [this.utilService.mongoId(user._id), '$liked_user_ids'],
+      };
 
     pipeLine.push({ $match: match });
     pipeLine.push({ $project: projection });

@@ -27,6 +27,7 @@ export class UtilService {
       gender: user.gender,
       role: user.role,
       disabled: user.disabled,
+      faculty: user.faculty,
     };
   }
 

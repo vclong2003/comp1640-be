@@ -70,6 +70,7 @@ export class UserController {
       properties: {
         name: { type: 'string' },
         phone: { type: 'string' },
+        facultyId: { type: 'string' },
         dob: { type: 'string', format: 'date' },
         avatar: { type: 'string', format: 'binary' },
       },
