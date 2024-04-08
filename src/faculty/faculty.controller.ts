@@ -29,6 +29,8 @@ export class FacultyController {
 
   // Create a new faculty ----------------------------------------------
   @Post('')
+  @Roles([ERole.Admin])
+  @UseInterceptors(FileInterceptor('bannerImage'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -41,8 +43,6 @@ export class FacultyController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('bannerImage'))
-  @Roles([ERole.Admin])
   async createFaculty(
     @Body() dto: CreateFacultyDto,
     @UploadedFile() bannerImage?: Express.Multer.File,
