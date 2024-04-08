@@ -12,11 +12,6 @@ export class CreateFacultyDto {
   @IsString()
   @IsNotEmpty()
   description: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  mcId?: string;
 }
 
 // Update faculty dto ------------------------

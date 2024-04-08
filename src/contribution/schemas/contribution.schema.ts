@@ -73,3 +73,7 @@ export class Contribution {
 }
 
 export const ContributionSchema = SchemaFactory.createForClass(Contribution);
+
+ContributionSchema.pre('aggregate', function () {
+  this.pipeline().unshift({ $match: { deleted_at: null } });
+});

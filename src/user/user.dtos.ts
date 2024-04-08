@@ -16,6 +16,7 @@ export class UserResponseDto {
   };
   gender: EGender;
   role: ERole;
+  disabled: boolean;
 }
 
 // Update user dto ------------------------------------------

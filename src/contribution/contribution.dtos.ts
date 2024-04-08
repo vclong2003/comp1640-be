@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { FileDto } from 'src/shared-modules/storage/storage.dtos';
 
 // Add contribution dto ------------------------
 export class AddContributionDto {
@@ -62,14 +63,8 @@ export class ContributionResponseDto {
     _id: string;
     name: string;
   };
-  documents: {
-    file_name: string;
-    file_url: string;
-  }[];
-  images: {
-    file_name: string;
-    file_url: string;
-  }[];
+  documents: FileDto[];
+  images: FileDto[];
 }
 
 // Find contribution dto ------------------------

@@ -19,6 +19,7 @@ import {
   TotalNumberOfContributionByFacultyDto,
   UpdateContributionDto,
 } from './contribution.dtos';
+import { UtilService } from 'src/shared-modules/util/util.service';
 
 @Injectable()
 export class ContributionService {
@@ -28,6 +29,7 @@ export class ContributionService {
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     @InjectModel('User') private userModel: Model<User>,
     private strorageSerive: StorageService,
+    private utilService: UtilService,
   ) {}
 
   // Add contribution ----------------------------------------------------------
@@ -98,10 +100,6 @@ export class ContributionService {
     }
 
     await contribution.save();
-    event.contribution_ids.push(contribution._id);
-    await event.save();
-    userFaculty.contribution_ids.push(contribution._id);
-    await userFaculty.save();
 
     return {
       _id: contribution._id,
@@ -145,14 +143,15 @@ export class ContributionService {
     if (description) contribution.description = description;
 
     if (bannerImage) {
-      const publicBannerImageUrl =
-        await this.strorageSerive.uploadPublicFile(bannerImage);
+      // delete old banner image
       if (contribution.banner_image_url) {
         await this.strorageSerive.deletePublicFile(
           contribution.banner_image_url,
         );
       }
-      contribution.banner_image_url = publicBannerImageUrl;
+      // upload new banner image
+      contribution.banner_image_url =
+        await this.strorageSerive.uploadPublicFile(bannerImage);
     }
 
     if (files.documents.length > 0) {
@@ -218,40 +217,65 @@ export class ContributionService {
 
   // Find contribution by id ---------------------------------------------------
   async findContributionById(
-    user: IAccessTokenPayload,
     contributionId: string,
+    user: IAccessTokenPayload,
   ): Promise<ContributionResponseDto> {
-    if (!mongoose.Types.ObjectId.isValid(contributionId)) {
-      throw new BadRequestException('Invalid contribution id!');
-    }
-    const contribution = await this.contributionModel.findById(contributionId);
-    if (!contribution) throw new BadRequestException('Contribution not found!');
+    const contributions = await this.contributionModel.aggregate([
+      {
+        $match: {
+          _id: this.mongoId(contributionId),
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          description: 1,
+          banner_image_url: 1,
+          submitted_at: 1,
+          is_publication: 1,
+          images: 1,
+          documents: 1,
+          author: 1,
+          is_liked: {
+            $in: [user._id, '$liked_user_ids'],
+          },
+          likes: { $size: '$liked_user_ids' },
+          comments: { $size: '$comments' },
+          private_comments: { $size: '$private_comments' },
+          is_editable: {
+            $cond: {
+              if: {
+                $gte: ['$event.final_closure_date', new Date()],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+    ]);
+
+    if (contributions.length <= 0) return;
+    const contribution = contributions[0];
+
     const images = await this.strorageSerive.getPrivateFilesUrls(
       contribution.images,
     );
     const documents = await this.strorageSerive.getPrivateFilesUrls(
       contribution.documents,
     );
-    return {
-      _id: contribution._id,
-      title: contribution.title,
-      description: contribution.description,
-      banner_image_url: contribution.banner_image_url,
-      submitted_at: contribution.submitted_at,
-      is_publication: contribution.is_publication,
-      is_editable: this.checkContributionEditable(
-        contribution.event.final_closure_date,
-      ),
-      author: contribution.author,
-      faculty: contribution.faculty,
-      event: contribution.event,
-      documents,
+
+    return this.utilService.santinizeContribution(
+      contribution,
       images,
-      likes: contribution.liked_user_ids?.length || 0,
-      comments: contribution.comments?.length || 0,
-      private_comments: contribution.private_comments?.length || 0,
-      is_liked: contribution.liked_user_ids.includes(user._id),
-    };
+      documents,
+      contribution.is_editable,
+      contribution.is_liked,
+      contribution.likes,
+      contribution.comments,
+      contribution.private_comments,
+    );
   }
 
   // Find contributions --------------------------------------------------------
@@ -276,7 +300,6 @@ export class ContributionService {
     const pipeLine: PipelineStage[] = [];
 
     const match = {};
-    match['deleted_at'] = null;
     if (title) match['title'] = { $regex: title, $options: 'i' };
     if (authorId) match['author._id'] = this.mongoId(authorId);
     if (authorName) {
@@ -286,20 +309,8 @@ export class ContributionService {
     if (has_private_comments) {
       match['private_comments'] = { $exists: true, $ne: [] };
     }
-    if (eventId && !facultyId) {
-      const event = await this.eventModel.findById(eventId);
-      if (!event) throw new BadRequestException("Event doesn't exist!");
-      match['_id'] = {
-        $in: event.contribution_ids.map((id) => this.mongoId(id)),
-      };
-    }
-    if (facultyId) {
-      const faculty = await this.facultyModel.findById(facultyId);
-      if (!faculty) throw new BadRequestException("Faculty doesn't exist!");
-      match['_id'] = {
-        $in: faculty.contribution_ids.map((id) => this.mongoId(id)),
-      };
-    }
+    if (eventId) match['event._id'] = this.mongoId(eventId);
+    if (facultyId) match['faculty._id'] = this.mongoId(facultyId);
 
     const projection = {
       _id: 1,

@@ -1,5 +1,4 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose from 'mongoose';
 import { FacultyMc, FacultyMcSchema } from './faculty-mc.schema';
 
 @Schema()
@@ -18,17 +17,101 @@ export class Faculty {
   @Prop({ type: FacultyMcSchema })
   mc: FacultyMc;
 
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Event' })
-  event_ids: string[];
-
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
-  contribution_ids: string[];
-
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
-  student_ids: string[];
-
   @Prop({ default: null })
   deleted_at: Date;
 }
 
 export const FacultySchema = SchemaFactory.createForClass(Faculty);
+
+FacultySchema.pre('aggregate', function () {
+  this.pipeline().unshift({ $match: { deleted_at: null } });
+});
+
+FacultySchema.pre('save', async function (next) {
+  const modifiedFields = this.modifiedPaths();
+
+  // Update related MC
+  if (modifiedFields.includes('mc')) {
+    await this.model('User').updateOne(
+      { _id: this.mc._id },
+      {
+        $set: {
+          'faculty._id': this._id,
+          'faculty.name': this.name,
+        },
+      },
+    );
+
+    await this.model('Event').updateMany(
+      { 'faculty._id': this._id },
+      {
+        $set: {
+          'faculty.mc._id': this.mc._id,
+          'faculty.mc.name': this.mc.name,
+          'faculty.mc.avatar_url': this.mc.avatar_url,
+          'faculty.mc.email': this.mc.email,
+        },
+      },
+    );
+  }
+
+  // Updat related name
+  if (modifiedFields.includes('name')) {
+    await this.model('User').updateMany(
+      { 'faculty._id': this._id },
+      {
+        $set: {
+          'faculty.name': this.name,
+        },
+      },
+    );
+    await this.model('Event').updateMany(
+      { 'faculty._id': this._id },
+      {
+        $set: {
+          'faculty.name': this.name,
+        },
+      },
+    );
+    await this.model('Contribution').updateMany(
+      { 'faculty._id': this._id },
+      {
+        $set: {
+          'faculty.name': this.name,
+        },
+      },
+    );
+  }
+
+  // Cascade delete
+  if (modifiedFields.includes('deleted_at')) {
+    if (this.deleted_at) {
+      await this.model('User').updateMany(
+        { 'faculty._id': this._id },
+        {
+          $set: {
+            faculty: null,
+          },
+        },
+      );
+      await this.model('Event').updateMany(
+        { 'faculty._id': this._id },
+        {
+          $set: {
+            deleted_at: this.deleted_at,
+          },
+        },
+      );
+      await this.model('Contribution').updateMany(
+        { 'faculty._id': this._id },
+        {
+          $set: {
+            deleted_at: this.deleted_at,
+          },
+        },
+      );
+    }
+  }
+
+  next();
+});

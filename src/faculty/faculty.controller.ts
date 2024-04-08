@@ -81,26 +81,6 @@ export class FacultyController {
     return await this.facultyService.removeFaculty(facultyId);
   }
 
-  // Move student -----------------------------------------------------
-  @Put(':facultyId/student/:studentId')
-  @Roles([ERole.Admin])
-  async moveStudent(
-    @Param('facultyId') facultyId: string,
-    @Param('studentId') studentId: string,
-  ): Promise<void> {
-    return await this.facultyService.moveStudent(facultyId, studentId);
-  }
-
-  // Remove student ---------------------------------------------------
-  @Delete(':facultyId/student/:studentId')
-  @Roles([ERole.Admin])
-  async removeStudent(
-    @Param('facultyId') facultyId: string,
-    @Param('studentId') studentId: string,
-  ): Promise<void> {
-    return await this.facultyService.removeStudent(facultyId, studentId);
-  }
-
   // Find faculties ---------------------------------------------------
   @Get('')
   @NoAccessToken()

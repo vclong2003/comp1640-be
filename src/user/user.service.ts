@@ -4,18 +4,14 @@ import { Model } from 'mongoose';
 import { FindUsersDto, UpdateUserDto, UserResponseDto } from './user.dtos';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 import { User } from './schemas/user.schema';
-import { Faculty } from 'src/faculty/schemas/faculty.schema';
-import { Event } from 'src/event/schemas/event.schema';
-import { Contribution } from 'src/contribution/schemas/contribution.schema';
+import { UtilService } from 'src/shared-modules/util/util.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel('User') private userModel: Model<User>,
-    @InjectModel('Faculty') private facultyModel: Model<Faculty>,
-    @InjectModel('Event') private eventModel: Model<Event>,
-    @InjectModel('Contribution') private contributionModel: Model<Contribution>,
     private storageService: StorageService,
+    private utilService: UtilService,
   ) {}
 
   // Find user by id ----------------------------------------------------
@@ -27,20 +23,32 @@ export class UserService {
 
   // Find users ---------------------------------------------------------
   async findUsers(dto: FindUsersDto): Promise<UserResponseDto[]> {
-    const { name, email, role, facultyId, skip, limit } = dto;
-    const query: any = {
-      role,
-      name: { $regex: name || '', $options: 'i' },
-      email: { $regex: email || '', $options: 'i' },
-      disabled: false,
-    };
-    if (facultyId) query['faculty._id'] = facultyId;
-    return this.userModel
-      .find(query)
-      .select('_id email name avatar_url phone dob faculty gender role')
-      .skip(skip)
-      .limit(limit)
-      .exec();
+    const users = await this.userModel.aggregate([
+      {
+        $match: {
+          role: dto.role,
+          name: { $regex: dto.name || '', $options: 'i' },
+          email: { $regex: dto.email || '', $options: 'i' },
+          disabled: false,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          email: 1,
+          name: 1,
+          avatar_url: 1,
+          phone: 1,
+          dob: 1,
+          faculty: 1,
+          gender: 1,
+          role: 1,
+          disabled: 1,
+        },
+      },
+    ]);
+
+    return users.map((user) => this.utilService.sanitizeUser(user));
   }
 
   // Update user by id --------------------------------------------------
@@ -52,81 +60,25 @@ export class UserService {
     const { name, phone, dob, gender } = dto;
     const user = await this.userModel.findOne({
       _id: userId,
-      disabled: false,
     });
-    if (!user) throw new BadRequestException('User not found');
 
     if (avatar) {
+      // Delete old avatar
       if (user.avatar_url) {
         await this.storageService.deletePublicFile(user.avatar_url);
       }
+      // Upload new avatar
       const avatarUrl = await this.storageService.uploadPublicFile(avatar);
       user.avatar_url = avatarUrl;
     }
+
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (dob) user.dob = dob;
     if (gender) user.gender = gender;
     await user.save();
 
-    const faculty = await this.facultyModel.findByIdAndUpdate(
-      user.faculty._id,
-      {
-        'mc.name': user.name,
-        'mc.avatar_url': user.avatar_url,
-      },
-      { new: true },
-    );
-    if (faculty) {
-      await this.eventModel.updateMany(
-        { _id: { $in: faculty.event_ids } },
-        { 'faculty.mc': faculty.mc },
-      );
-    }
-
-    await this.contributionModel.updateMany(
-      { 'author._id': user._id },
-      {
-        'author.name': user.name,
-        'author.avatar_url': user.avatar_url,
-      },
-    );
-
-    // update comment inside contribution
-    await this.contributionModel.updateMany(
-      { 'comments.author._id': user._id },
-      {
-        $set: {
-          'comments.$[elem].author.name': user.name,
-          'comments.$[elem].author.avatar_url': user.avatar_url,
-        },
-      },
-      { arrayFilters: [{ 'elem.author._id': user._id }] },
-    );
-
-    //updte private comment inside contribution
-    await this.contributionModel.updateMany(
-      { 'private_comments.author._id': user._id },
-      {
-        $set: {
-          'private_comments.$[elem].author.name': user.name,
-          'private_comments.$[elem].author.avatar_url': user.avatar_url,
-        },
-      },
-      { arrayFilters: [{ 'elem.author._id': user._id }] },
-    );
-
-    return {
-      _id: user._id,
-      email: user.email,
-      name: user.name,
-      avatar_url: user.avatar_url,
-      phone: user.phone,
-      dob: user.dob,
-      gender: user.gender,
-      role: user.role,
-      faculty: user.faculty,
-    };
+    return this.utilService.sanitizeUser(user);
   }
 
   // Disable user -------------------------------------------------------

@@ -178,8 +178,8 @@ export class ContributionController {
     @Param('contributionId') contributionId: string,
   ): Promise<ContributionResponseDto> {
     return await this.contributionService.findContributionById(
-      req.user,
       contributionId,
+      req.user,
     );
   }
 
