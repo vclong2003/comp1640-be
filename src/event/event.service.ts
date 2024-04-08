@@ -108,7 +108,7 @@ export class EventService {
               else: false,
             },
           },
-          number_of_contributions: { $size: 'contributions' },
+          number_of_contributions: { $size: '$contributions' },
           faculty: 1,
         },
       },
