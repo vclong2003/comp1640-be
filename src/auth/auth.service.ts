@@ -56,6 +56,14 @@ export class AuthService {
       if (!faculty) throw new BadRequestException('Faculty not found!');
     }
 
+    if (role === ERole.Student && !facultyId) {
+      throw new BadRequestException('Faculty is required for student!');
+    }
+
+    if (role === ERole.Guest && !facultyId) {
+      throw new BadRequestException('Faculty is required for guest!');
+    }
+
     const token = await this.jwtService.genRegisterToken({
       email,
       role,
@@ -91,10 +99,10 @@ export class AuthService {
 
     // Find faculty if role is student
     let faculty;
-    if (facultyId && role !== ERole.Student) {
-      throw new BadRequestException('You can only select faculty for student!');
+    if (role === ERole.Student || role === ERole.Guest) {
+      if (!facultyId) throw new BadRequestException('Faculty is required!');
+      faculty = await this.facultyModel.findById(facultyId);
     }
-    if (facultyId) faculty = await this.facultyModel.findById(facultyId);
 
     const newUser = new this.userModel({
       email,
