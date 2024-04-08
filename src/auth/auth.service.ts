@@ -102,6 +102,7 @@ export class AuthService {
     if (role === ERole.Student || role === ERole.Guest) {
       if (!facultyId) throw new BadRequestException('Faculty is required!');
       faculty = await this.facultyModel.findById(facultyId);
+      if (!faculty) throw new BadRequestException('Faculty not found!');
     }
 
     const newUser = new this.userModel({
