@@ -32,7 +32,6 @@ export class UserService {
           role: dto.role,
           name: { $regex: dto.name || '', $options: 'i' },
           email: { $regex: dto.email || '', $options: 'i' },
-          disabled: false,
         },
       },
       {
