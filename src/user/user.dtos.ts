@@ -43,6 +43,11 @@ export class UpdateUserDto {
   @IsString()
   @Matches(/^(?!\s+$).+/, { message: 'Gender cannot be empty' })
   gender?: EGender;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  facultyId?: string;
 }
 
 // Find user dto ------------------------------------------

@@ -5,6 +5,7 @@ import { FindUsersDto, UpdateUserDto, UserResponseDto } from './user.dtos';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 import { User } from './schemas/user.schema';
 import { UtilService } from 'src/shared-modules/util/util.service';
+import { ERole } from './user.enums';
 
 @Injectable()
 export class UserService {
@@ -57,7 +58,7 @@ export class UserService {
     dto: UpdateUserDto,
     avatar?: Express.Multer.File,
   ): Promise<UserResponseDto> {
-    const { name, phone, dob, gender } = dto;
+    const { name, phone, dob, gender, facultyId } = dto;
     const user = await this.userModel.findOne({
       _id: userId,
     });
@@ -70,6 +71,10 @@ export class UserService {
       // Upload new avatar
       const avatarUrl = await this.storageService.uploadPublicFile(avatar);
       user.avatar_url = avatarUrl;
+    }
+
+    if (facultyId && user.role !== ERole.Student) {
+      throw new BadRequestException('Only student can have faculty');
     }
 
     if (name) user.name = name;
