@@ -2,8 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { UserFaculty, UserFacultySchema } from './user-faculty.schema';
 import { UserSession, UserSessionSchema } from './user-session.schema';
-import { Event } from 'src/event/schemas/event.schema';
-import { Contribution } from 'src/contribution/schemas/contribution.schema';
 import { EGender, ERole } from '../user.enums';
 
 @Schema()
@@ -37,10 +35,10 @@ export class User {
   @Prop({ type: UserFacultySchema })
   faculty?: UserFaculty;
 
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Event.name })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Event' })
   participated_event_ids: string[];
 
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: Contribution.name })
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Contribution' })
   submitted_contribution_ids: string[];
 
   @Prop({ type: [UserSessionSchema] })
@@ -51,3 +49,23 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.pre('save', async function (next) {
+  const modifiedFields = this.modifiedPaths();
+
+  if (
+    modifiedFields.includes('name') ||
+    modifiedFields.includes('avatar_url')
+  ) {
+    await this.model('Contribution').updateMany(
+      { 'author._id': this._id },
+      {
+        $set: {
+          'author.name': this.name,
+          'author.avatar_url': this.avatar_url,
+        },
+      },
+    );
+    next();
+  }
+});
