@@ -36,11 +36,7 @@ export class UtilService {
       name: faculty.name,
       description: faculty.description,
       banner_image_url: faculty.banner_image_url,
-      mc: {
-        _id: faculty.mc._id,
-        name: faculty.mc.name,
-        email: faculty.mc.email,
-      },
+      mc: faculty.mc,
     };
   }
 
@@ -61,15 +57,7 @@ export class UtilService {
       is_accepting_new_contribution,
       is_contributions_editable,
       number_of_contributions,
-      faculty: {
-        _id: event.faculty._id,
-        name: event.faculty.name,
-        mc: {
-          _id: event.faculty.mc._id,
-          name: event.faculty.mc.name,
-          email: event.faculty.mc.email,
-        },
-      },
+      faculty: event.faculty,
     };
   }
 

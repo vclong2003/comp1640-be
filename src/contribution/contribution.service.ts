@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model, PipelineStage } from 'mongoose';
+import { Model, PipelineStage } from 'mongoose';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { Event } from 'src/event/schemas/event.schema';
@@ -223,7 +223,7 @@ export class ContributionService {
     const contributions = await this.contributionModel.aggregate([
       {
         $match: {
-          _id: this.mongoId(contributionId),
+          _id: this.utilService.mongoId(contributionId),
         },
       },
       {
@@ -301,7 +301,7 @@ export class ContributionService {
 
     const match = {};
     if (title) match['title'] = { $regex: title, $options: 'i' };
-    if (authorId) match['author._id'] = this.mongoId(authorId);
+    if (authorId) match['author._id'] = this.utilService.mongoId(authorId);
     if (authorName) {
       match['author.name'] = { $regex: authorName, $options: 'i' };
     }
@@ -309,8 +309,8 @@ export class ContributionService {
     if (has_private_comments) {
       match['private_comments'] = { $exists: true, $ne: [] };
     }
-    if (eventId) match['event._id'] = this.mongoId(eventId);
-    if (facultyId) match['faculty._id'] = this.mongoId(facultyId);
+    if (eventId) match['event._id'] = this.utilService.mongoId(eventId);
+    if (facultyId) match['faculty._id'] = this.utilService.mongoId(facultyId);
 
     const projection = {
       _id: 1,
@@ -566,14 +566,6 @@ export class ContributionService {
       throw new BadRequestException('Contribution not in your faculty!');
     }
 
-    await this.eventModel.findByIdAndUpdate(contribution.event._id, {
-      $pull: { contribution_ids: contributionId },
-    });
-
-    await this.facultyModel.findByIdAndUpdate(contribution.faculty._id, {
-      $pull: { contribution_ids: contributionId },
-    });
-
     contribution.deleted_at = new Date();
     await contribution.save();
     return;
@@ -649,8 +641,5 @@ export class ContributionService {
     const regex = /([^\/]+)\/([^\/?#]+)\?/;
     const match = regex.exec(url);
     return match ? decodeURIComponent(match[1] + '/' + match[2]) : null;
-  }
-  mongoId(id: string): mongoose.Types.ObjectId {
-    return new mongoose.Types.ObjectId(id);
   }
 }

@@ -93,9 +93,7 @@ export class EventController {
   async findEvents(
     @Req() req,
     @Query() dto: FindEventsDTO,
-  ): Promise<
-    Omit<EventResponseDto, 'description' | 'banner_image_url' | 'faculty.mc'>[]
-  > {
+  ): Promise<EventResponseDto[]> {
     if (
       req.user.role === ERole.MarketingManager ||
       req.user.role === ERole.Admin
@@ -113,10 +111,7 @@ export class EventController {
   // Delete event -------------------------------------------------------------
   @Delete(':eventId')
   @Roles([ERole.Admin, ERole.MarketingCoordinator])
-  async deleteEvent(
-    @Req() req,
-    @Param('eventId') eventId: string,
-  ): Promise<void> {
+  async deleteEvent(@Param('eventId') eventId: string): Promise<void> {
     return await this.eventService.removeEvent(eventId);
   }
 }

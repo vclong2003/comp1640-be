@@ -1,5 +1,4 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose from 'mongoose';
 import { UserFaculty, UserFacultySchema } from './user-faculty.schema';
 import { UserSession, UserSessionSchema } from './user-session.schema';
 import { EGender, ERole } from '../user.enums';
@@ -29,7 +28,7 @@ export class User {
   @Prop({ required: true })
   role: ERole;
 
-  @Prop({ required: true })
+  @Prop({ required: true, minlength: 8 })
   password: string;
 
   @Prop({ type: UserFacultySchema })

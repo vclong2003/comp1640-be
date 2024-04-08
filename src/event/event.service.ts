@@ -108,7 +108,7 @@ export class EventService {
               else: false,
             },
           },
-          number_of_contributions: { $size: 'contributions_ids' },
+          number_of_contributions: { $size: 'contributions' },
           faculty: 1,
         },
       },
@@ -124,11 +124,7 @@ export class EventService {
   }
 
   // Find events -------------------------------------------------------------
-  async findEvents(
-    dto: FindEventsDTO,
-  ): Promise<
-    Omit<EventResponseDto, 'description' | 'banner_image_url' | 'faculty.mc'>[]
-  > {
+  async findEvents(dto: FindEventsDTO): Promise<EventResponseDto[]> {
     const {
       facultyId,
       name,
@@ -160,7 +156,6 @@ export class EventService {
       first_closure_date: 1,
       final_closure_date: 1,
       faculty: 1,
-      number_of_contributions: { $size: '$contribution_ids' },
       is_accepting_new_contribution: {
         $cond: {
           if: {
