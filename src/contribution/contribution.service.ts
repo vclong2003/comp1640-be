@@ -41,9 +41,9 @@ export class ContributionService {
       bannerImage: Express.Multer.File[];
     },
   ): Promise<AddContributionResponseDto> {
+    this.helper.ensureUserHaveFaculty(user);
     this.helper.ensureFilesNotEmpty(files.documents);
     this.helper.ensureFilesNotEmpty(files.images);
-    this.helper.ensureUserHaveFaculty(user);
 
     const { eventId, title, description } = dto;
     const student = await this.userModel.findById(user._id);

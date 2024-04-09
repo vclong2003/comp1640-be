@@ -36,6 +36,13 @@ export class UpdateContributionDto {
   description?: string;
 }
 
+// Contribution Files dto ---------------------------
+export class ContributionFilesDto {
+  documents: Express.Multer.File[];
+  images: Express.Multer.File[];
+  bannerImage: Express.Multer.File[];
+}
+
 // Contribution response dto ------------------------
 export class ContributionResponseDto {
   _id: string;
@@ -97,7 +104,7 @@ export class GetContributionsDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  is_publication?: boolean;
+  is_publication?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

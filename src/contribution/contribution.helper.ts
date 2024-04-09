@@ -151,12 +151,16 @@ export class ContributionHelper {
     if (authorName) {
       match['author.name'] = { $regex: authorName, $options: 'i' };
     }
-    if (is_publication === true) match['is_publication'] = true;
     if (has_private_comments) {
       match['private_comments'] = { $exists: true, $ne: [] };
     }
     if (eventId) match['event._id'] = this.mongoId(eventId);
     if (facultyId) match['faculty._id'] = this.mongoId(facultyId);
+    if (is_publication) {
+      if (/true/.test(is_publication) === true) match['is_publication'] = true;
+      if (/false/.test(is_publication) === true)
+        match['is_publication'] = false;
+    }
 
     const projection = {
       _id: 1,
@@ -184,7 +188,7 @@ export class ContributionHelper {
 
     if (popular)
       pipeline.push({
-        $sort: popular ? { submitted_at: -1, likes: -1 } : { submitted_at: -1 },
+        $sort: popular ? { likes: -1, submitted_at: -1 } : { submitted_at: -1 },
       });
 
     if (limit) pipeline.push({ $limit: limit });

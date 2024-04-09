@@ -22,6 +22,7 @@ import { AddCommentDto } from './comment.dtos';
 import {
   AddContributionDto,
   AddContributionResponseDto,
+  ContributionFilesDto,
   ContributionResponseDto,
   GetContributionsDto,
   NumberOfContributionsByFacultyPerYearDto,
@@ -69,16 +70,12 @@ export class ContributionController {
   )
   @Roles([ERole.Student])
   async addContribution(
-    @Req() { user },
+    @Req() req,
     @Body() dto: AddContributionDto,
     @UploadedFiles()
-    files: {
-      documents: Express.Multer.File[];
-      images: Express.Multer.File[];
-      bannerImage: Express.Multer.File[];
-    },
+    files: ContributionFilesDto,
   ): Promise<AddContributionResponseDto> {
-    return await this.contributionService.addContribution(user._id, dto, files);
+    return await this.contributionService.addContribution(req.user, dto, files);
   }
 
   // Update contribution -------------------------------------------
@@ -121,11 +118,7 @@ export class ContributionController {
     @Param('contributionId') contributionId: string,
     @Body() dto: UpdateContributionDto,
     @UploadedFiles()
-    files: {
-      documents: Express.Multer.File[];
-      images: Express.Multer.File[];
-      bannerImage: Express.Multer.File[];
-    },
+    files: ContributionFilesDto,
   ) {
     return await this.contributionService.updateContribution(
       req.user,
