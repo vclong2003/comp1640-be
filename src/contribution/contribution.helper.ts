@@ -161,6 +161,7 @@ export class ContributionHelper {
       if (/false/.test(is_publication) === true)
         match['is_publication'] = false;
     }
+    if (popular) match['is_publication'] = true;
 
     const projection = {
       _id: 1,
