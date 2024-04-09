@@ -8,6 +8,8 @@ import {
 import mongoose, { PipelineStage } from 'mongoose';
 import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 import { ERole } from 'src/user/user.enums';
+import { Event } from 'src/event/schemas/event.schema';
+import { Comment } from './schemas/contribution-comment/comment.schema';
 
 @Injectable()
 export class ContributionHelper {
@@ -47,10 +49,36 @@ export class ContributionHelper {
     };
   }
 
+  // Ensure contribution is public ---------------------------------------------
+  ensureContributionIsPublic(contribution: Contribution): void {
+    if (!contribution.is_publication) {
+      throw new BadRequestException('Contribution is not public');
+    }
+  }
+
+  // Ensure files array is not empty -------------------------------------------
+  ensureFilesNotEmpty(files: Express.Multer.File[]): void {
+    if (files.length <= 0) {
+      throw new BadRequestException(
+        'Contribution must have atleast 1 image and document',
+      );
+    }
+  }
+
   // Ensure user have faculty ---------------------------------------------------
-  ensureUserHaveFaculty(user: IAccessTokenPayload) {
+  ensureUserHaveFaculty(user: IAccessTokenPayload): void {
     if (!user.facultyId) {
       throw new BadRequestException('You dont belong to any faculty');
+    }
+  }
+
+  // Ensure event ownership ----------------------------------------------------
+  ensureEventBelongsToUserFaculty(
+    event: Event,
+    user: IAccessTokenPayload,
+  ): void {
+    if (event.faculty._id.toString() !== user.facultyId) {
+      throw new BadRequestException('Event not in your faculty');
     }
   }
 
@@ -70,25 +98,29 @@ export class ContributionHelper {
   ensureContributionMcOwnership(
     contribution: Contribution,
     user: IAccessTokenPayload,
-  ) {
-    if (user.role !== ERole.MarketingCoordinator) {
-      throw new BadRequestException('You are not a Marketing Coordinator');
-    }
-
-    if (!user.facultyId) {
-      throw new BadRequestException('You dont belong to any faculty');
-    }
-
+  ): void {
     if (contribution.faculty._id.toString() !== user.facultyId) {
       throw new BadRequestException('You are not the MC of this faculty');
     }
   }
 
   // Ensure contribution editability -------------------------------------------
-  ensureContributionEditability(contribution: Contribution) {
-    if (contribution.event.final_closure_date < new Date()) {
+  ensureContributionEditability(contribution: Contribution): void {
+    if (this.checkContributionEditable(contribution.event.final_closure_date)) {
       throw new BadRequestException('Contribution is not editable');
     }
+  }
+
+  // Ensure comment ownership --------------------------------------------------
+  ensureCommentOwnership(comment: Comment, user: IAccessTokenPayload) {
+    if (comment.author._id.toString() !== user._id) {
+      throw new BadRequestException('You are not the owner of this comment');
+    }
+  }
+
+  // Check contribution editability -------------------------------------------
+  checkContributionEditable(finalClosureDate: Date): boolean {
+    return finalClosureDate > new Date();
   }
 
   // Generate get contributions pipeline -----------------------------------------

@@ -33,7 +33,7 @@ export class ContributionService {
 
   // Add contribution ----------------------------------------------------------
   async addContribution(
-    studentId: string,
+    user: IAccessTokenPayload,
     dto: AddContributionDto,
     files: {
       documents: Express.Multer.File[];
@@ -41,28 +41,18 @@ export class ContributionService {
       bannerImage: Express.Multer.File[];
     },
   ): Promise<AddContributionResponseDto> {
-    if (!files.documents || files.documents.length <= 0) {
-      throw new BadRequestException("Document files can't be empty!");
-    }
+    this.helper.ensureFilesNotEmpty(files.documents);
+    this.helper.ensureFilesNotEmpty(files.images);
+    this.helper.ensureUserHaveFaculty(user);
 
     const { eventId, title, description } = dto;
-
-    const student = await this.userModel.findById(studentId);
-    if (!student.faculty) {
-      throw new BadRequestException("Student's faculty not found!");
-    }
-    const userFaculty = await this.facultyModel.findById(student.faculty._id);
-
+    const student = await this.userModel.findById(user._id);
     const event = await this.eventModel.findOne({
       _id: eventId,
       deleted_at: null,
     });
-    if (!event) throw new BadRequestException('Event not found!');
-    if (event.faculty._id.toString() !== userFaculty._id.toString()) {
-      throw new BadRequestException(
-        "Event's faculty doesn't match your faculty!",
-      );
-    }
+
+    this.helper.ensureEventBelongsToUserFaculty(event, user);
 
     const contribution = new this.contributionModel({
       title,
@@ -88,11 +78,9 @@ export class ContributionService {
     contribution.documents = await this.strorageSerive.uploadPrivateFiles(
       files.documents,
     );
-    if (files.images.length > 0) {
-      contribution.images = await this.strorageSerive.uploadPrivateFiles(
-        files.images,
-      );
-    }
+    contribution.images = await this.strorageSerive.uploadPrivateFiles(
+      files.images,
+    );
     if (files.bannerImage.length > 0) {
       contribution.banner_image_url =
         await this.strorageSerive.uploadPublicFile(files.bannerImage[0]);
@@ -116,31 +104,18 @@ export class ContributionService {
       bannerImage: Express.Multer.File[];
     },
   ): Promise<void> {
+    this.helper.ensureUserHaveFaculty(user);
+
     const contribution = await this.contributionModel.findById(contributionId);
-    if (!contribution) throw new BadRequestException('Contribution not found!');
-
-    if (
-      user.role === ERole.Student &&
-      contribution.author._id.toString() !== user._id
-    ) {
-      throw new BadRequestException('Not your contribution!');
+    if (user.role === ERole.Student) {
+      this.helper.ensureContributionOwnership(contribution, user);
     }
-
-    if (
-      user.role === ERole.MarketingCoordinator &&
-      user.facultyId.toString() !== contribution.faculty._id.toString()
-    ) {
-      throw new BadRequestException('Contribution not in your faculty!');
+    if (user.role === ERole.MarketingCoordinator) {
+      this.helper.ensureContributionMcOwnership(contribution, user);
     }
-
-    if (
-      !this.checkContributionEditable(contribution.event.final_closure_date)
-    ) {
-      throw new BadRequestException('Contribution is not editable!');
-    }
+    this.helper.ensureContributionEditability(contribution);
 
     const { title, description } = dto;
-
     if (title) contribution.title = title;
     if (description) contribution.description = description;
 
@@ -183,25 +158,15 @@ export class ContributionService {
     const contribution = await this.contributionModel.findById(contributionId);
     if (!contribution) throw new BadRequestException('Contribution not found!');
 
-    if (
-      user.role === ERole.Student &&
-      contribution.author._id.toString() !== user._id
-    ) {
-      throw new BadRequestException('Not your contribution!');
+    if (user.role === ERole.Student) {
+      this.helper.ensureContributionOwnership(contribution, user);
     }
 
-    if (
-      user.role === ERole.MarketingCoordinator &&
-      user.facultyId.toString() !== contribution.faculty._id.toString()
-    ) {
-      throw new BadRequestException('Contribution not in your faculty!');
+    if (user.role === ERole.MarketingCoordinator) {
+      this.helper.ensureContributionMcOwnership(contribution, user);
     }
 
-    if (
-      !this.checkContributionEditable(contribution.event.final_closure_date)
-    ) {
-      throw new BadRequestException('Contribution is not editable!');
-    }
+    this.helper.ensureContributionEditability(contribution);
 
     await this.strorageSerive.deletePrivateFile(fileUrl);
 
@@ -217,8 +182,8 @@ export class ContributionService {
 
   // Find contribution by id ---------------------------------------------------
   async findContributionById(
-    contributionId: string,
     user: IAccessTokenPayload,
+    contributionId: string,
   ): Promise<ContributionResponseDto> {
     const contributions = await this.contributionModel.aggregate([
       {
@@ -340,51 +305,47 @@ export class ContributionService {
 
   // Add comment --------------------------------------------------------------
   async addComment(
-    userId,
+    user: IAccessTokenPayload,
     contributionId: string,
     dto: AddCommentDto,
   ): Promise<CommentResponseDto> {
     const { content } = dto;
 
-    const user = await this.userModel.findById(userId);
-    if (!user) throw new BadRequestException('User not found');
+    const userInfo = await this.userModel.findById(user._id);
 
     const comment = {
       content,
       posted_at: new Date(),
       author: {
-        _id: user._id,
-        avatar_url: user.avatar_url,
-        name: user.name,
+        _id: userInfo._id,
+        avatar_url: userInfo.avatar_url,
+        name: userInfo.name,
       },
     };
-
-    const contribution = await this.contributionModel.findByIdAndUpdate(
-      contributionId,
-      { $push: { comments: comment } },
-    );
-    if (!contribution) throw new BadRequestException('Cotribution not found!');
+    await this.contributionModel.findByIdAndUpdate(contributionId, {
+      $push: { comments: comment },
+    });
 
     return comment as CommentResponseDto;
   }
 
   // Remove comment -----------------------------------------------------------
   async removeComment(
-    userId,
+    user: IAccessTokenPayload,
     contributionId: string,
     commentId: string,
   ): Promise<void> {
     const contribution = await this.contributionModel.findById(contributionId);
-    if (!contribution) throw new BadRequestException('Contribution not found!');
 
     const commentIndex = contribution.comments.findIndex(
       (comment) => comment._id.toString() === commentId,
     );
     if (commentIndex < 0) throw new BadRequestException('Comment not found!');
 
-    if (contribution.comments[commentIndex].author._id.toString() !== userId) {
-      throw new BadRequestException('Unauthorized!');
-    }
+    this.helper.ensureCommentOwnership(
+      contribution.comments[commentIndex],
+      user,
+    );
 
     contribution.comments.splice(commentIndex, 1);
     await contribution.save();
@@ -398,22 +359,14 @@ export class ContributionService {
   ): Promise<CommentResponseDto[]> {
     const contribution = await this.contributionModel.findOne({
       _id: contributionId,
-      deleted_at: null,
     });
-    if (!contribution) throw new BadRequestException('Contribution not found!');
 
-    if (
-      user.role === ERole.Student &&
-      contribution.author._id.toString() !== user._id
-    ) {
-      throw new BadRequestException('Not your contribution!');
+    if (user.role === ERole.Student) {
+      this.helper.ensureContributionOwnership(contribution, user);
     }
 
-    if (
-      user.role === ERole.MarketingCoordinator &&
-      user.facultyId.toString() !== contribution.faculty._id.toString()
-    ) {
-      throw new BadRequestException('Contribution not in your faculty!');
+    if (user.role === ERole.MarketingCoordinator) {
+      this.helper.ensureContributionMcOwnership;
     }
 
     return contribution.private_comments as CommentResponseDto[];
@@ -427,23 +380,13 @@ export class ContributionService {
   ): Promise<CommentResponseDto> {
     const { content } = dto;
     const commentUser = await this.userModel.findById(user._id);
-    if (!commentUser) throw new BadRequestException('User not found');
-
     const contribution = await this.contributionModel.findById(contributionId);
-    if (!contribution) throw new BadRequestException('Cotribution not found!');
 
-    if (
-      user.role === ERole.Student &&
-      contribution.author._id.toString() !== user._id
-    ) {
-      throw new BadRequestException('Not your contribution!');
+    if (user.role === ERole.Student) {
+      this.helper.ensureContributionOwnership(contribution, user);
     }
-
-    if (
-      user.role === ERole.MarketingCoordinator &&
-      user.facultyId.toString() !== contribution.faculty._id.toString()
-    ) {
-      throw new BadRequestException('Contribution not in your faculty!');
+    if (user.role === ERole.MarketingCoordinator) {
+      this.helper.ensureContributionMcOwnership(contribution, user);
     }
 
     const comment = {
@@ -471,30 +414,22 @@ export class ContributionService {
     const contribution = await this.contributionModel.findById(contributionId);
     if (!contribution) throw new BadRequestException('Contribution not found!');
 
-    if (
-      user.role === ERole.Student &&
-      contribution.author._id.toString() !== user._id
-    ) {
-      throw new BadRequestException('Not your contribution!');
+    if (user.role === ERole.Student) {
+      this.helper.ensureContributionOwnership(contribution, user);
     }
 
-    if (
-      user.role === ERole.MarketingCoordinator &&
-      user.facultyId.toString() !== contribution.faculty._id.toString()
-    ) {
-      throw new BadRequestException('Contribution not in your faculty!');
+    if (user.role === ERole.MarketingCoordinator) {
+      this.helper.ensureContributionMcOwnership(contribution, user);
     }
 
     const commentIndex = contribution.private_comments.findIndex(
       (comment) => comment._id.toString() === commentId,
     );
     if (commentIndex < 0) throw new BadRequestException('Comment not found!');
-    if (
-      contribution.private_comments[commentIndex].author._id.toString() !==
-      user._id
-    ) {
-      throw new BadRequestException('Unauthorized!');
-    }
+    this.helper.ensureCommentOwnership(
+      contribution.private_comments[commentIndex],
+      user,
+    );
     contribution.private_comments.splice(commentIndex, 1);
     await contribution.save();
     return;
@@ -502,17 +437,12 @@ export class ContributionService {
 
   // Like contribution ----------------------------------------------------------
   async likeContribution(
-    userId: string,
+    user: IAccessTokenPayload,
     contributionId: string,
   ): Promise<void> {
     const contribution = await this.contributionModel.findById(contributionId);
-    if (!contribution) throw new BadRequestException('Contribution not found!');
-
-    if (contribution.liked_user_ids.includes(userId)) {
-      throw new BadRequestException('Already liked!');
-    }
-
-    contribution.liked_user_ids.push(userId);
+    if (contribution.liked_user_ids.includes(user._id)) return;
+    contribution.liked_user_ids.push(user._id);
     await contribution.save();
     return;
   }
@@ -523,16 +453,12 @@ export class ContributionService {
     contributionId: string,
   ): Promise<void> {
     const contribution = await this.contributionModel.findById(contributionId);
-    if (!contribution) throw new BadRequestException('Contribution not found!');
 
-    if (user.role === ERole.Student && contribution.author._id !== user._id) {
-      throw new BadRequestException('Not your contribution!');
+    if (user.role === ERole.Student) {
+      this.helper.ensureContributionMcOwnership(contribution, user);
     }
-    if (
-      user.role === ERole.MarketingCoordinator &&
-      user.facultyId !== contribution.faculty._id
-    ) {
-      throw new BadRequestException('Contribution not in your faculty!');
+    if (user.role === ERole.MarketingCoordinator) {
+      this.helper.ensureContributionMcOwnership(contribution, user);
     }
 
     contribution.deleted_at = new Date();
@@ -600,10 +526,5 @@ export class ContributionService {
     ]);
 
     return result;
-  }
-
-  // Helper functions ---------------------------------------------------------
-  checkContributionEditable(finalClosureDate: Date) {
-    return finalClosureDate > new Date();
   }
 }
