@@ -119,7 +119,7 @@ export class ContributionService {
     if (title) contribution.title = title;
     if (description) contribution.description = description;
 
-    if (files.bannerImage.length > 0) {
+    if (files.bannerImage && files.bannerImage.length > 0) {
       // delete old banner image
       if (contribution.banner_image_url) {
         await this.strorageSerive.deletePublicFile(
@@ -131,14 +131,14 @@ export class ContributionService {
         await this.strorageSerive.uploadPublicFile(files.bannerImage[0]);
     }
 
-    if (files.documents.length > 0) {
+    if (files.documents && files.documents.length > 0) {
       const newDocuments = await this.strorageSerive.uploadPrivateFiles(
         files.documents,
       );
       contribution.documents = contribution.documents.concat(newDocuments);
     }
 
-    if (files.images.length > 0) {
+    if (files.images && files.images.length > 0) {
       const newImages = await this.strorageSerive.uploadPrivateFiles(
         files.images,
       );
@@ -248,18 +248,7 @@ export class ContributionService {
     user: IAccessTokenPayload,
     dto: GetContributionsDto,
   ): Promise<Partial<ContributionResponseDto>[]> {
-    const pipeline = this.helper.generateGetContributionsPipeline(dto);
-
-    if (user) {
-      pipeline.push({
-        $project: {
-          is_liked: {
-            $in: [this.helper.mongoId(user._id), '$liked_user_ids'],
-          },
-        },
-      });
-    }
-
+    const pipeline = this.helper.generateGetContributionsPipeline(dto, user);
     const contributions = await this.contributionModel.aggregate(pipeline);
     return contributions;
   }

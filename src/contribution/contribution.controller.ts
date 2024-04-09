@@ -26,6 +26,7 @@ import {
   GetContributionsDto,
   NumberOfContributionsByFacultyPerYearDto,
   TotalNumberOfContributionByFacultyDto,
+  UpdateContributionDto,
 } from './contribution.dtos';
 
 @Controller('contribution')
@@ -118,7 +119,7 @@ export class ContributionController {
   async updateContribution(
     @Req() req,
     @Param('contributionId') contributionId: string,
-    @Body() dto: AddContributionDto,
+    @Body() dto: UpdateContributionDto,
     @UploadedFiles()
     files: {
       documents: Express.Multer.File[];
@@ -207,7 +208,7 @@ export class ContributionController {
     @Body() dto: AddCommentDto,
   ) {
     return await this.contributionService.addComment(
-      req.user._id,
+      req.user,
       contributionId,
       dto,
     );
@@ -221,7 +222,7 @@ export class ContributionController {
     @Param('commentId') commentId: string,
   ) {
     return await this.contributionService.removeComment(
-      req.user._id,
+      req.user,
       contributionId,
       commentId,
     );
@@ -276,7 +277,7 @@ export class ContributionController {
     @Param('contributionId') contributionId: string,
   ) {
     return await this.contributionService.likeContribution(
-      req.user._id,
+      req.user,
       contributionId,
     );
   }

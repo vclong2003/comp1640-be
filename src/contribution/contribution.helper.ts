@@ -86,7 +86,7 @@ export class ContributionHelper {
     contribution: Contribution,
     user: IAccessTokenPayload,
   ): void {
-    if (contribution.author.toString() !== user._id) {
+    if (contribution.author._id.toString() !== user._id) {
       throw new BadRequestException(
         'You are not the owner of this contribution',
       );
@@ -105,7 +105,9 @@ export class ContributionHelper {
 
   // Ensure contribution editability -------------------------------------------
   ensureContributionEditability(contribution: Contribution): void {
-    if (this.checkContributionEditable(contribution.event.final_closure_date)) {
+    if (
+      !this.checkContributionEditable(contribution.event.final_closure_date)
+    ) {
       throw new BadRequestException('Contribution is not editable');
     }
   }
@@ -123,7 +125,10 @@ export class ContributionHelper {
   }
 
   // Generate get contributions pipeline -----------------------------------------
-  generateGetContributionsPipeline(dto: GetContributionsDto): PipelineStage[] {
+  generateGetContributionsPipeline(
+    dto: GetContributionsDto,
+    user?: IAccessTokenPayload,
+  ): PipelineStage[] {
     const {
       title,
       authorId,
@@ -165,6 +170,12 @@ export class ContributionHelper {
       comments: { $size: '$comments' },
       private_comments: { $size: '$private_comments' },
     };
+
+    if (user) {
+      projection['liked'] = {
+        $in: [this.mongoId(user._id), '$liked_user_ids'],
+      };
+    }
 
     pipeline.push({ $match: match });
     pipeline.push({ $project: projection });
