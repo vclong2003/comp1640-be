@@ -31,7 +31,7 @@ FacultySchema.pre('save', async function (next) {
   const modifiedFields = this.modifiedPaths();
 
   // Update related MC
-  if (modifiedFields.includes('mc')) {
+  if (modifiedFields.includes('mc') && this?.mc) {
     await this.model('User').updateOne(
       { _id: this.mc._id },
       {
