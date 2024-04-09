@@ -54,7 +54,8 @@ export class FindUsersDto {
   @IsString()
   name?: string;
 
-  @ApiProperty({ type: 'enum', enum: ERole })
+  @ApiProperty({ type: 'enum', enum: ERole, required: false })
+  @IsOptional()
   @IsEnum(ERole)
   role: ERole;
 

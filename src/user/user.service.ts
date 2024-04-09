@@ -4,9 +4,9 @@ import { Model } from 'mongoose';
 import { FindUsersDto, UpdateUserDto, UserResponseDto } from './user.dtos';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 import { User } from './schemas/user.schema';
-import { UtilService } from 'src/shared-modules/util/util.service';
 import { ERole } from './user.enums';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
+import { UserHelper } from './user.helper';
 
 @Injectable()
 export class UserService {
@@ -14,7 +14,7 @@ export class UserService {
     @InjectModel('User') private userModel: Model<User>,
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     private storageService: StorageService,
-    private utilService: UtilService,
+    private helper: UserHelper,
   ) {}
 
   // Find user by id ----------------------------------------------------
@@ -26,31 +26,11 @@ export class UserService {
 
   // Find users ---------------------------------------------------------
   async findUsers(dto: FindUsersDto): Promise<UserResponseDto[]> {
-    const users = await this.userModel.aggregate([
-      {
-        $match: {
-          role: dto.role,
-          name: { $regex: dto.name || '', $options: 'i' },
-          email: { $regex: dto.email || '', $options: 'i' },
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          email: 1,
-          name: 1,
-          avatar_url: 1,
-          phone: 1,
-          dob: 1,
-          faculty: 1,
-          gender: 1,
-          role: 1,
-          disabled: 1,
-        },
-      },
-    ]);
+    const users = await this.userModel.aggregate(
+      this.helper.generateFindUsersPipeline(dto),
+    );
 
-    return users.map((user) => this.utilService.sanitizeUser(user));
+    return users.map((user) => this.helper.sanitizeUser(user));
   }
 
   // Update user by id --------------------------------------------------
@@ -90,7 +70,7 @@ export class UserService {
     if (faculty) user.faculty = { _id: faculty._id, name: faculty.name };
     await user.save();
 
-    return this.utilService.sanitizeUser(user);
+    return this.helper.sanitizeUser(user);
   }
 
   // Disable user -------------------------------------------------------

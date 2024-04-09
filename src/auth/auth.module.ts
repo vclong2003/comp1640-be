@@ -9,10 +9,17 @@ import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { MailerModule } from 'src/shared-modules/mailer/mailer.module';
 import { FacultyModule } from 'src/faculty/faculty.module';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { UserHelper } from 'src/user/user.helper';
 
 @Module({
   imports: [UserModule, PasswordModule, JwtModule, MailerModule, FacultyModule],
-  providers: [AuthService, LocalStrategy, AccessTokenStrategy, GoogleStrategy],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    AccessTokenStrategy,
+    GoogleStrategy,
+    UserHelper,
+  ],
   controllers: [AuthController],
   exports: [AuthService],
 })

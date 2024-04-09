@@ -30,7 +30,7 @@ import {
   RemoveLoginSessionDto,
 } from './dtos/login-session.dto';
 import { ERole } from 'src/user/user.enums';
-import { UtilService } from 'src/shared-modules/util/util.service';
+import { UserHelper } from 'src/user/user.helper';
 
 @Injectable()
 export class AuthService {
@@ -41,7 +41,7 @@ export class AuthService {
     private jwtService: JwtService,
     private mailerService: MailerService,
     private configService: ConfigService,
-    private utilService: UtilService,
+    private userHelper: UserHelper,
   ) {}
 
   // Register ------------------------------------------------------
@@ -163,7 +163,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: this.utilService.sanitizeUser(user),
+      user: this.userHelper.sanitizeUser(user),
     };
   }
 

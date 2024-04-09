@@ -4,28 +4,11 @@ import { EventResponseDto } from 'src/event/event.dtos';
 import { Event } from 'src/event/schemas/event.schema';
 import { FacultyResponseDto } from 'src/faculty/faculty.dtos';
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
-import { User } from 'src/user/schemas/user.schema';
-import { UserResponseDto } from 'src/user/user.dtos';
 
 @Injectable()
 export class UtilService {
   mongoId(id: string): mongoose.Types.ObjectId {
     return new mongoose.Types.ObjectId(id);
-  }
-
-  sanitizeUser(user: User): UserResponseDto {
-    return {
-      _id: user._id,
-      email: user.email,
-      name: user.name,
-      avatar_url: user.avatar_url,
-      phone: user.phone,
-      dob: user.dob,
-      gender: user.gender,
-      role: user.role,
-      disabled: user.disabled,
-      faculty: user.faculty,
-    };
   }
 
   sanitizeFaculty(faculty: Faculty): FacultyResponseDto {
