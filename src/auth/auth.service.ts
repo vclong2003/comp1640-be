@@ -56,6 +56,10 @@ export class AuthService {
       if (!faculty) throw new BadRequestException('Faculty not found!');
     }
 
+    if (role !== ERole.Student && role !== ERole.Guest && facultyId) {
+      throw new BadRequestException('This role does not require faculty!');
+    }
+
     if (role === ERole.Student && !facultyId) {
       throw new BadRequestException('Faculty is required for student!');
     }
