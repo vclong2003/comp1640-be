@@ -75,17 +75,15 @@ export class UserService {
 
   // Disable user -------------------------------------------------------
   async disableUser(userId: string): Promise<void> {
-    const result = await this.userModel.findByIdAndUpdate(userId, {
+    await this.userModel.findByIdAndUpdate(userId, {
       disabled: true,
     });
-    if (!result) throw new BadRequestException('User not found');
   }
 
   // Enable user --------------------------------------------------------
   async enableUser(userId: string): Promise<void> {
-    const result = await this.userModel.findByIdAndUpdate(userId, {
+    await this.userModel.findByIdAndUpdate(userId, {
       disabled: false,
     });
-    if (!result) throw new BadRequestException('User not found');
   }
 }
