@@ -103,13 +103,6 @@ export class FacultyService {
     const { name, description, mcId } = dto;
 
     // Check MC
-    let mc;
-    if (mcId) {
-      mc = await this.userModel.findById(mcId);
-      if (mc.role !== ERole.MarketingCoordinator) {
-        throw new BadRequestException('Invalid mc');
-      }
-    }
 
     const faculty = await this.facultyModel.findOne({
       _id: facultyId,
@@ -117,24 +110,24 @@ export class FacultyService {
 
     if (name) faculty.name = name;
     if (description) faculty.description = description;
-    if (mc) {
-      // If mc already exists in another faculty, remove it
-      const otherFaculties = await this.facultyModel.find({
-        _id: { $ne: facultyId },
-        'mc._id': mc._id,
+    if (mcId && mcId !== faculty.mc?._id.toString()) {
+      const newMc = await this.userModel.findOne({
+        _id: mcId,
+        role: ERole.MarketingCoordinator,
       });
-      await Promise.all(
-        otherFaculties.map(async (f) => {
-          f.mc = null;
-          await f.save();
-        }),
-      );
-
+      if (!newMc) throw new BadRequestException('Invalid MC');
+      if (newMc.faculty?._id) {
+        const mcOldFaculty = await this.facultyModel.findOne({
+          _id: newMc.faculty._id,
+        });
+        mcOldFaculty.mc = null;
+        await mcOldFaculty.save();
+      }
       faculty.mc = {
-        _id: mc._id,
-        name: mc.name,
-        email: mc.email,
-        avatar_url: mc.avatar_url,
+        _id: newMc._id,
+        name: newMc.name,
+        avatar_url: newMc.avatar_url,
+        email: newMc.email,
       };
     }
 
