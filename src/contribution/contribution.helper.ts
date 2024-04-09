@@ -180,7 +180,12 @@ export class ContributionHelper {
 
     pipeline.push({ $match: match });
     pipeline.push({ $project: projection });
-    if (popular) pipeline.push({ $sort: { likes: -1 } });
+
+    if (popular)
+      pipeline.push({
+        $sort: popular ? { submitted_at: -1, likes: -1 } : { submitted_at: -1 },
+      });
+
     if (limit) pipeline.push({ $limit: limit });
     if (skip) pipeline.push({ $skip: skip });
 
