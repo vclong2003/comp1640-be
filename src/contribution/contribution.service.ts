@@ -253,7 +253,7 @@ export class ContributionService {
     if (user.role === ERole.Admin || user.role === ERole.MarketingManager) {
       pipeline = this.helper.generateGetContributionsPipeline(dto, user);
     } else {
-      // If user is student, mc or guest, show only public contributions of their faculty
+      // If user is student, mc or guest, show only  contributions of their faculty
       this.helper.ensureUserHaveFaculty(user);
       pipeline = this.helper.generateGetContributionsPipeline(
         { ...dto, facultyId: user.facultyId },
