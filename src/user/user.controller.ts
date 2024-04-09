@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -21,11 +22,13 @@ import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 export class UserController {
   constructor(private userService: UserService) {}
 
+  // Get my profile --------------------------------------------
   @Get('/my-profile')
   async getMyProfile(@Req() req): Promise<UserResponseDto> {
     return await this.userService.findUserById(req.user._id);
   }
 
+  // Update my profile -----------------------------------------
   @Put('/my-profile')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -49,11 +52,13 @@ export class UserController {
     return await this.userService.updateUserById(req.user._id, dto, avatar);
   }
 
+  // Find users ------------------------------------------------
   @Get('/')
   async findUsers(@Query() dto: FindUsersDto): Promise<UserResponseDto[]> {
     return await this.userService.findUsers(dto);
   }
 
+  // Find user by id -------------------------------------------
   @Get('/:userId')
   @Roles([ERole.Admin])
   async findUserById(
@@ -62,6 +67,7 @@ export class UserController {
     return await this.userService.findUserById(userId);
   }
 
+  // Update user by id -----------------------------------------
   @Put('/:userId')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -86,12 +92,20 @@ export class UserController {
     return await this.userService.updateUserById(userId, dto, avatar);
   }
 
+  // Disable user ----------------------------------------------
   @Post('/:userId/disable')
   @Roles([ERole.Admin])
-  async disableUser(@Param('userId') userId: string): Promise<void> {
+  async disableUser(
+    @Req() req,
+    @Param('userId') userId: string,
+  ): Promise<void> {
+    if (req.user._id === userId) {
+      throw new BadRequestException('Cannot disable yourself!');
+    }
     return await this.userService.disableUser(userId);
   }
 
+  // Enable user -----------------------------------------------
   @Post('/:userId/enable')
   @Roles([ERole.Admin])
   async enableUser(@Param('userId') userId: string): Promise<void> {
