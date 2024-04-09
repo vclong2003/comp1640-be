@@ -81,7 +81,7 @@ export class ContributionService {
     contribution.images = await this.strorageSerive.uploadPrivateFiles(
       files.images,
     );
-    if (files.bannerImage.length > 0) {
+    if (files?.bannerImage && files.bannerImage.length > 0) {
       contribution.banner_image_url =
         await this.strorageSerive.uploadPublicFile(files.bannerImage[0]);
     }
