@@ -68,7 +68,7 @@ export class ContributionResponseDto {
 }
 
 // Find contribution dto ------------------------
-export class FindContributionsDto {
+export class GetContributionsDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()

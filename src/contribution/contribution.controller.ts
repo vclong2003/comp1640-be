@@ -9,14 +9,10 @@ import {
   Query,
   Req,
   Res,
-  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import {
-  FileFieldsInterceptor,
-  FileInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { ContributionService } from './contribution.service';
@@ -27,7 +23,7 @@ import {
   AddContributionDto,
   AddContributionResponseDto,
   ContributionResponseDto,
-  FindContributionsDto,
+  GetContributionsDto,
   NumberOfContributionsByFacultyPerYearDto,
   TotalNumberOfContributionByFacultyDto,
 } from './contribution.dtos';
@@ -115,8 +111,8 @@ export class ContributionController {
     FileFieldsInterceptor([
       { name: 'documents', maxCount: 5 },
       { name: 'images', maxCount: 5 },
+      { name: 'bannerImage', maxCount: 1 },
     ]),
-    FileInterceptor('bannerImage'),
   )
   @Roles([ERole.Student, ERole.MarketingCoordinator, ERole.Admin])
   async updateContribution(
@@ -124,15 +120,17 @@ export class ContributionController {
     @Param('contributionId') contributionId: string,
     @Body() dto: AddContributionDto,
     @UploadedFiles()
-    files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
-    @UploadedFile() bannerImage: Express.Multer.File,
+    files: {
+      documents: Express.Multer.File[];
+      images: Express.Multer.File[];
+      bannerImage: Express.Multer.File[];
+    },
   ) {
     return await this.contributionService.updateContribution(
       req.user._id,
       contributionId,
       { ...dto },
       files,
-      bannerImage,
     );
   }
 
@@ -155,23 +153,18 @@ export class ContributionController {
   @Get('')
   async findContributions(
     @Req() req,
-    @Query() dto: FindContributionsDto,
+    @Query() dto: GetContributionsDto,
   ): Promise<Partial<ContributionResponseDto>[]> {
-    return await this.contributionService.findContributions(
-      dto,
-      false,
-      req.user,
-    );
+    return await this.contributionService.getContributions(req.user, dto);
   }
 
   // FindContributionsAndDownloadZip ----------------------------------------
   @Get('download')
   async findContributionsAndDownloadZip(
-    @Query() dto: FindContributionsDto,
+    @Query() dto: GetContributionsDto,
     @Res() res,
   ) {
-    const file =
-      await this.contributionService.findContributionsAndDownloadZip(dto);
+    const file = await this.contributionService.zipContributions(dto);
     file.pipe(res);
   }
 

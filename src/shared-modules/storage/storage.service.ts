@@ -80,7 +80,7 @@ export class StorageService {
   async getPrivateFilesUrls(files: FileDto[]): Promise<FileDto[]> {
     return Promise.all(
       files.map(async (file) => {
-        const fileUrl = await this.storage
+        const accessUrl = await this.storage
           .bucket(this.PrivateBucketName)
           .file(file.file_url)
           .getSignedUrl({
@@ -89,7 +89,8 @@ export class StorageService {
           });
         return {
           file_name: file.file_name,
-          file_url: fileUrl.toString(),
+          file_url: file.file_url,
+          file_access_url: accessUrl.toString(),
         };
       }),
     );

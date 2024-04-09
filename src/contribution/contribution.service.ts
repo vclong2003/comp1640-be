@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage } from 'mongoose';
+import { Model } from 'mongoose';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { Event } from 'src/event/schemas/event.schema';
@@ -9,17 +9,16 @@ import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import { AddCommentDto, CommentResponseDto } from './comment.dtos';
 import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 import { ERole } from 'src/user/user.enums';
-
 import {
   AddContributionDto,
   AddContributionResponseDto,
   ContributionResponseDto,
-  FindContributionsDto,
+  GetContributionsDto,
   NumberOfContributionsByFacultyPerYearDto,
   TotalNumberOfContributionByFacultyDto,
   UpdateContributionDto,
 } from './contribution.dtos';
-import { UtilService } from 'src/shared-modules/util/util.service';
+import { ContributionHelper } from './contribution.helper';
 
 @Injectable()
 export class ContributionService {
@@ -29,7 +28,7 @@ export class ContributionService {
     @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     @InjectModel('User') private userModel: Model<User>,
     private strorageSerive: StorageService,
-    private utilService: UtilService,
+    private helper: ContributionHelper,
   ) {}
 
   // Add contribution ----------------------------------------------------------
@@ -111,8 +110,11 @@ export class ContributionService {
     user: IAccessTokenPayload,
     contributionId: string,
     dto: UpdateContributionDto,
-    files: { documents: Express.Multer.File[]; images: Express.Multer.File[] },
-    bannerImage?: Express.Multer.File,
+    files: {
+      documents: Express.Multer.File[];
+      images: Express.Multer.File[];
+      bannerImage: Express.Multer.File[];
+    },
   ): Promise<void> {
     const contribution = await this.contributionModel.findById(contributionId);
     if (!contribution) throw new BadRequestException('Contribution not found!');
@@ -142,7 +144,7 @@ export class ContributionService {
     if (title) contribution.title = title;
     if (description) contribution.description = description;
 
-    if (bannerImage) {
+    if (files.bannerImage.length > 0) {
       // delete old banner image
       if (contribution.banner_image_url) {
         await this.strorageSerive.deletePublicFile(
@@ -151,7 +153,7 @@ export class ContributionService {
       }
       // upload new banner image
       contribution.banner_image_url =
-        await this.strorageSerive.uploadPublicFile(bannerImage);
+        await this.strorageSerive.uploadPublicFile(files.bannerImage[0]);
     }
 
     if (files.documents.length > 0) {
@@ -176,7 +178,7 @@ export class ContributionService {
   async removeContributionFile(
     user: IAccessTokenPayload,
     contributionId: string,
-    fileFullUrl: string,
+    fileUrl: string,
   ): Promise<void> {
     const contribution = await this.contributionModel.findById(contributionId);
     if (!contribution) throw new BadRequestException('Contribution not found!');
@@ -201,16 +203,14 @@ export class ContributionService {
       throw new BadRequestException('Contribution is not editable!');
     }
 
-    const fileBucketUrl = this.extractFileNameFromURL(fileFullUrl);
-    if (!fileBucketUrl) throw new BadRequestException('File not found!');
+    await this.strorageSerive.deletePrivateFile(fileUrl);
 
-    await this.strorageSerive.deletePrivateFile(fileBucketUrl);
-
-    const fileIndex = contribution.documents.findIndex(
-      (file) => file.file_url === fileBucketUrl,
+    contribution.documents = contribution.documents.filter(
+      (document) => document.file_url !== fileUrl,
     );
-    if (fileIndex < 0) throw new BadRequestException('File not found!');
-    contribution.documents.splice(fileIndex, 1);
+    contribution.images = contribution.images.filter(
+      (image) => image.file_url !== fileUrl,
+    );
 
     await contribution.save();
   }
@@ -223,7 +223,7 @@ export class ContributionService {
     const contributions = await this.contributionModel.aggregate([
       {
         $match: {
-          _id: this.utilService.mongoId(contributionId),
+          _id: this.helper.mongoId(contributionId),
         },
       },
       {
@@ -266,7 +266,7 @@ export class ContributionService {
       contribution.documents,
     );
 
-    return this.utilService.santinizeContribution(
+    return this.helper.santinizeContribution(
       contribution,
       images,
       documents,
@@ -278,85 +278,51 @@ export class ContributionService {
     );
   }
 
-  // Find contributions --------------------------------------------------------
-  async findContributions(
-    dto: FindContributionsDto,
-    withFiles: boolean = false,
-    user?: IAccessTokenPayload,
+  // Get contributions --------------------------------------------------------
+  async getContributions(
+    user: IAccessTokenPayload,
+    dto: GetContributionsDto,
   ): Promise<Partial<ContributionResponseDto>[]> {
-    const {
-      title,
-      eventId,
-      authorId,
-      authorName,
-      facultyId,
-      is_publication,
-      limit,
-      skip,
-      has_private_comments,
-      popular,
-    } = dto;
+    const pipeline = this.helper.generateGetContributionsPipeline(dto);
 
-    const pipeLine: PipelineStage[] = [];
-
-    const match = {};
-    if (title) match['title'] = { $regex: title, $options: 'i' };
-    if (authorId) match['author._id'] = this.utilService.mongoId(authorId);
-    if (authorName) {
-      match['author.name'] = { $regex: authorName, $options: 'i' };
+    if (user) {
+      pipeline.push({
+        $project: {
+          is_liked: {
+            $in: [this.helper.mongoId(user._id), '$liked_user_ids'],
+          },
+        },
+      });
     }
-    if (is_publication) match['is_publication'] = is_publication;
-    if (has_private_comments) {
-      match['private_comments'] = { $exists: true, $ne: [] };
-    }
-    if (eventId) match['event._id'] = this.utilService.mongoId(eventId);
-    if (facultyId) match['faculty._id'] = this.utilService.mongoId(facultyId);
 
-    const projection = {
-      _id: 1,
-      title: 1,
-      author: 1,
-      submitted_at: 1,
-      faculty: 1,
-      event: 1,
-      is_publication: 1,
-      likes: { $size: '$liked_user_ids' },
-      comments: { $size: '$comments' },
-      private_comments: { $size: '$private_comments' },
-    };
-    if (withFiles) {
-      projection['documents'] = 1;
-      projection['images'] = 1;
-    }
-    if (user)
-      projection['is_liked'] = {
-        $in: [this.utilService.mongoId(user._id), '$liked_user_ids'],
-      };
-
-    pipeLine.push({ $match: match });
-    pipeLine.push({ $project: projection });
-    if (popular) pipeLine.push({ $sort: { likes: -1 } });
-    if (limit) pipeLine.push({ $limit: limit });
-    if (skip) pipeLine.push({ $skip: skip });
-
-    const contributions = await this.contributionModel.aggregate(pipeLine);
+    const contributions = await this.contributionModel.aggregate(pipeline);
     return contributions;
   }
 
   // Find Contributions and download zip ---------------------------------------
-  async findContributionsAndDownloadZip(
-    dto: FindContributionsDto,
+  async zipContributions(
+    dto: GetContributionsDto,
   ): Promise<NodeJS.ReadableStream> {
-    const contributions = await this.findContributions(dto, true);
-    const foldersAndFiles = contributions.map((contribution) => {
-      return {
-        folder_name: contribution.title,
-        files_url: [
-          ...contribution.documents.map((file) => file.file_url),
-          ...contribution.images.map((image) => image.file_url),
-        ],
-      };
+    const pipeline = this.helper.generateGetContributionsPipeline(dto);
+
+    // Add images and documents to pipeline projection
+    pipeline.push({
+      $project: {
+        images: 1,
+        documents: 1,
+      },
     });
+
+    const contributions = await this.contributionModel.aggregate(pipeline);
+
+    // Map each contribution to its folder
+    const foldersAndFiles = contributions.map((contribution) => ({
+      folder_name: contribution.title,
+      files_url: [
+        ...contribution.documents.map((file) => file.file_url),
+        ...contribution.images.map((image) => image.file_url),
+      ],
+    }));
 
     return await this.strorageSerive.organizeAndZipFiles(foldersAndFiles);
   }
@@ -639,10 +605,5 @@ export class ContributionService {
   // Helper functions ---------------------------------------------------------
   checkContributionEditable(finalClosureDate: Date) {
     return finalClosureDate > new Date();
-  }
-  extractFileNameFromURL(url: string): string | null {
-    const regex = /([^\/]+)\/([^\/?#]+)\?/;
-    const match = regex.exec(url);
-    return match ? decodeURIComponent(match[1] + '/' + match[2]) : null;
   }
 }
