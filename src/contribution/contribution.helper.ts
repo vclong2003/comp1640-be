@@ -164,6 +164,7 @@ export class ContributionHelper {
       author: 1,
       submitted_at: 1,
       description: { $substr: ['$description', 0, 100] },
+      banner_image_url: 1,
       faculty: 1,
       event: 1,
       is_publication: 1,
