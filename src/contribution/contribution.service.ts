@@ -248,7 +248,19 @@ export class ContributionService {
     user: IAccessTokenPayload,
     dto: GetContributionsDto,
   ): Promise<Partial<ContributionResponseDto>[]> {
-    const pipeline = this.helper.generateGetContributionsPipeline(dto, user);
+    let pipeline;
+
+    if (user.role === ERole.Admin || user.role === ERole.MarketingManager) {
+      pipeline = this.helper.generateGetContributionsPipeline(dto, user);
+    } else {
+      // If user is student, mc or guest, show only public contributions of their faculty
+      this.helper.ensureUserHaveFaculty(user);
+      pipeline = this.helper.generateGetContributionsPipeline(
+        { ...dto, facultyId: user.facultyId },
+        user,
+      );
+    }
+
     const contributions = await this.contributionModel.aggregate(pipeline);
     return contributions;
   }

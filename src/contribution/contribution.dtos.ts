@@ -106,7 +106,7 @@ export class GetContributionsDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsBoolean()
+  @IsString()
   popular?: boolean;
 
   @ApiProperty({ required: false })

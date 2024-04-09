@@ -141,7 +141,7 @@ export class ContributionHelper {
       eventId,
       popular,
     } = dto;
-
+    console.log(authorId);
     const pipeline: PipelineStage[] = [];
 
     // Match conditions
@@ -151,7 +151,7 @@ export class ContributionHelper {
     if (authorName) {
       match['author.name'] = { $regex: authorName, $options: 'i' };
     }
-    if (is_publication) match['is_publication'] = is_publication;
+    if (is_publication === true) match['is_publication'] = true;
     if (has_private_comments) {
       match['private_comments'] = { $exists: true, $ne: [] };
     }
@@ -163,6 +163,7 @@ export class ContributionHelper {
       title: 1,
       author: 1,
       submitted_at: 1,
+      description: { $substr: ['$description', 0, 100] },
       faculty: 1,
       event: 1,
       is_publication: 1,
@@ -172,7 +173,7 @@ export class ContributionHelper {
     };
 
     if (user) {
-      projection['liked'] = {
+      projection['is_liked'] = {
         $in: [this.mongoId(user._id), '$liked_user_ids'],
       };
     }

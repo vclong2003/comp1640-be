@@ -150,9 +150,9 @@ export class ContributionController {
     );
   }
 
-  // Find contributions ----------------------------------------
+  // Get contributions ----------------------------------------
   @Get('')
-  async findContributions(
+  async getContributions(
     @Req() req,
     @Query() dto: GetContributionsDto,
   ): Promise<Partial<ContributionResponseDto>[]> {

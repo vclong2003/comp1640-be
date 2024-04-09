@@ -19,6 +19,11 @@ import { UtilModule } from './shared-modules/util/util.module';
       pinoHttp: {
         transport: {
           target: 'pino-pretty',
+          options: {
+            levelFirst: true,
+            colorize: true,
+            ignore: 'pid,req,res',
+          },
         },
       },
     }),
