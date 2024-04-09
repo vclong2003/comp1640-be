@@ -65,6 +65,8 @@ export class UpdateEventDTO {
 
 // Find event dto ------------------------
 export class FindEventsDTO {
+  _id?: string;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
