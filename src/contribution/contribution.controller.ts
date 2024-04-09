@@ -127,9 +127,9 @@ export class ContributionController {
     },
   ) {
     return await this.contributionService.updateContribution(
-      req.user._id,
+      req.user,
       contributionId,
-      { ...dto },
+      dto,
       files,
     );
   }
@@ -175,8 +175,8 @@ export class ContributionController {
     @Param('contributionId') contributionId: string,
   ): Promise<ContributionResponseDto> {
     return await this.contributionService.findContributionById(
-      contributionId,
       req.user,
+      contributionId,
     );
   }
 

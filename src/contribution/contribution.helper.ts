@@ -7,7 +7,6 @@ import {
 } from './contribution.dtos';
 import mongoose, { PipelineStage } from 'mongoose';
 import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
-import { ERole } from 'src/user/user.enums';
 import { Event } from 'src/event/schemas/event.schema';
 import { Comment } from './schemas/contribution-comment/comment.schema';
 
