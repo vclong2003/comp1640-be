@@ -473,7 +473,6 @@ export class ContributionService {
   }
 
   // Get analytics -------------------------------------------------------------
-  // number of contributions by faculty per selected month
   async yearlyAnalysis(
     year: number,
   ): Promise<NumberOfContributionsByFacultyPerYearDto[]> {
@@ -566,7 +565,6 @@ export class ContributionService {
 
     return result;
   }
-
   async avgContributionsPerStudent(): Promise<AvgContributionPerStudentDto[]> {
     const result = await this.contributionModel.aggregate([
       {
