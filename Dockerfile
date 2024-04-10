@@ -6,7 +6,7 @@ COPY . .
 
 # RUN npm install
 
-RUN yarn install --ignore-engines
+RUN yarn i
 
 EXPOSE 4000
 
