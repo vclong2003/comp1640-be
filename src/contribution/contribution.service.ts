@@ -493,7 +493,7 @@ export class ContributionService {
       {
         $group: {
           _id: '$faculty._id',
-          name: { $first: '$faculty.name' },
+          faculty: { $first: '$faculty.name' },
           data: {
             $push: {
               month: { $month: '$submitted_at' },
@@ -505,7 +505,7 @@ export class ContributionService {
       {
         $project: {
           _id: 0,
-          name: 1,
+          faculty: 1,
           data: {
             $map: {
               input: { $range: [1, 13] },
@@ -536,8 +536,15 @@ export class ContributionService {
       {
         $group: {
           _id: '$faculty._id',
-          name: { $first: '$faculty.name' },
+          faculty: { $first: '$faculty.name' },
           contributions: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          faculty: 1,
+          contributions: 1,
         },
       },
     ]);
