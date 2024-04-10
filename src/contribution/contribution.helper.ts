@@ -193,8 +193,8 @@ export class ContributionHelper {
         $sort: popular ? { likes: -1, submitted_at: -1 } : { submitted_at: -1 },
       });
 
-    if (limit) pipeline.push({ $limit: limit });
-    if (skip) pipeline.push({ $skip: skip });
+    if (limit) pipeline.push({ $limit: Number(limit) });
+    if (skip) pipeline.push({ $skip: Number(skip) });
 
     return pipeline;
   }
