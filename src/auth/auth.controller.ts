@@ -52,7 +52,7 @@ export class AuthController {
   // Send Register Email ------------------------------------------------------
   @Post('register-email')
   @NoAccessToken()
-  // @Roles([ERole.Admin])
+  @Roles([ERole.Admin])
   async sendRegisterEmail(
     @Body() dto: SendRegisterEmailDto,
     @Response() res,

@@ -118,7 +118,7 @@ export class AuthService {
     if (dob) newUser.dob = dob;
     if (phone) newUser.phone = phone;
     if (gender) newUser.gender = gender;
-    if (role === ERole.Student && faculty) {
+    if (faculty) {
       newUser.faculty = {
         _id: faculty._id,
         name: faculty.name,
