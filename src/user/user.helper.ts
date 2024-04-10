@@ -52,8 +52,8 @@ export class UserHelper {
     const pipeline = [];
     pipeline.push({ $match: match });
     pipeline.push({ $project: project });
-    if (skip) pipeline.push({ $skip: skip });
-    if (limit) pipeline.push({ $limit: limit });
+    if (skip) pipeline.push({ $skip: Number(skip) });
+    if (limit) pipeline.push({ $limit: Number(limit) });
 
     return pipeline;
   }

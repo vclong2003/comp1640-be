@@ -67,8 +67,8 @@ export class FacultyService {
           mc: 1,
         },
       },
-      { $skip: skip || 0 },
-      { $limit: limit || 100 },
+      { $skip: Number(skip) || 0 },
+      { $limit: Number(limit) || 100 },
     ]);
 
     return faculties.map((faculty) =>

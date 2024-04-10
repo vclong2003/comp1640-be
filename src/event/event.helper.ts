@@ -62,8 +62,8 @@ export class EventHelper {
     pipeline.push(this.generateFindEventsPipelineProjection());
 
     if (sort) pipeline.push({ $sort: { [sort]: -1 } });
-    if (skip) pipeline.push({ $skip: skip });
-    if (limit) pipeline.push({ $limit: limit });
+    if (skip) pipeline.push({ $skip: Number(skip) });
+    if (limit) pipeline.push({ $limit: Number(limit) });
 
     return pipeline;
   }
