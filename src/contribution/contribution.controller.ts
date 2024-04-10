@@ -178,7 +178,7 @@ export class ContributionController {
     @Res() res,
   ) {
     const file = await this.contributionService.zipContributions(dto);
-    file.pipe(res);
+    return file.pipe(res);
   }
 
   // Find contribution by id ----------------------------------------
