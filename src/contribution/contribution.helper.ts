@@ -141,7 +141,6 @@ export class ContributionHelper {
       eventId,
       popular,
     } = dto;
-    console.log(authorId);
     const pipeline: PipelineStage[] = [];
 
     // Match conditions
