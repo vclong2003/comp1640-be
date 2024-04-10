@@ -128,10 +128,119 @@ export class GetContributionsDto {
 }
 
 // Analysis DTOs ----------------------------------------
+/*
+[
+  {
+    "name": "Information Technology ",
+    "data": [
+      {
+        "month": 1,
+        "contributions": 0
+      },
+      {
+        "month": 2,
+        "contributions": 0
+      },
+      {
+        "month": 3,
+        "contributions": 0
+      },
+      {
+        "month": 4,
+        "contributions": 12
+      },
+      {
+        "month": 5,
+        "contributions": 0
+      },
+      {
+        "month": 6,
+        "contributions": 0
+      },
+      {
+        "month": 7,
+        "contributions": 0
+      },
+      {
+        "month": 8,
+        "contributions": 0
+      },
+      {
+        "month": 9,
+        "contributions": 0
+      },
+      {
+        "month": 10,
+        "contributions": 0
+      },
+      {
+        "month": 11,
+        "contributions": 0
+      },
+      {
+        "month": 12,
+        "contributions": 0
+      }
+    ]
+  },
+  {
+    "name": "Marketing ",
+    "data": [
+      {
+        "month": 1,
+        "contributions": 0
+      },
+      {
+        "month": 2,
+        "contributions": 0
+      },
+      {
+        "month": 3,
+        "contributions": 0
+      },
+      {
+        "month": 4,
+        "contributions": 8
+      },
+      {
+        "month": 5,
+        "contributions": 0
+      },
+      {
+        "month": 6,
+        "contributions": 0
+      },
+      {
+        "month": 7,
+        "contributions": 0
+      },
+      {
+        "month": 8,
+        "contributions": 0
+      },
+      {
+        "month": 9,
+        "contributions": 0
+      },
+      {
+        "month": 10,
+        "contributions": 0
+      },
+      {
+        "month": 11,
+        "contributions": 0
+      },
+      {
+        "month": 12,
+        "contributions": 0
+      }
+    ]
+  }
+]
+*/
 export class NumberOfContributionsByFacultyPerYearDto {
-  faculty: string;
-  month: number;
-  count: number;
+  name: string;
+  data: { month: number; contributions: number }[];
 }
 
 export class TotalNumberOfContributionByFacultyDto {

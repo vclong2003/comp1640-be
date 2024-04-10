@@ -485,26 +485,45 @@ export class ContributionService {
         $match: {
           deleted_at: null,
           submitted_at: {
-            $gte: new Date(year, 0, 1),
-            $lt: new Date(year + 1, 0, 1),
+            $gte: new Date(Number(year), 0, 1),
+            $lt: new Date(Number(year) + 1, 0, 1),
           },
         },
       },
       {
         $group: {
-          _id: {
-            faculty: '$faculty._id',
-            month: { $month: '$submitted_at' },
+          _id: '$faculty._id',
+          name: { $first: '$faculty.name' },
+          data: {
+            $push: {
+              month: { $month: '$submitted_at' },
+              contributions: 1,
+            },
           },
-          count: { $sum: 1 },
         },
       },
       {
         $project: {
           _id: 0,
-          faculty: '$_id.faculty',
-          month: '$_id.month',
-          count: 1,
+          name: 1,
+          data: {
+            $map: {
+              input: { $range: [1, 13] },
+              as: 'month',
+              in: {
+                month: '$$month',
+                contributions: {
+                  $size: {
+                    $filter: {
+                      input: '$data',
+                      as: 'item',
+                      cond: { $eq: ['$$item.month', '$$month'] },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     ]);
