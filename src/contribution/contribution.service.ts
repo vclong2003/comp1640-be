@@ -287,7 +287,7 @@ export class ContributionService {
 
     // Map each contribution to its folder
     const foldersAndFiles = contributions.map((contribution) => ({
-      folder_name: contribution.title,
+      folder_name: `${contribution.title}_${contribution._id}`,
       files_url: [
         ...contribution.documents.map((file) => file.file_url),
         ...contribution.images.map((image) => image.file_url),
