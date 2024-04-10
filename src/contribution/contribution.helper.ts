@@ -175,6 +175,8 @@ export class ContributionHelper {
       likes: { $size: '$liked_user_ids' },
       comments: { $size: '$comments' },
       private_comments: { $size: '$private_comments' },
+      images: 1,
+      documents: 1,
     };
 
     if (user) {

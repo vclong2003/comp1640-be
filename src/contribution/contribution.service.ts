@@ -277,16 +277,12 @@ export class ContributionService {
   async zipContributions(
     dto: GetContributionsDto,
   ): Promise<NodeJS.ReadableStream> {
+    const { facultyId, eventId } = dto;
+    if (!facultyId && !eventId) {
+      throw new BadRequestException('Filter is too broad!');
+    }
+
     const pipeline = this.helper.generateGetContributionsPipeline(dto);
-
-    // Add images and documents to pipeline projection
-    pipeline.push({
-      $project: {
-        images: 1,
-        documents: 1,
-      },
-    });
-
     const contributions = await this.contributionModel.aggregate(pipeline);
 
     // Map each contribution to its folder

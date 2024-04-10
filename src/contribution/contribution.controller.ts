@@ -16,7 +16,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { ContributionService } from './contribution.service';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { AddCommentDto } from './comment.dtos';
 
 import {
@@ -171,6 +171,7 @@ export class ContributionController {
   }
 
   // FindContributionsAndDownloadZip ----------------------------------------
+  @ApiExcludeEndpoint()
   @Get('download')
   async findContributionsAndDownloadZip(
     @Query() dto: GetContributionsDto,
