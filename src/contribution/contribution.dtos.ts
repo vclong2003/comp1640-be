@@ -135,5 +135,11 @@ export class NumberOfContributionsByFacultyPerYearDto {
 
 export class TotalNumberOfContributionByFacultyDto {
   faculty: string;
-  contributions: number;
+  published: number;
+  not_published: number;
+}
+
+export class AvgContributionPerStudentDto {
+  faculty: string;
+  avg: number;
 }

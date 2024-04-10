@@ -12,6 +12,7 @@ import { ERole } from 'src/user/user.enums';
 import {
   AddContributionDto,
   AddContributionResponseDto,
+  AvgContributionPerStudentDto,
   ContributionResponseDto,
   GetContributionsDto,
   NumberOfContributionsByFacultyPerYearDto,
@@ -526,21 +527,80 @@ export class ContributionService {
 
     return result;
   }
-  // total number of contributions by faculty
   async lifetimeAnalysis(): Promise<TotalNumberOfContributionByFacultyDto[]> {
     const result = await this.contributionModel.aggregate([
       {
         $group: {
           _id: '$faculty._id',
           faculty: { $first: '$faculty.name' },
-          contributions: { $sum: 1 },
+          published: {
+            $sum: {
+              $cond: [{ $eq: ['$is_publication', true] }, 1, 0],
+            },
+          },
+          not_published: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $ne: ['$is_publication', false] },
+                    { $eq: ['$is_publication', null] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
         },
       },
       {
         $project: {
           _id: 0,
           faculty: 1,
-          contributions: 1,
+          published: 1,
+          not_published: 1,
+        },
+      },
+    ]);
+
+    return result;
+  }
+
+  async avgContributionsPerStudent(): Promise<AvgContributionPerStudentDto[]> {
+    const result = await this.contributionModel.aggregate([
+      {
+        // lookup embed students of faculty in each contribution
+        $lookup: {
+          from: 'users',
+          localField: 'faculty._id',
+          foreignField: 'faculty._id',
+          as: 'studentsPerFaculty',
+          pipeline: [
+            {
+              $match: {
+                role: 'student',
+              },
+            },
+          ],
+        },
+      },
+      {
+        // group contribution by faculty
+        $group: {
+          _id: '$faculty._id',
+          faculty: { $first: '$faculty.name' },
+          totalContributions: { $sum: 1 },
+          // count students in the first contribution in group (since they are same)
+          totalStudents: { $first: { $size: '$studentsPerFaculty' } },
+        },
+      },
+      {
+        $project: {
+          faculty: 1,
+          avg: {
+            $divide: ['$totalContributions', '$totalStudents'],
+          },
         },
       },
     ]);

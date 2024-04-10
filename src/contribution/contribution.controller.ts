@@ -22,6 +22,7 @@ import { AddCommentDto } from './comment.dtos';
 import {
   AddContributionDto,
   AddContributionResponseDto,
+  AvgContributionPerStudentDto,
   ContributionFilesDto,
   ContributionResponseDto,
   GetContributionsDto,
@@ -49,6 +50,15 @@ export class ContributionController {
     TotalNumberOfContributionByFacultyDto[]
   > {
     return await this.contributionService.lifetimeAnalysis();
+  }
+
+  // Get avg contributions per student ------------------------------------
+  @Get('avg-contributions-per-student')
+  @Roles([ERole.Admin])
+  async getAvgContributionsPerStudent(): Promise<
+    AvgContributionPerStudentDto[]
+  > {
+    return await this.contributionService.avgContributionsPerStudent();
   }
 
   // Add contribution ----------------------------------------
@@ -161,7 +171,7 @@ export class ContributionController {
     );
   }
 
-  // Get contributions ----------------------------------------
+  // Get contributions -----------------------------------------------
   @Get('')
   async getContributions(
     @Req() req,
@@ -170,9 +180,9 @@ export class ContributionController {
     return await this.contributionService.getContributions(req.user, dto);
   }
 
-  // FindContributionsAndDownloadZip ----------------------------------------
-  @ApiExcludeEndpoint()
+  // Download contribution files --------------------------------------
   @Get('download')
+  @ApiExcludeEndpoint()
   async findContributionsAndDownloadZip(
     @Query() dto: GetContributionsDto,
     @Res() res,
