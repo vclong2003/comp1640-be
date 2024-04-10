@@ -1,5 +1,5 @@
 import { Storage } from '@google-cloud/storage';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { FileDto, FoldersToZipDto } from './storage.dtos';
@@ -12,6 +12,8 @@ export class StorageService {
 
   private readonly PrivateBucketName = 'alhkq-private';
   private readonly PublicBucketName = 'alhkq-public';
+
+  private readonly FILE_BYTES_LIMIT = 5 * 1024 * 1024; // 5MB
 
   constructor() {
     this.storage = new Storage({
@@ -28,6 +30,8 @@ export class StorageService {
    * @returns A Promise that resolves to the public URL of the uploaded file.
    */
   async uploadPublicFile(file: Express.Multer.File): Promise<string> {
+    this.ensureFileSizeLimit(file);
+
     const fileName = uuidv4() + '/' + file.originalname;
     await this.storage
       .bucket(this.PublicBucketName)
@@ -64,6 +68,8 @@ export class StorageService {
    * @returns A Promise that resolves to an array of FileDto objects representing the uploaded files.
    */
   async uploadPrivateFiles(files: Express.Multer.File[]): Promise<FileDto[]> {
+    files.forEach((file) => this.ensureFileSizeLimit(file));
+
     const uploadedFiles = await Promise.all(
       files.map(async (file) => {
         const fileName = uuidv4() + '/' + file.originalname;
@@ -158,12 +164,26 @@ export class StorageService {
     file: Express.Multer.File,
     width: number,
   ): Promise<Express.Multer.File> {
-    if (file.mimetype.split('/')[0] !== 'image') {
-      throw new Error('File is not an image');
-    }
+    this.ensureFileIsImage(file);
     return await sharp(file.buffer)
       .resize(width)
       .toBuffer()
       .then((buffer) => ({ ...file, buffer }));
+  }
+
+  // Check if the file is an image
+  ensureFileIsImage(file: Express.Multer.File): void {
+    if (file.mimetype.split('/')[0] !== 'image') {
+      throw new BadRequestException('File is not an image');
+    }
+  }
+
+  // Check if the file size is within the limit
+  ensureFileSizeLimit(file: Express.Multer.File): void {
+    if (file.size > this.FILE_BYTES_LIMIT) {
+      throw new BadRequestException(
+        `The file ${file.originalname} is too large. The maximum file size is 5MB.`,
+      );
+    }
   }
 }
