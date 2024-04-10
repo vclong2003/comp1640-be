@@ -49,8 +49,9 @@ export class UserService {
       if (user.avatar_url) {
         await this.storageService.deletePublicFile(user.avatar_url);
       }
-      // Upload new avatar
-      const avatarUrl = await this.storageService.uploadPublicFile(avatar);
+      const resizedAvatar = await this.storageService.resizeImage(avatar, 400);
+      const avatarUrl =
+        await this.storageService.uploadPublicFile(resizedAvatar);
       user.avatar_url = avatarUrl;
     }
 

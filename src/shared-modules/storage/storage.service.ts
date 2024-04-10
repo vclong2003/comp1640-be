@@ -4,6 +4,7 @@ import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { FileDto, FoldersToZipDto } from './storage.dtos';
 import * as JSZip from 'jszip';
+import * as sharp from 'sharp';
 
 @Injectable()
 export class StorageService {
@@ -46,7 +47,14 @@ export class StorageService {
   async deletePublicFile(publicUrl: string): Promise<void> {
     const encodedFileName = publicUrl.split('/').pop();
     const fileName = decodeURIComponent(encodedFileName);
-    await this.storage.bucket(this.PublicBucketName).file(fileName).delete();
+    await this.storage
+      .bucket(this.PublicBucketName)
+      .file(fileName)
+      .delete()
+      .catch((error) => {
+        console.error('Error deleting file:', error);
+        return;
+      });
     return;
   }
 
@@ -137,5 +145,25 @@ export class StorageService {
   async deletePrivateFile(fileName: string): Promise<void> {
     await this.storage.bucket(this.PrivateBucketName).file(fileName).delete();
     return;
+  }
+
+  /**
+   * Resizes an image file to the specified width.
+   * @param file - The image file to resize.
+   * @param width - The desired width of the resized image.
+   * @returns A Promise that resolves to the resized image file.
+   * @throws Error if the provided file is not an image.
+   */
+  async resizeImage(
+    file: Express.Multer.File,
+    width: number,
+  ): Promise<Express.Multer.File> {
+    if (file.mimetype.split('/')[0] !== 'image') {
+      throw new Error('File is not an image');
+    }
+    return await sharp(file.buffer)
+      .resize(width)
+      .toBuffer()
+      .then((buffer) => ({ ...file, buffer }));
   }
 }

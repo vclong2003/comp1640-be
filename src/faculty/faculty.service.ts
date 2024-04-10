@@ -86,8 +86,12 @@ export class FacultyService {
 
     // Upload banner image
     if (bannerImage) {
+      const resizedBannerImage = await this.storageService.resizeImage(
+        bannerImage,
+        1400,
+      );
       newFaculty.banner_image_url =
-        await this.storageService.uploadPublicFile(bannerImage);
+        await this.storageService.uploadPublicFile(resizedBannerImage);
     }
 
     await newFaculty.save();
@@ -137,8 +141,12 @@ export class FacultyService {
         await this.storageService.deletePublicFile(faculty.banner_image_url);
       }
       // Upload new banner image
+      const resizedBannerImage = await this.storageService.resizeImage(
+        bannerImage,
+        1400,
+      );
       faculty.banner_image_url =
-        await this.storageService.uploadPublicFile(bannerImage);
+        await this.storageService.uploadPublicFile(resizedBannerImage);
     }
 
     await faculty.save();

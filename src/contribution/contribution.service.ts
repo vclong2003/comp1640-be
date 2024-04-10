@@ -82,8 +82,12 @@ export class ContributionService {
       files.images,
     );
     if (files?.bannerImage && files.bannerImage.length > 0) {
+      const resizedBannerImage = await this.strorageSerive.resizeImage(
+        files.bannerImage[0],
+        1400,
+      );
       contribution.banner_image_url =
-        await this.strorageSerive.uploadPublicFile(files.bannerImage[0]);
+        await this.strorageSerive.uploadPublicFile(resizedBannerImage);
     }
 
     await contribution.save();
@@ -127,8 +131,12 @@ export class ContributionService {
         );
       }
       // upload new banner image
+      const resizedBannerImage = await this.strorageSerive.resizeImage(
+        files.bannerImage[0],
+        1400,
+      );
       contribution.banner_image_url =
-        await this.strorageSerive.uploadPublicFile(files.bannerImage[0]);
+        await this.strorageSerive.uploadPublicFile(resizedBannerImage);
     }
 
     if (files.documents && files.documents.length > 0) {

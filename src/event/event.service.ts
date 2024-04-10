@@ -59,8 +59,12 @@ export class EventService {
 
     // Upload banner image
     if (bannerImage) {
+      const resizedBannerImage = await this.storageService.resizeImage(
+        bannerImage,
+        1400,
+      );
       newEvent.banner_image_url =
-        await this.storageService.uploadPublicFile(bannerImage);
+        await this.storageService.uploadPublicFile(resizedBannerImage);
     }
 
     await newEvent.save();
@@ -139,8 +143,12 @@ export class EventService {
         await this.storageService.deletePublicFile(event.banner_image_url);
       }
       // Upload new banner image
+      const resizedBannerImage = await this.storageService.resizeImage(
+        bannerImage,
+        1400,
+      );
       event.banner_image_url =
-        await this.storageService.uploadPublicFile(bannerImage);
+        await this.storageService.uploadPublicFile(resizedBannerImage);
     }
 
     await event.save();
