@@ -33,6 +33,24 @@ import {
 @Controller('contribution')
 export class ContributionController {
   constructor(private contributionService: ContributionService) {}
+  // Get yearly analysis ----------------------------------------------
+  @Get('yearly-analysis/:year')
+  @Roles([ERole.Admin])
+  async getYearlyAnalysis(
+    @Param('year') year: number,
+  ): Promise<NumberOfContributionsByFacultyPerYearDto[]> {
+    return await this.contributionService.yearlyAnalysis(year);
+  }
+
+  // Get lifetime analysis ----------------------------------------------
+  @Get('lifetime-analysis')
+  @Roles([ERole.Admin])
+  async getLifetimeAnalysis(): Promise<
+    TotalNumberOfContributionByFacultyDto[]
+  > {
+    return await this.contributionService.lifetimeAnalysis();
+  }
+
   // Add contribution ----------------------------------------
   @Post('')
   @ApiConsumes('multipart/form-data')
@@ -273,23 +291,5 @@ export class ContributionController {
       req.user,
       contributionId,
     );
-  }
-
-  // Get yearly analysis ----------------------------------------------
-  @Get('yearly-analysis/:year')
-  @Roles([ERole.Admin])
-  async getYearlyAnalysis(
-    @Param('year') year: number,
-  ): Promise<NumberOfContributionsByFacultyPerYearDto[]> {
-    return await this.contributionService.yearlyAnalysis(year);
-  }
-
-  // Get lifetime analysis ----------------------------------------------
-  @Get('lifetime-analysis')
-  @Roles([ERole.Admin])
-  async getLifetimeAnalysis(): Promise<
-    TotalNumberOfContributionByFacultyDto[]
-  > {
-    return await this.contributionService.lifetimeAnalysis();
   }
 }

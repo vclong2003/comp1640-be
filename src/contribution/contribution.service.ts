@@ -534,21 +534,10 @@ export class ContributionService {
   async lifetimeAnalysis(): Promise<TotalNumberOfContributionByFacultyDto[]> {
     const result = await this.contributionModel.aggregate([
       {
-        $match: {
-          deleted_at: null,
-        },
-      },
-      {
         $group: {
           _id: '$faculty._id',
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          faculty: '$faculty.name',
-          count: 1,
+          name: { $first: '$faculty.name' },
+          contributions: { $sum: 1 },
         },
       },
     ]);
