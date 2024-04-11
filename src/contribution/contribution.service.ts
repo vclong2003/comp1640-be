@@ -542,7 +542,7 @@ export class ContributionService {
               $cond: [
                 {
                   $or: [
-                    { $ne: ['$is_publication', false] },
+                    { $eq: ['$is_publication', false] },
                     { $eq: ['$is_publication', null] },
                   ],
                 },
