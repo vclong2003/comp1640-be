@@ -13,7 +13,7 @@ export class StorageService {
   private readonly PrivateBucketName = 'alhkq-private';
   private readonly PublicBucketName = 'alhkq-public';
 
-  private readonly FILE_BYTES_LIMIT = 5 * 1024 * 1024; // 5MB
+  private readonly FILE_BYTES_LIMIT = 25 * 1024 * 1024; // 25MB
 
   constructor() {
     this.storage = new Storage({
@@ -182,7 +182,7 @@ export class StorageService {
   ensureFileSizeLimit(file: Express.Multer.File): void {
     if (file.size > this.FILE_BYTES_LIMIT) {
       throw new BadRequestException(
-        `The file ${file.originalname} is too large. The maximum file size is 5MB.`,
+        `The file ${file.originalname} is too large. The maximum file size is 25MB.`,
       );
     }
   }
