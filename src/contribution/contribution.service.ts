@@ -539,16 +539,7 @@ export class ContributionService {
           },
           not_published: {
             $sum: {
-              $cond: [
-                {
-                  $or: [
-                    { $eq: ['$is_publication', false] },
-                    { $eq: ['$is_publication', null] },
-                  ],
-                },
-                1,
-                0,
-              ],
+              $cond: [{ $ne: ['$is_publication', true] }, 1, 0],
             },
           },
         },
