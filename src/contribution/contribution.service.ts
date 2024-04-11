@@ -13,6 +13,7 @@ import {
   AddContributionDto,
   AddContributionResponseDto,
   AvgContributionPerStudentDto,
+  AvgContributionsPerEventDto,
   ContributionResponseDto,
   GetContributionsDto,
   NumberOfContributionsByFacultyPerYearDto,
@@ -589,6 +590,44 @@ export class ContributionService {
           faculty: 1,
           avg: {
             $divide: ['$totalContributions', '$totalStudents'],
+          },
+        },
+      },
+    ]);
+
+    return result;
+  }
+  async avgContributionsPerEvent(): Promise<AvgContributionsPerEventDto[]> {
+    const result = await this.contributionModel.aggregate([
+      {
+        $lookup: {
+          from: 'events',
+          localField: 'faculty._id',
+          foreignField: 'faculty._id',
+          as: 'eventsPerFaculty',
+          pipeline: [
+            {
+              $match: {
+                deleted_at: null,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: '$faculty._id',
+          faculty: { $first: '$faculty.name' },
+          totalContributions: { $sum: 1 },
+          totalEvents: { $first: { $size: '$eventsPerFaculty' } },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          faculty: 1,
+          avg: {
+            $divide: ['$totalContributions', '$totalEvents'],
           },
         },
       },

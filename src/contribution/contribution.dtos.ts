@@ -143,3 +143,8 @@ export class AvgContributionPerStudentDto {
   faculty: string;
   avg: number;
 }
+
+export class AvgContributionsPerEventDto {
+  faculty: string;
+  avg: number;
+}

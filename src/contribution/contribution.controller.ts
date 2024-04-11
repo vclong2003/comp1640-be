@@ -23,6 +23,7 @@ import {
   AddContributionDto,
   AddContributionResponseDto,
   AvgContributionPerStudentDto,
+  AvgContributionsPerEventDto,
   ContributionFilesDto,
   ContributionResponseDto,
   GetContributionsDto,
@@ -61,7 +62,14 @@ export class ContributionController {
     return await this.contributionService.avgContributionsPerStudent();
   }
 
-  // Add contribution ----------------------------------------
+  //Get avg contributions per event ---------------------------------------
+  @Get('avg-contributions-per-event')
+  @Roles([ERole.Admin])
+  async getAvgContributionsPerEvent(): Promise<AvgContributionsPerEventDto[]> {
+    return await this.contributionService.avgContributionsPerEvent();
+  }
+
+  // Add contribution -----------------------------------------------------
   @Post('')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
