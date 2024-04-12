@@ -6,7 +6,7 @@ COPY . .
 
 # RUN npm install
 
-RUN yarn i
+RUN yarn i && yarn build
 
 EXPOSE 4000
 
