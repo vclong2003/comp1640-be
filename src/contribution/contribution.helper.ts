@@ -57,7 +57,7 @@ export class ContributionHelper {
 
   // Ensure files array is not empty -------------------------------------------
   ensureFilesNotEmpty(files: Express.Multer.File[]): void {
-    if (files.length <= 0) {
+    if (!files || files.length <= 0) {
       throw new BadRequestException(
         'Contribution must have atleast 1 image and document',
       );
