@@ -228,6 +228,8 @@ export class ContributionService {
           images: 1,
           documents: 1,
           author: 1,
+          faculty: 1,
+          event: 1,
           is_liked: {
             $in: [user._id, '$liked_user_ids'],
           },
