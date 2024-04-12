@@ -211,6 +211,19 @@ export class ContributionController {
     );
   }
 
+  // Publish contribution --------------------------------------------
+  @Post(':contributionId/publish')
+  @Roles([ERole.MarketingCoordinator])
+  async publishContribution(
+    @Req() req,
+    @Param('contributionId') contributionId: string,
+  ) {
+    return await this.contributionService.publishContribution(
+      req.user,
+      contributionId,
+    );
+  }
+
   // Remove contribution ----------------------------------------
   @Delete(':contributionId')
   @Roles([ERole.Student, ERole.MarketingCoordinator, ERole.Admin])

@@ -315,6 +315,20 @@ export class ContributionService {
     return await this.strorageSerive.organizeAndZipFiles(foldersAndFiles);
   }
 
+  // Publish contribution -------------------------------------------------------
+  async publishContribution(
+    user: IAccessTokenPayload,
+    contributionId: string,
+  ): Promise<void> {
+    this.helper.ensureUserHaveFaculty(user);
+
+    const contribution = await this.contributionModel.findById(contributionId);
+    this.helper.ensureContributionMcOwnership(contribution, user);
+
+    contribution.is_publication = true;
+    await contribution.save();
+  }
+
   // Find all comments --------------------------------------------------------
   async findAllComments(contributionId: string): Promise<CommentResponseDto[]> {
     const contribution = await this.contributionModel.findOne({
