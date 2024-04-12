@@ -247,8 +247,28 @@ export class ContributionService {
       },
     ]);
 
-    if (contributions.length <= 0) return;
+    if (contributions.length <= 0) {
+      throw new BadRequestException('Contribution not found!');
+    }
     const contribution = contributions[0];
+
+    if (
+      contribution.is_publication &&
+      (user.role === ERole.Student || user.role === ERole.Guest)
+    ) {
+      this.helper.ensureEventBelongsToUserFaculty(contribution, user);
+    } else {
+      if (user.role === ERole.Guest) {
+        throw new BadRequestException('Contribution is not public!');
+      }
+      if (user.role === ERole.Student) {
+        this.helper.ensureContributionMcOwnership(contribution, user);
+      }
+    }
+
+    if (user.role === ERole.MarketingCoordinator) {
+      this.helper.ensureContributionMcOwnership(contribution, user);
+    }
 
     const images = await this.strorageSerive.getPrivateFilesUrls(
       contribution.images,
