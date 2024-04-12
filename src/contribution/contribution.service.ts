@@ -5,7 +5,6 @@ import { Model } from 'mongoose';
 import { Contribution } from 'src/contribution/schemas/contribution.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { Event } from 'src/event/schemas/event.schema';
-import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import { AddCommentDto, CommentResponseDto } from './comment.dtos';
 import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 import { ERole } from 'src/user/user.enums';
@@ -21,16 +20,20 @@ import {
   UpdateContributionDto,
 } from './contribution.dtos';
 import { ContributionHelper } from './contribution.helper';
+import { ConfigService } from '@nestjs/config';
+import { MailerService } from 'src/shared-modules/mailer/mailer.service';
+import { EClientConfigKeys } from 'src/config/client.config';
 
 @Injectable()
 export class ContributionService {
   constructor(
     @InjectModel('Contribution') private contributionModel: Model<Contribution>,
     @InjectModel('Event') private eventModel: Model<Event>,
-    @InjectModel('Faculty') private facultyModel: Model<Faculty>,
     @InjectModel('User') private userModel: Model<User>,
     private strorageSerive: StorageService,
     private helper: ContributionHelper,
+    private configService: ConfigService,
+    private mailerService: MailerService,
   ) {}
 
   // Add contribution ----------------------------------------------------------
@@ -91,8 +94,18 @@ export class ContributionService {
       contribution.banner_image_url =
         await this.strorageSerive.uploadPublicFile(resizedBannerImage);
     }
-
     await contribution.save();
+
+    const clientUrl = await this.configService.get(EClientConfigKeys.Url);
+    const contributionUrl = `${clientUrl}/contribution/${contribution._id}`;
+    if (event?.faculty?.mc) {
+      this.mailerService.sendNewContributionEmail({
+        mcEmail: event.faculty.mc.email,
+        mcName: event.faculty.mc.name,
+        studentName: student.name,
+        contributionUrl,
+      });
+    }
 
     return {
       _id: contribution._id,

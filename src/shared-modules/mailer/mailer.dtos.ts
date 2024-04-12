@@ -8,3 +8,10 @@ export class SendResetPasswordEmailDto {
   name: string;
   url: string;
 }
+
+export class SendNewContributionEmailDto {
+  mcEmail: string;
+  mcName: string;
+  studentName: string;
+  contributionUrl: string;
+}
