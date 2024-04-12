@@ -10,7 +10,6 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
-  ForbiddenException,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -23,6 +22,7 @@ import {
 } from './event.dtos';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
+
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
@@ -59,7 +59,7 @@ export class EventController {
     @Body() dto: CreateEventDTO,
     @UploadedFile() bannerImage?: Express.Multer.File,
   ): Promise<EventResponseDto> {
-    return await this.eventService.createEvent(dto, bannerImage);
+    return await this.eventService.createEvent(req.user, dto, bannerImage);
   }
 
   // Update event -------------------------------------------------------------
@@ -94,18 +94,7 @@ export class EventController {
     @Req() req,
     @Query() dto: FindEventsDTO,
   ): Promise<EventResponseDto[]> {
-    if (
-      req.user.role === ERole.MarketingManager ||
-      req.user.role === ERole.Admin
-    ) {
-      return await this.eventService.findEvents(dto);
-    }
-
-    const facultyId = req.user.facultyId;
-    if (!facultyId) {
-      throw new ForbiddenException('You dont belong to any faculty!');
-    }
-    return await this.eventService.findEvents({ ...dto, facultyId });
+    return await this.eventService.findEvents(req.user, dto);
   }
 
   // Delete event -------------------------------------------------------------

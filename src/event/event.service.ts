@@ -11,6 +11,8 @@ import {
 import { Faculty } from 'src/faculty/schemas/faculty.schema';
 import { StorageService } from 'src/shared-modules/storage/storage.service';
 import { EventHelper } from './event.helper';
+import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
+import { ERole } from 'src/user/user.enums';
 
 @Injectable()
 export class EventService {
@@ -23,6 +25,7 @@ export class EventService {
 
   // Create event -------------------------------------------------------------
   async createEvent(
+    user: IAccessTokenPayload,
     dto: CreateEventDTO,
     bannerImage?: Express.Multer.File,
   ): Promise<EventResponseDto> {
@@ -41,7 +44,13 @@ export class EventService {
     );
 
     // Find faculty
-    const faculty = await this.facultyModel.findById(facultyId);
+    let faculty;
+    if (user.role === ERole.MarketingCoordinator) {
+      this.helper.ensureUserHaveFaculty(user);
+      faculty = await this.facultyModel.findById(user.facultyId);
+    } else {
+      faculty = await this.facultyModel.findById(facultyId);
+    }
     if (!faculty) throw new BadRequestException('Faculty not found');
 
     const newEvent = new this.eventModel({
@@ -93,8 +102,21 @@ export class EventService {
   }
 
   // Find events -------------------------------------------------------------
-  async findEvents(dto: FindEventsDTO): Promise<EventResponseDto[]> {
-    const pipeline = this.helper.generateFindEventsPipeline(dto);
+  async findEvents(
+    user: IAccessTokenPayload,
+    dto: FindEventsDTO,
+  ): Promise<EventResponseDto[]> {
+    let pipeline;
+    if (user.role === ERole.Admin || user.role === ERole.MarketingManager) {
+      pipeline = this.helper.generateFindEventsPipeline(dto);
+    } else {
+      this.helper.ensureUserHaveFaculty(user);
+      pipeline = this.helper.generateFindEventsPipeline({
+        ...dto,
+        facultyId: user.facultyId,
+      });
+    }
+
     const events = await this.eventModel.aggregate(pipeline);
 
     return events.map((event) =>

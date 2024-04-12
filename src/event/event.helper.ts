@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import mongoose, { PipelineStage } from 'mongoose';
 import { EventResponseDto, FindEventsDTO } from './event.dtos';
 import { Event } from './schemas/event.schema';
+import { IAccessTokenPayload } from 'src/shared-modules/jwt/jwt.interfaces';
 
 @Injectable()
 export class EventHelper {
@@ -117,6 +118,13 @@ export class EventHelper {
     return {
       $project: project,
     };
+  }
+
+  // ensure user have faculty -----------------------------------------------------
+  ensureUserHaveFaculty(user: IAccessTokenPayload): void {
+    if (!user.facultyId) {
+      throw new BadRequestException("You don't have faculty");
+    }
   }
 
   // Ensure date valid -------------------------------------------------------------

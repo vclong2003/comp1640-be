@@ -24,6 +24,9 @@ import { ConfigService } from '@nestjs/config';
 import { MailerService } from 'src/shared-modules/mailer/mailer.service';
 import { EClientConfigKeys } from 'src/config/client.config';
 
+// student mail when publish contribution
+// mm when published
+
 @Injectable()
 export class ContributionService {
   constructor(

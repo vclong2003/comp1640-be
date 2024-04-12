@@ -37,7 +37,7 @@ export class ContributionController {
   constructor(private contributionService: ContributionService) {}
   // Get yearly analysis ----------------------------------------------
   @Get('yearly-analysis/:year')
-  @Roles([ERole.Admin])
+  @Roles([ERole.Admin, ERole.MarketingManager])
   async getYearlyAnalysis(
     @Param('year') year: number,
   ): Promise<NumberOfContributionsByFacultyPerYearDto[]> {
@@ -46,7 +46,7 @@ export class ContributionController {
 
   // Get lifetime analysis ----------------------------------------------
   @Get('lifetime-analysis')
-  @Roles([ERole.Admin])
+  @Roles([ERole.Admin, ERole.MarketingManager])
   async getLifetimeAnalysis(): Promise<
     TotalNumberOfContributionByFacultyDto[]
   > {
@@ -55,7 +55,7 @@ export class ContributionController {
 
   // Get avg contributions per student ------------------------------------
   @Get('avg-contributions-per-student')
-  @Roles([ERole.Admin])
+  @Roles([ERole.Admin, ERole.MarketingManager])
   async getAvgContributionsPerStudent(): Promise<
     AvgContributionPerStudentDto[]
   > {
@@ -64,7 +64,7 @@ export class ContributionController {
 
   //Get avg contributions per event ---------------------------------------
   @Get('avg-contributions-per-event')
-  @Roles([ERole.Admin])
+  @Roles([ERole.Admin, ERole.MarketingManager])
   async getAvgContributionsPerEvent(): Promise<AvgContributionsPerEventDto[]> {
     return await this.contributionService.avgContributionsPerEvent();
   }
