@@ -16,8 +16,9 @@ import { FindUsersDto, UpdateUserDto, UserResponseDto } from './user.dtos';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { EGender, ERole } from './user.enums';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('User')
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}

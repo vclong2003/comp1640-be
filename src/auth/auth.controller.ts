@@ -22,7 +22,7 @@ import {
   SetupAccountDto,
   VerifyRegisterTokenResponseDto,
 } from './dtos/register.dto';
-import { ApiBody } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import {
   ResetPasswordDto,
@@ -38,6 +38,7 @@ import { ChangePasswordDto } from './dtos/change-password.dto';
 import { FindLoginSessionsDto } from './dtos/login-session.dto';
 import { Roles } from './decorators/roles.decorator';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   readonly cookieOptions = {

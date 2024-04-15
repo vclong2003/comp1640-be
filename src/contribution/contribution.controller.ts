@@ -16,7 +16,12 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ERole } from 'src/user/user.enums';
 import { ContributionService } from './contribution.service';
-import { ApiBody, ApiConsumes, ApiExcludeEndpoint } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiExcludeEndpoint,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AddCommentDto } from './comment.dtos';
 
 import {
@@ -32,6 +37,7 @@ import {
   UpdateContributionDto,
 } from './contribution.dtos';
 
+@ApiTags('Contribution')
 @Controller('contribution')
 export class ContributionController {
   constructor(private contributionService: ContributionService) {}
