@@ -171,6 +171,7 @@ export class ContributionService {
       contribution.images = contribution.images.concat(newImages);
     }
 
+    contribution.edited_at = new Date();
     await contribution.save();
     return;
   }
@@ -203,7 +204,9 @@ export class ContributionService {
       (image) => image.file_url !== fileUrl,
     );
 
+    contribution.edited_at = new Date();
     await contribution.save();
+    return;
   }
 
   // Publish contribution ------------------------------------------------------
@@ -215,6 +218,10 @@ export class ContributionService {
 
     const contribution = await this.contributionModel.findById(contributionId);
     this.helper.ensureContributionMcOwnership(contribution, user);
+
+    if (!contribution.edited_at) {
+      throw new BadRequestException('Contribution is not edited yet!');
+    }
 
     contribution.is_publication = true;
     await contribution.save();
