@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService as BaseMailerService } from '@nestjs-modules/mailer';
 import {
+  SendContributionPublishedEmailDto,
   SendGuestRegisterEmailDto,
   SendNewContributionEmailDto,
   SendResetPasswordEmailDto,
@@ -62,6 +63,26 @@ export class MailerService {
         context: {
           mcName,
           studentName,
+          contributionUrl,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw new Error('Error when sending email!');
+    }
+  }
+
+  // Send contribution published emamil ----------------------------------
+  async sendContributionPublishedEmail(dto: SendContributionPublishedEmailDto) {
+    const { authorEmail, authorName, contributionUrl } = dto;
+    try {
+      await this.baseMailerService.sendMail({
+        to: authorEmail,
+        from: 'System <vclong2003@gmail.com>',
+        subject: 'Contribution published',
+        template: 'contribution-published',
+        context: {
+          authorName,
           contributionUrl,
         },
       });

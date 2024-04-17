@@ -218,13 +218,21 @@ export class ContributionService {
 
     const contribution = await this.contributionModel.findById(contributionId);
     this.helper.ensureContributionMcOwnership(contribution, user);
-
     if (!contribution.edited_at) {
       throw new BadRequestException('Contribution is not edited yet!');
     }
 
     contribution.is_publication = true;
     await contribution.save();
+
+    const clientUrl = await this.configService.get(EClientConfigKeys.Url);
+    const contributionUrl = `${clientUrl}/contribution/${contribution._id}`;
+    this.mailerService.sendContributionPublishedEmail({
+      authorEmail: contribution.author.email,
+      authorName: contribution.author.name,
+      contributionUrl,
+    });
+    return;
   }
 
   // Find contribution by id ---------------------------------------------------

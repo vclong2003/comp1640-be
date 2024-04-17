@@ -15,3 +15,9 @@ export class SendNewContributionEmailDto {
   studentName: string;
   contributionUrl: string;
 }
+
+export class SendContributionPublishedEmailDto {
+  authorEmail: string;
+  authorName: string;
+  contributionUrl: string;
+}
