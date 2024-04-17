@@ -20,9 +20,10 @@ import {
 } from './faculty.dtos';
 import { ERole } from 'src/user/user.enums';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { NoAccessToken } from 'src/auth/decorators/no-access-token.decorator';
 
+@ApiTags('Faculty')
 @Controller('faculty')
 export class FacultyController {
   constructor(private facultyService: FacultyService) {}
