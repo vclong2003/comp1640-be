@@ -448,6 +448,8 @@ export class ContributionService {
     const commentUser = await this.userModel.findById(user._id);
     const contribution = await this.contributionModel.findById(contributionId);
 
+    this.helper.ensurePrivateCommentPostability(contribution);
+
     if (user.role === ERole.Student) {
       this.helper.ensureContributionOwnership(contribution, user);
     }

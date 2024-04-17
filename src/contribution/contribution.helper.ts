@@ -12,6 +12,8 @@ import { Comment } from './schemas/contribution-comment/comment.schema';
 
 @Injectable()
 export class ContributionHelper {
+  private readonly PRIVATE_COMMENT_DAYS = 14;
+
   // Get mongo id --------------------------------------------------------------
   mongoId(id: string): mongoose.Types.ObjectId {
     return new mongoose.Types.ObjectId(id);
@@ -109,6 +111,19 @@ export class ContributionHelper {
       !this.checkContributionEditable(contribution.event.final_closure_date)
     ) {
       throw new BadRequestException('Contribution is not editable');
+    }
+  }
+
+  // ensurePrivateCommentPostability -------------------------------------------
+  ensurePrivateCommentPostability(contribution: Contribution): void {
+    const { submitted_at } = contribution;
+    const diff = Math.abs(new Date().getTime() - submitted_at.getTime());
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+    if (days > this.PRIVATE_COMMENT_DAYS) {
+      throw new BadRequestException(
+        `You can only post private comment within ${this.PRIVATE_COMMENT_DAYS} days of submission`,
+      );
     }
   }
 
