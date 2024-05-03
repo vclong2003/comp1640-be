@@ -1,8 +1,10 @@
 - ❗❗❗ Use yarn i instead of yarn install
 - Deployed_url: https://api.alhkq.live
 
-
 <!--
+Artifact Registry:
+asia-east1-docker.pkg.dev/comp1640-vcl-gw/alhkq/nest
+
 GC Storage cors:
 view:
 gcloud storage buckets describe gs://alhkq-public --format="default(cors_config)"
